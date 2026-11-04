@@ -1,0 +1,23 @@
+# Jogo montado: arquivos grandes demais para o git (o executável e o banco passam de 100 MB)
+/app/
+/banco/
+/Jogar ENEM RPG.exe
+
+# Material oficial do INEP baixado pelos scripts de ferramentas/ (1,7 GB)
+/provas/
+/documentos_redacao/
+/dados/microdados/
+
+# Gerado pelo 05_montar_banco.py
+/dados/registros_questoes.json
+/dados/registros_*.json
+
+# Progresso de quem joga
+/progresso/
+
+# Temporários
+/dados/_tmp/
+__pycache__/
+*.pyc
+node_modules/
+.claude/

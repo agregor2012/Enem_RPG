@@ -1,0 +1,9 @@
+{
+  "name": "enem-rpg",
+  "productName": "ENEM RPG",
+  "version": "1.0.0",
+  "description": "Jogo de estudo com as questões oficiais do Enem",
+  "main": "main.js",
+  "author": "ENEM RPG",
+  "private": true
+}

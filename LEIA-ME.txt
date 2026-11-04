@@ -1,0 +1,56 @@
+ENEM RPG
+========
+
+COMO JOGAR
+Dê dois cliques em "Jogar ENEM RPG.exe". Não precisa de internet.
+Mantenha as pastas juntas: o jogo procura "app", "banco" e "documentos_redacao"
+ao lado desse arquivo. A pasta Enem inteira pode mudar de lugar.
+
+SEU PROGRESSO
+Fica em progresso\save.json, e uma cópia de segurança em save.copia.json.
+Como a pasta está no OneDrive, ele acompanha você entre computadores.
+
+O QUE HÁ NO JOGO
+- Mapa com os dois reinos: Linguagens e Ciências Humanas. As regiões são as
+  competências reais da Matriz de Referência do Enem. A roda do mouse aproxima e
+  afasta o mapa; aproximado, é só arrastar para mover (teclas + e - também servem,
+  e 0 mostra o mapa inteiro).
+- Reino do Sábio: todas as questões numa jornada sem fim, contra inimigos de todos
+  os reinos. Cada acerto tira um ponto de vida do inimigo, a cada 5 ondas surge um
+  chefe e a dificuldade sobe aos poucos. Dá para encerrar quando quiser.
+- Conquistas em cinco graus (Bronze, Prata, Ouro, Platina e Lendária). Cada uma
+  libera um título, que você escolhe no painel do herói, abaixo do nome.
+- Expedições de 5 a 45 questões, com pontos, XP, nível e porcentagem de acerto.
+- Masmorra dos Erros: revisão espaçada do que você errou (1, 2, 4, 8 e 16 dias).
+- Arena do Simulado: provas reais, na ordem original, com cronômetro.
+- Torre da Redação: estrutura, competências, nota zero, temas de 2005 a 2025 e
+  redações comentadas.
+- Grimório: histórico, gráfico de acerto, competências e conquistas.
+- Contagem para o 1º dia do Enem: começa na data oficial de 2026 (08/11) e pode ser
+  trocada em "alterar", no painel do herói.
+
+Teclas na questão: A a E escolhem, Enter confirma e avança.
+Botão direito risca uma alternativa.
+
+DE ONDE VÊM OS DADOS
+Provas e gabaritos: https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos
+Microdados: https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/enem
+Redação: Cartilhas do Participante, manuais de correção e Matrizes de Referência do INEP.
+
+Os gabaritos foram conferidos entre os PDFs e os microdados do INEP. A dificuldade
+vem do parâmetro da TRI publicado pelo INEP. As provas de 2005 a 2008 não separam
+áreas: a classificação em Linguagens ou Humanas foi feita lendo cada questão.
+
+A lista do que ficou de fora, com o motivo, está no jogo em Ajustes.
+
+LIMITES CONHECIDOS
+- Os PDFs em "provas" são os originais do INEP e por isso ainda trazem as questões
+  anuladas. O filtro vale para o jogo, que não as mostra.
+- O INEP não divulga comentário de cada questão. O jogo mostra o gabarito e a
+  habilidade cobrada, não a explicação da resposta.
+- Em 2024 e 2025 a Cartilha chama os textos de "boas notas", sem dizer se foram 1.000.
+- 2020 tem apenas um link para reportagem, e 2005 a 2010 não têm exemplos,
+  porque não há publicação oficial dessas redações.
+
+PARA RECONSTRUIR
+Os scripts da pasta "ferramentas" são numerados na ordem de execução.

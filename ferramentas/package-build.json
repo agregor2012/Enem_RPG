@@ -1,0 +1,16 @@
+{
+  "name": "enem-rpg",
+  "productName": "ENEM RPG",
+  "version": "1.0.0",
+  "description": "Jogo de estudo para o Enem",
+  "main": "main.js",
+  "author": "ENEM RPG",
+  "private": true,
+  "devDependencies": {
+    "@electron/asar": "^4.3.1",
+    "@electron/packager": "^20.3.0",
+    "@fontsource/cinzel": "^5.3.0",
+    "@fontsource/crimson-pro": "^5.3.0",
+    "electron": "^33.4.11"
+  }
+}

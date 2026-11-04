@@ -1,0 +1,483 @@
+{
+ "total_registros": 3685,
+ "no_banco": 3545,
+ "repetidas": 93,
+ "fora": [
+  {
+   "ano": 2009,
+   "aplicacao": "regular",
+   "area": "LC",
+   "numero": 101,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Pedagógico)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "CH",
+   "numero": 21,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "CH",
+   "numero": 22,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "CH",
+   "numero": 25,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "LC",
+   "numero": 114,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "LC",
+   "numero": 117,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "LC",
+   "numero": 128,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CH",
+   "numero": 2,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CH",
+   "numero": 15,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "LC",
+   "numero": 117,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "LC",
+   "numero": 125,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "regular",
+   "area": "LC",
+   "numero": 94,
+   "lingua": 0,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CH",
+   "numero": 14,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CH",
+   "numero": 24,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CH",
+   "numero": 44,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "LC",
+   "numero": 93,
+   "lingua": 1,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "LC",
+   "numero": 103,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "LC",
+   "numero": 126,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2012,
+   "aplicacao": "regular",
+   "area": "LC",
+   "numero": 107,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2013,
+   "aplicacao": "regular",
+   "area": "CH",
+   "numero": 1,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2013,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "LC",
+   "numero": 126,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2014,
+   "aplicacao": "regular",
+   "area": "LC",
+   "numero": 126,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2014,
+   "aplicacao": "terceira_aplicacao",
+   "area": "CH",
+   "numero": 12,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2014,
+   "aplicacao": "terceira_aplicacao",
+   "area": "LC",
+   "numero": 125,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2016,
+   "aplicacao": "regular",
+   "area": "CH",
+   "numero": 25,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2016,
+   "aplicacao": "regular",
+   "area": "LC",
+   "numero": 113,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2016,
+   "aplicacao": "regular",
+   "area": "LC",
+   "numero": 129,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2016,
+   "aplicacao": "segunda_aplicacao",
+   "area": "CH",
+   "numero": 6,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2016,
+   "aplicacao": "segunda_aplicacao",
+   "area": "LC",
+   "numero": 111,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2016,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CH",
+   "numero": 32,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2017,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CH",
+   "numero": 89,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2019,
+   "aplicacao": "regular",
+   "area": "LC",
+   "numero": 33,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2019,
+   "aplicacao": "regular",
+   "area": "CH",
+   "numero": 48,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2019,
+   "aplicacao": "regular",
+   "area": "CH",
+   "numero": 90,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2020,
+   "aplicacao": "regular",
+   "area": "CH",
+   "numero": 51,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2020,
+   "aplicacao": "digital",
+   "area": "LC",
+   "numero": 34,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Anulado pela TRI)"
+  },
+  {
+   "ano": 2020,
+   "aplicacao": "digital",
+   "area": "LC",
+   "numero": 34,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Anulado pela TRI)"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "regular",
+   "area": "LC",
+   "numero": 24,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "regular",
+   "area": "LC",
+   "numero": 43,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "regular",
+   "area": "CH",
+   "numero": 74,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "LC",
+   "numero": 34,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Anulado)"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "regular",
+   "area": "CH",
+   "numero": 64,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (bisblg < -0.15)"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CH",
+   "numero": 81,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2024,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "LC",
+   "numero": 40,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Algoritmo não convergiu)"
+  },
+  {
+   "ano": 2025,
+   "aplicacao": "regular",
+   "area": "LC",
+   "numero": 42,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2025,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "LC",
+   "numero": 15,
+   "lingua": null,
+   "motivo": "gabaritos oficiais divergentes (PDF D, microdados B)"
+  },
+  {
+   "ano": 2025,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CH",
+   "numero": 62,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Bis<0,01)"
+  }
+ ],
+ "cortes_dificuldade": {
+  "LC": [
+   0.41007,
+   0.98781
+  ],
+  "CH": [
+   0.658,
+   1.31972
+  ]
+ },
+ "por_ano": [
+  [
+   2005,
+   23
+  ],
+  [
+   2006,
+   24
+  ],
+  [
+   2007,
+   21
+  ],
+  [
+   2008,
+   23
+  ],
+  [
+   2009,
+   89
+  ],
+  [
+   2010,
+   178
+  ],
+  [
+   2011,
+   183
+  ],
+  [
+   2012,
+   186
+  ],
+  [
+   2013,
+   186
+  ],
+  [
+   2014,
+   282
+  ],
+  [
+   2015,
+   190
+  ],
+  [
+   2016,
+   277
+  ],
+  [
+   2017,
+   189
+  ],
+  [
+   2018,
+   190
+  ],
+  [
+   2019,
+   186
+  ],
+  [
+   2020,
+   283
+  ],
+  [
+   2021,
+   186
+  ],
+  [
+   2022,
+   188
+  ],
+  [
+   2023,
+   190
+  ],
+  [
+   2024,
+   189
+  ],
+  [
+   2025,
+   282
+  ]
+ ],
+ "por_area": {
+  "LC": 1849,
+  "CH": 1696
+ }
+}
