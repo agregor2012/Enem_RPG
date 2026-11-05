@@ -14,7 +14,8 @@ O QUE HÁ NO JOGO
 - Mapa com os dois reinos: Linguagens e Ciências Humanas. As regiões são as
   competências reais da Matriz de Referência do Enem. A roda do mouse aproxima e
   afasta o mapa; aproximado, é só arrastar para mover (teclas + e - também servem,
-  e 0 mostra o mapa inteiro).
+  e 0 mostra o mapa inteiro). As "Terras não mapeadas" sob a névoa guardam lugar
+  para os reinos que ainda vão chegar.
 - Reino do Sábio: todas as questões numa jornada sem fim, contra inimigos de todos
   os reinos. Cada acerto tira um ponto de vida do inimigo, a cada 5 ondas surge um
   chefe e a dificuldade sobe aos poucos. Dá para encerrar quando quiser.

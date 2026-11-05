@@ -17,7 +17,8 @@ com o gabarito conferido entre os PDFs e os microdados do INEP.
   segundo a Cartilha do Participante do INEP, mais temas e redações publicadas pelo INEP.
 - **Progressão:** XP, níveis, pontos, porcentagem de acerto por sessão e 54 conquistas em cinco
   graus (Bronze, Prata, Ouro, Platina e Lendária). Cada conquista libera um título para o herói.
-- **Mapa:** atlas com zoom pela roda do mouse e arraste para mover.
+- **Mapa:** atlas com zoom pela roda do mouse e arraste para mover. Duas "Terras não mapeadas",
+  sob névoa, guardam lugar para reinos futuros.
 
 Ficam fora do banco as questões anuladas pelo INEP, as que têm gabaritos oficiais divergentes e
 aquelas cujo recorte automático não ficou confiável. A lista, com o motivo de cada uma, aparece
@@ -49,6 +50,14 @@ Rode os scripts de `ferramentas/` na ordem dos números:
 
 Para testar a interface no navegador, sem empacotar: `node ferramentas/servidor_dev.js` e abra
 `http://localhost:4173`.
+
+## Novos reinos no mapa
+
+O mapa é montado a partir de listas no começo da seção "mapa" de `jogo/app.js`. Para acrescentar
+um reino, desenhe o lugar numa função como `castelo()` (em volta do ponto 0, 0, com a faixa do
+nome no fim) e acrescente-o em `LUGARES_MAPA` com o `x` e o `y` de uma das `VAGAS_MAPA` e o id
+dela em `vaga`: a névoa daquela vaga some sozinha. Território (`TERRITORIOS_MAPA`) e estrada até
+a Torre (`ESTRADAS_MAPA`) são opcionais. Cada vaga tem espaço para um lugar do tamanho do castelo.
 
 ## Pastas
 

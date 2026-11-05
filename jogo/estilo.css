@@ -102,11 +102,15 @@ code { font-family: Consolas, monospace; font-size: .92em; background: rgba(0,0,
 .fichas .contagem dd { color: var(--ouro-forte); }
 .mudar-data { grid-column: 1 / -1; justify-self: start; font-size: 12px; color: var(--texto-2); padding: 1px 0; border-bottom: 1px dashed var(--texto-3); }
 .mudar-data:hover { color: var(--ouro-forte); border-bottom-color: var(--ouro); }
-.mapa-area { flex: 1; min-width: 0; padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+.mapa-area { flex: 1; min-width: 0; padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 10px; }
 .faixa-continuar { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 9px 14px; border: 1px solid var(--linha); border-radius: var(--raio); background: var(--noite-2); font-size: 14px; }
-/* o palco mede o espaço livre; a moldura cabe nele mantendo a proporção do mapa (1000 x 660) */
-.mapa-palco { flex: 1; min-height: 0; container-type: size; display: grid; place-items: center; }
-.mapa-moldura { position: relative; width: min(100cqw, 100cqh * 1000 / 660); aspect-ratio: 1000 / 660; display: flex; border-radius: 14px; overflow: hidden; background: #0d1a2c; box-shadow: 0 8px 26px rgba(0,0,0,.45), inset 0 0 0 1px rgba(201,168,101,.25); }
+/* o mapa ocupa todo o espaço livre; a vista inteira mostra o mundo todo e completa o resto com mar */
+.mapa-palco { flex: 1; min-height: 0; display: flex; }
+.mapa-moldura { position: relative; flex: 1; min-width: 0; display: flex; border-radius: 14px; overflow: hidden; background: #0d1a2c; border: 3px solid #8c7346; box-shadow: 0 8px 26px rgba(0,0,0,.45); }
+.mapa-moldura::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse at center, transparent 62%, rgba(0,0,0,.42) 100%); }
+.mapa-moldura::after { content: ''; position: absolute; inset: 6px; z-index: 1; pointer-events: none; border: 1px solid rgba(201,168,101,.7); border-radius: 9px; }
+.canto { position: absolute; z-index: 2; width: 12px; height: 12px; background: #c9a865; border: 1px solid #8c7346; transform: rotate(45deg); pointer-events: none; }
+.canto.c1 { left: 0; top: 0; } .canto.c2 { right: 0; top: 0; } .canto.c3 { left: 0; bottom: 0; } .canto.c4 { right: 0; bottom: 0; }
 .mapa { flex: 1; min-height: 0; width: 100%; height: 100%; display: block; user-select: none; touch-action: none; }
 .mapa.ampliado { cursor: grab; }
 .mapa.arrastando, .mapa.arrastando .no { cursor: grabbing; }
@@ -115,18 +119,19 @@ code { font-family: Consolas, monospace; font-size: .92em; background: rgba(0,0,
 .faixa .f1 { font: 600 16px var(--titulo); fill: #fbf1d8; letter-spacing: .03em; }
 .faixa .f2 { font: 600 11.5px var(--corpo); fill: #5a4a32; }
 .faixa .etq { fill: #f7eed6; stroke: #b49a68; stroke-width: 1; }
-.rotulo-regiao { font: italic 400 15px var(--leitura); fill: #6b5638; letter-spacing: .16em; opacity: .78; }
-.rotulo-mar { font: italic 400 16px var(--leitura); fill: #a9c9e4; letter-spacing: .32em; opacity: .55; }
-.rotulo-lago { font: italic 600 12px var(--leitura); fill: #f2f8fb; letter-spacing: .06em; opacity: .9; }
+.rotulo-regiao { font: italic 400 18px var(--leitura); fill: #6b5638; letter-spacing: .16em; opacity: .78; }
+.rotulo-vaga { font: italic 600 19px var(--leitura); fill: #7d7466; letter-spacing: .14em; }
+.rotulo-mar { font: italic 400 19px var(--leitura); fill: #a9c9e4; letter-spacing: .34em; opacity: .55; }
+.rotulo-lago { font: italic 600 14px var(--leitura); fill: #f2f8fb; letter-spacing: .06em; opacity: .92; }
 .cartela-t { font: 700 20px var(--titulo); fill: #4a3820; letter-spacing: .06em; }
 .cartela-s { font: italic 400 12.5px var(--leitura); fill: #6b5638; letter-spacing: .08em; }
 .rosa-n { font: 700 13px var(--titulo); fill: #ecdcb2; }
-.zoom-controles { position: absolute; right: 14px; bottom: 14px; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px; border-radius: 12px; background: rgba(13, 20, 34, .84); border: 1px solid rgba(201,168,101,.45); }
+.zoom-controles { position: absolute; z-index: 3; right: 16px; bottom: 16px; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px; border-radius: 12px; background: rgba(13, 20, 34, .84); border: 1px solid rgba(201,168,101,.45); }
 .botao-zoom { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 8px; color: var(--ouro-forte); border: 1px solid transparent; }
 .botao-zoom:hover { border-color: var(--ouro); background: rgba(220,181,101,.12); }
 .botao-zoom .ico { width: 18px; height: 18px; }
 .zoom-nivel { font: 600 11px var(--corpo); color: var(--texto-2); padding: 1px 0; }
-.dica-mapa { position: absolute; left: 50%; transform: translateX(-50%); bottom: 10px; font-size: 12px; color: rgba(236,230,216,.78); background: rgba(13,20,34,.62); padding: 3px 11px; border-radius: 999px; pointer-events: none; white-space: nowrap; animation: some-dica 1s ease 7s forwards; }
+.dica-mapa { position: absolute; z-index: 3; left: 50%; transform: translateX(-50%); bottom: 10px; font-size: 12px; color: rgba(236,230,216,.78); background: rgba(13,20,34,.62); padding: 3px 11px; border-radius: 999px; pointer-events: none; white-space: nowrap; animation: some-dica 1s ease 7s forwards; }
 @keyframes some-dica { to { opacity: 0; visibility: hidden; } }
 .contador { font: 700 13px var(--corpo); fill: #fff; }
 

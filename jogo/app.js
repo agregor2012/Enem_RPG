@@ -16,7 +16,7 @@ const E = {
   selecao: null, riscadas: new Set(), resultado: null, respostaAtual: null,
   torreAba: 'estrutura', torreAno: null, leitor: null, modal: null, relogio: null,
   simFiltro: 'todos', criacao: { nome: '', classe: 'escriba' }, checklist: new Set(), relatorio: null,
-  vista: { x: 0, y: 0, w: 1000, h: 660 }, vistaAlvo: null, fimArrasto: 0,
+  camera: { z: 1, cx: 700, cy: 520 }, cameraAlvo: null, fimArrasto: 0,
 };
 
 /* ---- utilidades ------------------------------------------------------- */
@@ -1070,23 +1070,62 @@ function graficoSessoes(lista) {
 /* ---- mapa ------------------------------------------------------------- */
 /* Atlas dos reinos. Cada lugar é desenhado em volta do próprio ponto de base (0, 0) e posto no
    mapa com translate; a faixa com o nome fica logo abaixo e ajustarFaixas() a mede pelo texto.
-   A roda do mouse aproxima e afasta; com o mapa aproximado, arrastar move a vista. */
-const MAPA = { w: 1000, h: 660 };
+   A roda do mouse aproxima e afasta; com o mapa aproximado, arrastar move a vista.
+
+   O mundo é uma grade de três faixas com a Torre da Redação no meio, e cada casa da grade
+   comporta um lugar do tamanho do castelo (uns 300 de largura e 290 de altura com a faixa).
+   As duas casas de cima nas pontas são VAGAS_MAPA, guardadas para reinos futuros.
+
+   Para pôr um reino novo no mapa:
+   1. desenhe o lugar numa função como castelo() ou templo(), em volta de (0, 0), com a faixa
+      do nome no fim (faixa(titulo, sub, dy, cor) e a cor em COR_REINO);
+   2. acrescente-o em LUGARES_MAPA com o x e o y de uma das VAGAS_MAPA e o id dela em
+      "vaga": a névoa daquela vaga some sozinha;
+   3. se quiser, dê a ele um território em TERRITORIOS_MAPA e uma estrada até a Torre em
+      ESTRADAS_MAPA. */
+const MAPA = { w: 1400, h: 1040 };
 const ZOOM_MAX = 3;
-const LUGARES = {
-  sabio: [500, 202], letras: [236, 292], humanidades: [764, 292],
-  torre: [452, 470], masmorra: [214, 486], arena: [740, 494],
-};
-const ILHA = 'M112 330C96 262 120 192 170 150C220 110 300 95 360 92C402 86 430 44 474 38C524 32 562 52 592 84C642 100 722 92 782 120C852 150 906 212 900 282C896 332 870 352 880 392C895 452 860 522 800 556C740 590 650 598 590 586C550 576 520 600 480 600C420 600 340 592 280 576C190 556 110 510 104 446C100 404 120 366 112 330Z';
-const TERRITORIOS = {
-  sabio: ['M330 20H670L660 140C640 214 585 258 500 260C415 258 360 214 340 140Z', '#7a55c2', '#5b3a8c'],
-  letras: ['M20 60H336C352 140 392 196 400 256C406 312 396 352 372 390C346 422 296 434 246 432L20 444Z', '#3f63ad', '#2f4f8f'],
-  humanas: ['M980 60H664C648 140 608 196 600 256C594 312 604 352 628 390C654 422 704 434 754 432L980 444Z', '#b5553a', '#9c3f27'],
-};
+const ESCALA_LUGAR = 1.1;
+const ILHA = 'M118 620C108 520 118 420 150 330C180 240 230 170 300 132C380 96 500 84 590 66C640 54 670 44 700 44C730 44 760 54 810 66C900 84 1020 96 1100 132C1170 170 1220 240 1250 330C1282 420 1300 520 1298 620C1296 700 1300 780 1272 860C1244 940 1180 990 1090 1004C1000 1016 930 1012 860 1000C810 990 760 970 700 970C640 970 590 990 540 1000C470 1012 380 1006 310 990C240 975 170 930 140 850C126 780 120 700 118 620Z';
 const COR_REINO = {
   letras: ['#2f4f8f', '#1f3768'], humanas: ['#9c3f27', '#6c2918'], sabio: ['#5b3a8c', '#3d2664'],
   torre: ['#26375e', '#172443'], masmorra: ['#433d4c', '#29252f'], arena: ['#8d2f2f', '#5f1f1f'],
 };
+/* Lugares do mapa. "desenho" recebe o resumo de progresso e devolve o SVG do lugar;
+   "acao" e "dados" viram data-acao e data-* do botão, como no resto do jogo. */
+const LUGARES_MAPA = [
+  { id: 'sabio', x: 700, y: 282, nome: 'Reino do Sábio, todas as questões', acao: 'ir', dados: { tela: 'sabio' },
+    desenho: p => observatorio(p.sabio.melhorOnda ? `Jornada sem fim · melhor onda ${p.sabio.melhorOnda}` : 'Jornada sem fim · todas as questões') },
+  { id: 'letras', x: 275, y: 640, nome: 'Reino das Letras, Linguagens', acao: 'reino', dados: { area: 'LC' },
+    desenho: p => castelo(`Linguagens · ${pct(p.lc.dominadas, p.lc.total)}% dominado`) },
+  { id: 'humanidades', x: 1115, y: 640, nome: 'Reino das Humanidades, Ciências Humanas', acao: 'reino', dados: { area: 'CH' },
+    desenho: p => templo(`Ciências Humanas · ${pct(p.ch.dominadas, p.ch.total)}% dominado`) },
+  { id: 'torre', x: 700, y: 660, nome: 'Torre da Redação', acao: 'ir', dados: { tela: 'redacao' }, desenho: () => torreRedacao() },
+  { id: 'masmorra', x: 420, y: 895, nome: p => `Masmorra dos Erros, ${p.fila} para rever hoje`, acao: 'ir', dados: { tela: 'revisao' },
+    desenho: p => masmorra(p.fila) },
+  { id: 'arena', x: 1010, y: 885, nome: 'Arena do Simulado', acao: 'ir', dados: { tela: 'simulado' }, desenho: () => coliseu() },
+];
+/* Terras reservadas para reinos futuros: ficam sob névoa até um lugar ocupar a vaga. x e y são o
+   ponto de base do futuro lugar, como em LUGARES_MAPA. */
+const VAGAS_MAPA = [
+  { id: 'noroeste', x: 330, y: 320, montanhas: [[-40, -50, 1.2], [15, -75, 1], [60, -38, .8]] },
+  { id: 'nordeste', x: 1070, y: 320, montanhas: [[-60, -38, .8], [-15, -75, 1], [40, -50, 1.2]] },
+];
+const TERRITORIOS_MAPA = {
+  sabio: ['M540 30H860L850 250C830 330 776 372 700 374C624 372 570 330 550 250Z', '#7a55c2', '#5b3a8c'],
+  letras: ['M60 430H560C580 500 592 570 586 640C580 704 546 760 490 790L60 800Z', '#3f63ad', '#2f4f8f'],
+  humanidades: ['M1340 450H960C944 520 934 580 938 640C942 700 966 744 1010 770L1340 780Z', '#b5553a', '#9c3f27'],
+};
+/* O rio desce do lago, passa entre a Torre e as Humanidades e deságua na baía do sul. */
+const RIO = 'M925 490C945 570 940 660 920 730C900 790 800 880 740 972';
+/* Estradas até a Torre, no centro. "ponte" marca onde a estrada cruza o rio. */
+const ESTRADAS_MAPA = [
+  { de: 'letras', d: 'M405 630C480 640 570 652 642 654' },
+  { de: 'sabio', d: 'M640 372C612 440 604 540 624 610C630 632 636 646 642 654' },
+  { de: 'masmorra', d: 'M526 836C526 786 528 736 540 706C552 676 598 660 642 654' },
+  { de: 'humanidades', d: 'M1000 630C940 636 840 650 760 656', ponte: [937, 637, -5] },
+  { de: 'arena', d: 'M905 812C890 784 870 754 866 726C866 696 846 668 760 656', ponte: [889, 784, 60] },
+];
 const f1 = n => Number(n.toFixed(1));
 
 function arvore(x, y, e = 1, redonda = false) {
@@ -1179,7 +1218,7 @@ function castelo(sub) {
     <path d="M-8 -66c3-1 6-.5 8 1c2-1.5 5-2 8-1v9c-3-1-6-.5-8 1c-2-1.5-5-2-8-1Z" fill="#f6efd9"/><path d="M0 -65v9" stroke="#2f4f8f" stroke-width="1"/>
     <path d="M-14 2V-22a14 14 0 0 1 28 0V2Z" fill="#4a3524" stroke="#6b5a3f" stroke-width="1.8"/>
     <path d="M-7 2V-28M0 2V-31M7 2V-28" stroke="#2c1f14" stroke-width="1.4"/>
-    ${bandeira(0, -160, 26, '#2f4f8f', '#1f3768', '<path d="M7 -176c4-5 8-7 12-7c-3 5-7 8-12 9Z" fill="#e3c27a"/>')}
+    ${bandeira(0, -160, 26, '#2f4f8f', '#1f3768', '<path d="M7 -16c4-5 8-7 12-7c-3 5-7 8-12 9Z" fill="#e3c27a"/>')}
     ${bandeira(-81, -126, 18, '#2f4f8f', '#1f3768')}${bandeira(81, -126, 18, '#2f4f8f', '#1f3768')}
     ${faixa('Reino das Letras', sub, 38, 'letras')}`;
 }
@@ -1201,7 +1240,7 @@ function templo(sub) {
     <path d="M-5 -115h10l-10 13h10Z" fill="none" stroke="#9c3f27" stroke-width="1.6" stroke-linejoin="round"/>
     <path d="M-24 -98c4-7 10-10 16-10M24 -98c-4-7-10-10-16-10" fill="none" stroke="#7d8f4a" stroke-width="2.2" stroke-linecap="round"/>
     <circle cy="-131" r="3.2" fill="#b4532f"/><path d="M-90 -90l-6-6M90 -90l6-6" stroke="#b4532f" stroke-width="2.5" stroke-linecap="round"/>
-    <g transform="translate(134 2)"><path d="M-7 0L-5 -62H5L7 0Z" fill="#e3d6b6" stroke="#7a6748" stroke-width="1.3"/>
+    <g transform="translate(128 2)"><path d="M-7 0L-5 -62H5L7 0Z" fill="#e3d6b6" stroke="#7a6748" stroke-width="1.3"/>
       <path d="M-5 -62L0 -73L5 -62Z" fill="#d8b25a" stroke="#7a6748" stroke-width="1.2"/>
       <path d="M-1 -52v4M1 -42v5M-1 -31v4M1 -20v4" stroke="#9a8a6b" stroke-width="1.2"/></g>
     ${faixa('Reino das Humanidades', sub, 38, 'humanas')}`;
@@ -1334,39 +1373,52 @@ function serpente(x, y) {
     <path d="M-46 3q8 3 16 0t16 0t16 0t16 0t16 0" stroke="#7fa6c7" fill="none" opacity=".6"/></g>`;
 }
 function cartela() {
-  return `<g transform="translate(34 26)"><path d="M12 0H238C246 0 252 6 252 14V46C252 54 246 60 238 60H12C5 60 0 54 0 46V14C0 6 5 0 12 0Z" fill="#f3e7c8" stroke="#8c7346" stroke-width="1.6"/>
+  return `<g transform="translate(36 28)"><path d="M12 0H238C246 0 252 6 252 14V46C252 54 246 60 238 60H12C5 60 0 54 0 46V14C0 6 5 0 12 0Z" fill="#f3e7c8" stroke="#8c7346" stroke-width="1.6"/>
     <path d="M7 7H245V53H7Z" fill="none" stroke="#c9a865" stroke-width=".9"/>
     <path d="M14 30h22M216 30h22" stroke="#c9a865" stroke-width="1"/><circle cx="12" cy="30" r="2" fill="#c9a865"/><circle cx="240" cy="30" r="2" fill="#c9a865"/>
     <text x="126" y="31" text-anchor="middle" class="cartela-t">Reinos do Enem</text>
     <text x="126" y="48" text-anchor="middle" class="cartela-s">Linguagens · Humanas · Redação</text></g>`;
 }
-function moldura() {
-  const canto = (x, y) => `<path d="M${x} ${y - 7}L${x + 7} ${y}L${x} ${y + 7}L${x - 7} ${y}Z" fill="#c9a865" stroke="#8c7346" stroke-width="1"/>`;
-  return `<rect x="5" y="5" width="990" height="650" rx="12" fill="none" stroke="#8c7346" stroke-width="3"/>
-    <rect x="13" y="13" width="974" height="634" rx="8" fill="none" stroke="#c9a865" stroke-width="1" opacity=".75"/>
-    ${canto(13, 13)}${canto(987, 13)}${canto(13, 647)}${canto(987, 647)}`;
+/* Névoa sobre uma vaga ainda sem reino: montanhas apagadas sob um banco de nuvens, no espaço
+   que o futuro lugar vai ocupar; o rótulo fica onde estaria a faixa do nome. */
+function nevoaVaga(v) {
+  const bolhas = [[-104, -61, 38], [-62, -91, 50], [-8, -105, 56], [48, -93, 50], [96, -65, 42], [44, -49, 48], [-36, -45, 50], [-124, -35, 28], [124, -33, 28]];
+  return `<g class="vaga" transform="translate(${v.x} ${v.y})" aria-hidden="true">
+    ${v.montanhas.map(([x, y, e]) => montanha(x, y, e)).join('')}
+    <ellipse cy="-75" rx="165" ry="100" fill="url(#m-nevoa-vaga)"/>
+    ${bolhas.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#ece8df" opacity=".74"/>`).join('')}
+    ${bolhas.map(([x, y, r]) => `<circle cx="${x - 7}" cy="${y - 9}" r="${f1(r * 0.62)}" fill="#fbf9f4" opacity=".55"/>`).join('')}
+    <text y="34" text-anchor="middle" class="rotulo-vaga">Terras não mapeadas</text></g>`;
 }
 
 function mapaSVG(lc, ch, fila) {
-  const no = (acao, attrs, nome, lugar, corpo) => `<g transform="translate(${LUGARES[lugar][0]} ${LUGARES[lugar][1]})">
-    <g class="no" role="button" tabindex="0" aria-label="${nome}" data-acao="${acao}" ${attrs}>${corpo}</g></g>`;
-  const estrada = d => `<path d="${d}" fill="none" stroke="#efe1b9" stroke-width="6" stroke-linecap="round" opacity=".75"/>
-    <path d="${d}" fill="none" stroke="#8f7350" stroke-width="2.2" stroke-dasharray="5 7" stroke-linecap="round"/>`;
-  const ponte = (x, y, a) => `<g transform="translate(${x} ${y}) rotate(${a})"><rect x="-13" y="-7" width="26" height="14" rx="2" fill="#a07a4e" stroke="#5f4529" stroke-width="1.2"/>
-    <path d="M-8 -7v14M-3 -7v14M2 -7v14M7 -7v14" stroke="#7a5a37" stroke-width="1"/><path d="M-14 -8H14M-14 8H14" stroke="#5f4529" stroke-width="1.6"/></g>`;
-  const S = E.save.sabio;
-  const subSabio = S.melhorOnda ? `Jornada sem fim · melhor onda ${S.melhorOnda}` : 'Jornada sem fim · todas as questões';
-  const [tS, tL, tH] = [TERRITORIOS.sabio, TERRITORIOS.letras, TERRITORIOS.humanas];
-  const v = E.vista;
-  return `<svg class="mapa ${v.w < MAPA.w - 0.5 ? 'ampliado' : ''}" viewBox="${f1(v.x)} ${f1(v.y)} ${f1(v.w)} ${f1(v.h)}" role="group" aria-label="Mapa dos reinos">
+  const progresso = { lc, ch, fila, sabio: E.save.sabio };
+  const no = (l) => {
+    const nome = typeof l.nome === 'function' ? l.nome(progresso) : l.nome;
+    const dados = Object.entries(l.dados || {}).map(([k, v]) => `data-${k}="${esc(v)}"`).join(' ');
+    return `<g transform="translate(${l.x} ${l.y}) scale(${ESCALA_LUGAR})">
+      <g class="no" role="button" tabindex="0" aria-label="${esc(nome)}" data-acao="${l.acao}" ${dados}>${l.desenho(progresso)}</g></g>`;
+  };
+  const estrada = d => `<path d="${d}" fill="none" stroke="#efe1b9" stroke-width="6.5" stroke-linecap="round" opacity=".75"/>
+    <path d="${d}" fill="none" stroke="#8f7350" stroke-width="2.4" stroke-dasharray="6 8" stroke-linecap="round"/>`;
+  const ponte = ([x, y, a]) => `<g transform="translate(${x} ${y}) rotate(${a})"><rect x="-15" y="-8" width="30" height="16" rx="2" fill="#a07a4e" stroke="#5f4529" stroke-width="1.2"/>
+    <path d="M-9 -8v16M-3 -8v16M3 -8v16M9 -8v16" stroke="#7a5a37" stroke-width="1"/><path d="M-16 -9H16M-16 9H16" stroke="#5f4529" stroke-width="1.8"/></g>`;
+  const ocupadas = new Set(LUGARES_MAPA.map(l => l.vaga).filter(Boolean));
+  const territorios = LUGARES_MAPA.map(l => TERRITORIOS_MAPA[l.id]).filter(Boolean);
+  const arvores = [
+    [430, 470], [466, 454, .95, 1], [505, 478], [446, 512, .9], [488, 526, .9, 1], [530, 506, .85], [560, 546, .85, 1],
+    [180, 790], [214, 806, .9, 1], [240, 776, .85], [168, 836, .85],
+    [510, 330, .9], [535, 352, .85, 1], [893, 352, .85, 1], [812, 548, .85, 1], [826, 590, .8],
+    [1232, 456, .85], [1254, 482, .8, 1], [1196, 820], [1222, 846, .9, 1], [1250, 812, .85], [1238, 876, .8],
+    [800, 950, .75], [835, 968, .7, 1]];
+  return `<svg class="mapa" viewBox="0 0 ${MAPA.w} ${MAPA.h}" role="group" aria-label="Mapa dos reinos">
     <defs>
-      <radialGradient id="m-mar" cx="50%" cy="48%" r="72%"><stop offset="0" stop-color="#23425f"/><stop offset=".62" stop-color="#19304a"/><stop offset="1" stop-color="#0d1a2c"/></radialGradient>
+      <radialGradient id="m-mar" gradientUnits="userSpaceOnUse" cx="${MAPA.w / 2}" cy="${MAPA.h * 0.46}" r="${MAPA.w * 0.82}"><stop offset="0" stop-color="#23425f"/><stop offset=".55" stop-color="#19304a"/><stop offset="1" stop-color="#0c1829"/></radialGradient>
       <pattern id="m-ondas" width="64" height="36" patternUnits="userSpaceOnUse">
         <path d="M4 12q6-6 12 0t12 0" fill="none" stroke="#5a86ab" stroke-width="1.1" stroke-linecap="round" opacity=".32"/>
         <path d="M36 30q6-6 12 0t12 0" fill="none" stroke="#5a86ab" stroke-width="1.1" stroke-linecap="round" opacity=".26"/></pattern>
       <linearGradient id="m-terra" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0e3bf"/><stop offset="1" stop-color="#dbc590"/></linearGradient>
       <radialGradient id="m-luz" cx="50%" cy="42%" r="60%"><stop offset="0" stop-color="#fff8e4" stop-opacity=".45"/><stop offset="1" stop-color="#fff8e4" stop-opacity="0"/></radialGradient>
-      <radialGradient id="m-vinheta" cx="50%" cy="50%" r="72%"><stop offset=".62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></radialGradient>
       <linearGradient id="m-cupula" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a3f99"/><stop offset="1" stop-color="#2b1b52"/></linearGradient>
       <radialGradient id="m-orbe" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#a8ecff"/><stop offset="1" stop-color="#3a9ccc"/></radialGradient>
       <radialGradient id="m-halo"><stop offset="0" stop-color="#a8ecff" stop-opacity=".6"/><stop offset="1" stop-color="#a8ecff" stop-opacity="0"/></radialGradient>
@@ -1374,117 +1426,131 @@ function mapaSVG(lc, ch, fila) {
       <radialGradient id="m-caverna" cx="50%" cy="95%" r="80%"><stop offset="0" stop-color="#7fe0a0" stop-opacity=".55"/><stop offset="1" stop-color="#7fe0a0" stop-opacity="0"/></radialGradient>
       <radialGradient id="m-fogo"><stop offset="0" stop-color="#ffbe5c" stop-opacity=".6"/><stop offset="1" stop-color="#ffbe5c" stop-opacity="0"/></radialGradient>
       <radialGradient id="m-nevoa"><stop offset="0" stop-color="#f4f1ea" stop-opacity=".22"/><stop offset="1" stop-color="#f4f1ea" stop-opacity="0"/></radialGradient>
+      <radialGradient id="m-nevoa-vaga"><stop offset="0" stop-color="#f3f0e8" stop-opacity=".9"/><stop offset=".7" stop-color="#f3f0e8" stop-opacity=".55"/><stop offset="1" stop-color="#f3f0e8" stop-opacity="0"/></radialGradient>
       <clipPath id="m-ilha"><path d="${ILHA}"/></clipPath>
     </defs>
-    <rect width="${MAPA.w}" height="${MAPA.h}" fill="url(#m-mar)"/>
-    <rect width="${MAPA.w}" height="${MAPA.h}" fill="url(#m-ondas)"/>
-    ${navio(908, 74)}${serpente(912, 612)}
-    <path d="M44 470c8-12 26-14 34-4c6 9-2 20-16 20c-12 0-22-6-18-16Z" fill="#dcc690" stroke="#8b7048" stroke-width="1.4"/>
-    ${arvore(58, 474, .7)}
-    <text x="950" y="420" text-anchor="middle" class="rotulo-mar" transform="rotate(90 950 420)">Mar das Questões</text>
-    <path d="${ILHA}" fill="none" stroke="#7fb4d6" stroke-width="18" opacity=".18"/>
-    <path d="${ILHA}" fill="none" stroke="#9cc7e2" stroke-width="7" opacity=".25"/>
-    <path d="${ILHA}" fill="#bfa877" transform="translate(4 6)" opacity=".5"/>
-    <path d="${ILHA}" fill="url(#m-terra)" stroke="#8b7048" stroke-width="2"/>
+    <rect x="-3000" y="-3000" width="${MAPA.w + 6000}" height="${MAPA.h + 6000}" fill="url(#m-mar)"/>
+    <rect x="-3000" y="-3000" width="${MAPA.w + 6000}" height="${MAPA.h + 6000}" fill="url(#m-ondas)"/>
+    ${navio(1320, 110)}${serpente(60, 470)}
+    <g transform="translate(1290 116)"><path d="M46 584c8-12 26-14 34-4c6 9-2 20-16 20c-12 0-22-6-18-16Z" fill="#dcc690" stroke="#8b7048" stroke-width="1.4"/>${arvore(60, 588, .7)}</g>
+    <text x="${MAPA.w / 2}" y="1024" text-anchor="middle" class="rotulo-mar">Mar das Questões</text>
+    <path d="${ILHA}" fill="none" stroke="#7fb4d6" stroke-width="22" opacity=".17"/>
+    <path d="${ILHA}" fill="none" stroke="#9cc7e2" stroke-width="8" opacity=".25"/>
+    <path d="${ILHA}" fill="#bfa877" transform="translate(5 7)" opacity=".5"/>
+    <path d="${ILHA}" fill="url(#m-terra)" stroke="#8b7048" stroke-width="2.2"/>
     <g clip-path="url(#m-ilha)">
-      <path d="${tS[0]}" fill="${tS[1]}" opacity=".13"/><path d="${tL[0]}" fill="${tL[1]}" opacity=".12"/><path d="${tH[0]}" fill="${tH[1]}" opacity=".12"/>
-      <g fill="none" stroke-width="1.6" stroke-dasharray="7 5" opacity=".55"><path d="${tS[0]}" stroke="${tS[2]}"/><path d="${tL[0]}" stroke="${tL[2]}"/><path d="${tH[0]}" stroke="${tH[2]}"/></g>
-      <ellipse cx="744" cy="502" rx="122" ry="48" fill="#e9d6a3" opacity=".55"/>
+      ${territorios.map(([d, cor]) => `<path d="${d}" fill="${cor}" opacity=".12"/>`).join('')}
+      <g fill="none" stroke-width="1.7" stroke-dasharray="8 6" opacity=".55">${territorios.map(([d, , borda]) => `<path d="${d}" stroke="${borda}"/>`).join('')}</g>
+      <ellipse cx="1010" cy="902" rx="168" ry="64" fill="#e9d6a3" opacity=".55"/>
       <rect width="${MAPA.w}" height="${MAPA.h}" fill="url(#m-luz)"/>
     </g>
-    ${colina(372, 420, 14)}${colina(660, 432, 13)}
-    ${montanha(356, 172, .78)}${montanha(392, 152, 1.05)}${montanha(432, 130, 1.3)}${montanha(572, 130, 1.28)}${montanha(610, 154, 1.05)}${montanha(646, 174, .78)}
-    ${montanha(706, 172, .95, false)}${montanha(752, 152, 1.15)}${montanha(800, 174, 1, false)}${montanha(842, 206, .82, false)}
-    <path d="M512 238C512 262 520 290 530 314" stroke="#7fb0cf" stroke-width="6" fill="none" stroke-linecap="round"/>
-    <path d="M578 344C592 370 600 400 600 432C602 470 586 510 576 540C568 560 560 572 556 582" stroke="#7fb0cf" stroke-width="7" fill="none" stroke-linecap="round"/>
-    <path d="M578 344C592 370 600 400 600 432C602 470 586 510 576 540C568 560 560 572 556 582" stroke="#c4e0f0" stroke-width="2" fill="none" stroke-linecap="round" opacity=".7"/>
-    <ellipse cx="542" cy="332" rx="62" ry="22" fill="#8cbbd8" stroke="#5f8eaf" stroke-width="1.5"/>
-    <ellipse cx="528" cy="324" rx="32" ry="6" fill="#c4e0f0" opacity=".5"/>
-    <text x="542" y="340" text-anchor="middle" class="rotulo-lago">Lago da Inspiração</text>
-    ${estrada('M286 334C320 356 360 378 400 398')}
-    ${estrada('M414 258C392 284 372 316 356 364')}
-    ${estrada('M400 400C414 422 428 444 444 464')}
-    ${estrada('M298 484C340 482 382 478 420 472')}
-    ${estrada('M714 334C690 356 652 380 600 405C576 420 556 448 536 472')}
-    ${estrada('M692 492C656 486 626 478 601 472C580 470 556 472 536 472')}
-    ${estrada('M536 472C524 472 512 472 500 472')}
-    ${ponte(599, 405, -18)}${ponte(601, 472, 4)}
-    <g transform="translate(398 398)"><path d="M0 0V-18" stroke="#5f4529" stroke-width="2"/><path d="M0 -17h12l3 3-3 3H0Z" fill="#c9a97a" stroke="#5f4529" stroke-width="1"/><path d="M0 -10h-11l-3 3 3 3H0Z" fill="#c9a97a" stroke="#5f4529" stroke-width="1"/></g>
-    ${[[118, 248], [138, 232, 1.1], [128, 270, .95, 1], [150, 298], [124, 322, 1.05], [152, 348, .9, 1], [178, 372], [316, 206, 1, 1], [338, 224], [326, 250, .9], [352, 264, .85, 1],
-      [210, 136, .9], [236, 126], [262, 138, .85, 1], [416, 300, .8, 1], [572, 298, .9, 1], [614, 292, .85],
-      [856, 250, .9], [872, 280, .85, 1], [850, 330], [828, 430, .9, 1], [852, 452], [874, 424, .85], [812, 548, .8, 1], [652, 590, .7],
-      [372, 540, .75, 1], [470, 556, .7], [612, 534, .75, 1]].map(([x, y, e = 1, r = 0]) => arvore(x, y, e, !!r)).join('')}
-    ${[[332, 452], [344, 478, .85], [128, 414, .8], [306, 540, .75], [150, 548, .7]].map(([x, y, e = 1]) => pedra(x, y, e)).join('')}
-    ${[[330, 590], [420, 584], [520, 520], [626, 562], [690, 556], [800, 520], [880, 470], [160, 430], [410, 410], [600, 380], [690, 400], [300, 420]].map(([x, y]) => tufo(x, y)).join('')}
-    ${no('ir', 'data-tela="sabio"', 'Reino do Sábio, todas as questões', 'sabio', observatorio(subSabio))}
-    ${no('reino', 'data-area="LC"', 'Reino das Letras, Linguagens', 'letras', castelo(`Linguagens · ${pct(lc.dominadas, lc.total)}% dominado`))}
-    ${no('reino', 'data-area="CH"', 'Reino das Humanidades, Ciências Humanas', 'humanidades', templo(`Ciências Humanas · ${pct(ch.dominadas, ch.total)}% dominado`))}
-    ${no('ir', 'data-tela="revisao"', `Masmorra dos Erros, ${fila} para rever hoje`, 'masmorra', masmorra(fila))}
-    ${no('ir', 'data-tela="redacao"', 'Torre da Redação', 'torre', torreRedacao())}
-    ${no('ir', 'data-tela="simulado"', 'Arena do Simulado', 'arena', coliseu())}
-    <ellipse cx="88" cy="118" rx="90" ry="20" fill="url(#m-nevoa)"/><ellipse cx="930" cy="300" rx="70" ry="22" fill="url(#m-nevoa)"/><ellipse cx="260" cy="640" rx="110" ry="18" fill="url(#m-nevoa)"/>
-    ${rosaDosVentos(78, 584, 38)}${cartela()}
-    <rect width="${MAPA.w}" height="${MAPA.h}" fill="url(#m-vinheta)" pointer-events="none"/>
-    ${moldura()}
+    ${montanha(550, 260, .85)}${montanha(585, 225, 1.15)}${montanha(625, 195, 1.35)}${montanha(775, 195, 1.33)}${montanha(815, 225, 1.15)}${montanha(850, 260, .85)}
+    <path d="M852 300C860 350 866 400 884 450" stroke="#7fb0cf" stroke-width="6.5" fill="none" stroke-linecap="round"/>
+    <path d="${RIO}" stroke="#7fb0cf" stroke-width="7.5" fill="none" stroke-linecap="round"/>
+    <path d="${RIO}" stroke="#c4e0f0" stroke-width="2" fill="none" stroke-linecap="round" opacity=".7"/>
+    <ellipse cx="905" cy="470" rx="66" ry="22" fill="#8cbbd8" stroke="#5f8eaf" stroke-width="1.5"/>
+    <ellipse cx="891" cy="462" rx="34" ry="6" fill="#c4e0f0" opacity=".5"/>
+    <text x="905" y="478" text-anchor="middle" class="rotulo-lago">Lago da Inspiração</text>
+    ${ESTRADAS_MAPA.map(e => estrada(e.d)).join('')}${ESTRADAS_MAPA.filter(e => e.ponte).map(e => ponte(e.ponte)).join('')}
+    <g transform="translate(500 684)"><path d="M0 0V-20" stroke="#5f4529" stroke-width="2"/><path d="M0 -19h13l3 3-3 3H0Z" fill="#c9a97a" stroke="#5f4529" stroke-width="1"/><path d="M0 -11h-12l-3 3 3 3H0Z" fill="#c9a97a" stroke="#5f4529" stroke-width="1"/></g>
+    ${arvores.map(([x, y, e = 1, r = 0]) => arvore(x, y, e, !!r)).join('')}
+    ${[[292, 878], [304, 912, .85], [552, 878, .9], [566, 904, .8], [604, 848, .9], [748, 842, .8], [618, 940, .75], [700, 830, .7]].map(([x, y, e = 1]) => pedra(x, y, e)).join('')}
+    ${[[470, 700], [380, 780], [610, 790], [760, 790], [990, 590], [1220, 760], [560, 420], [1180, 450], [700, 420], [850, 610], [175, 740]].map(([x, y]) => tufo(x, y)).join('')}
+    <text x="482" y="604" text-anchor="middle" class="rotulo-regiao">Bosque dos Poetas</text>
+    <text x="680" y="905" text-anchor="middle" class="rotulo-regiao">Ermos Sombrios</text>
+    ${VAGAS_MAPA.filter(v => !ocupadas.has(v.id)).map(nevoaVaga).join('')}
+    ${LUGARES_MAPA.map(no).join('')}
+    <ellipse cx="1370" cy="460" rx="90" ry="24" fill="url(#m-nevoa)"/><ellipse cx="330" cy="1020" rx="140" ry="20" fill="url(#m-nevoa)"/>
+    ${rosaDosVentos(88, 950, 40)}${cartela()}
   </svg>`;
 }
 function controlesMapa() {
   const dica = !E.dicaMapa; // a dica aparece na primeira vez que o mapa abre e some sozinha
   E.dicaMapa = true;
-  return `<div class="zoom-controles" role="group" aria-label="Zoom do mapa">
+  return `<span class="canto c1"></span><span class="canto c2"></span><span class="canto c3"></span><span class="canto c4"></span>
+    <div class="zoom-controles" role="group" aria-label="Zoom do mapa">
       <button class="botao-zoom" data-acao="zoom" data-v="mais" title="Aproximar (roda do mouse ou +)" aria-label="Aproximar">${ico('mais')}</button>
-      <span class="zoom-nivel" aria-live="polite">${Math.round((MAPA.w / E.vista.w) * 100)}%</span>
+      <span class="zoom-nivel" aria-live="polite">${Math.round(E.camera.z * 100)}%</span>
       <button class="botao-zoom" data-acao="zoom" data-v="menos" title="Afastar (roda do mouse ou −)" aria-label="Afastar">${ico('menos')}</button>
       <button class="botao-zoom" data-acao="zoom" data-v="inteiro" title="Ver o mapa inteiro (0)" aria-label="Ver o mapa inteiro">${ico('enquadrar')}</button>
     </div>
     ${dica ? '<p class="dica-mapa">Roda do mouse aproxima e afasta · arraste para mover</p>' : ''}`;
 }
 
-/* ---- zoom e arraste ---- */
-let animacaoVista = null;
-function limitarVista(v) {
-  const w = Math.min(MAPA.w, Math.max(MAPA.w / ZOOM_MAX, v.w));
-  const h = (w * MAPA.h) / MAPA.w;
-  return { w, h, x: Math.min(MAPA.w - w, Math.max(0, v.x)), y: Math.min(MAPA.h - h, Math.max(0, v.y)) };
+/* ---- câmera do mapa: zoom e arraste ---- */
+/* A câmera guarda o zoom (1 a ZOOM_MAX) e o ponto central do mundo. A vista inteira (zoom 1)
+   acompanha a proporção da janela: mostra o mundo todo e completa o resto com mar. */
+let animacaoCamera = null;
+function vistaBase() {
+  const r = document.querySelector('svg.mapa')?.getBoundingClientRect();
+  const a = r && r.width > 1 && r.height > 1 ? r.width / r.height : MAPA.w / MAPA.h;
+  if (a >= MAPA.w / MAPA.h) {
+    const w = MAPA.h * a;
+    return { x: (MAPA.w - w) / 2, y: 0, w, h: MAPA.h };
+  }
+  const h = MAPA.w / a;
+  return { x: 0, y: (MAPA.h - h) / 2, w: MAPA.w, h };
+}
+function limitarCamera(c, base = vistaBase()) {
+  const z = Math.min(ZOOM_MAX, Math.max(1, c.z));
+  const w = base.w / z; const h = base.h / z;
+  return {
+    z,
+    cx: Math.min(base.x + base.w - w / 2, Math.max(base.x + w / 2, c.cx)),
+    cy: Math.min(base.y + base.h - h / 2, Math.max(base.y + h / 2, c.cy)),
+  };
+}
+function vistaDaCamera(c, base) {
+  const w = base.w / c.z; const h = base.h / c.z;
+  return { x: c.cx - w / 2, y: c.cy - h / 2, w, h };
 }
 function aplicarVista() {
   const svg = document.querySelector('svg.mapa');
   if (!svg) return;
-  const v = E.vista;
+  const base = vistaBase();
+  E.camera = limitarCamera(E.camera, base);
+  const v = vistaDaCamera(E.camera, base);
   svg.setAttribute('viewBox', `${f1(v.x)} ${f1(v.y)} ${f1(v.w)} ${f1(v.h)}`);
-  svg.classList.toggle('ampliado', v.w < MAPA.w - 0.5);
+  svg.classList.toggle('ampliado', E.camera.z > 1.001);
   const rotulo = document.querySelector('.zoom-nivel');
-  if (rotulo) rotulo.textContent = `${Math.round((MAPA.w / v.w) * 100)}%`;
+  if (rotulo) rotulo.textContent = `${Math.round(E.camera.z * 100)}%`;
 }
-function animarVista(alvo) {
-  cancelAnimationFrame(animacaoVista);
-  E.vistaAlvo = alvo;
-  const ini = { ...E.vista };
+function animarCamera(alvo) {
+  cancelAnimationFrame(animacaoCamera);
+  E.cameraAlvo = alvo;
+  const ini = { ...E.camera };
   const t0 = performance.now();
   const passo = (t) => {
     const k = Math.min(1, (t - t0) / 170);
     const e = 1 - (1 - k) ** 3;
-    E.vista = { x: ini.x + (alvo.x - ini.x) * e, y: ini.y + (alvo.y - ini.y) * e, w: ini.w + (alvo.w - ini.w) * e, h: ini.h + (alvo.h - ini.h) * e };
+    E.camera = { z: ini.z + (alvo.z - ini.z) * e, cx: ini.cx + (alvo.cx - ini.cx) * e, cy: ini.cy + (alvo.cy - ini.cy) * e };
     aplicarVista();
-    if (k < 1) animacaoVista = requestAnimationFrame(passo);
-    else E.vistaAlvo = null;
+    if (k < 1) animacaoCamera = requestAnimationFrame(passo);
+    else E.cameraAlvo = null;
   };
-  animacaoVista = requestAnimationFrame(passo);
+  animacaoCamera = requestAnimationFrame(passo);
   // com a janela encoberta o navegador para os quadros de animação: a vista final vale mesmo assim
   setTimeout(() => {
-    if (E.vistaAlvo !== alvo) return;
-    cancelAnimationFrame(animacaoVista);
-    E.vista = alvo; E.vistaAlvo = null;
+    if (E.cameraAlvo !== alvo) return;
+    cancelAnimationFrame(animacaoCamera);
+    E.camera = alvo; E.cameraAlvo = null;
     aplicarVista();
   }, 260);
 }
-/* fator > 1 aproxima; (cx, cy) é o ponto do mapa que fica parado sob o cursor */
-function zoomMapa(fator, cx, cy) {
-  const base = E.vistaAlvo || E.vista;
-  const w = base.w / fator;
-  const px = cx ?? base.x + base.w / 2; const py = cy ?? base.y + base.h / 2;
-  animarVista(limitarVista({ w, x: px - ((px - base.x) * w) / base.w, y: py - ((py - base.y) * w) / base.w }));
+/* fator > 1 aproxima; (px, py) é o ponto do mundo que fica parado sob o cursor. No limite do
+   zoom nada se mexe: antes, o deslocamento era calculado para um zoom que não acontecia. */
+function zoomMapa(fator, px, py) {
+  const atual = E.cameraAlvo || E.camera;
+  const z = Math.min(ZOOM_MAX, Math.max(1, atual.z * fator));
+  if (Math.abs(z - atual.z) < 1e-4) return;
+  const base = vistaBase();
+  const v = vistaDaCamera(atual, base);
+  const qx = px ?? atual.cx; const qy = py ?? atual.cy;
+  const k = atual.z / z;
+  const x = qx - (qx - v.x) * k; const y = qy - (qy - v.y) * k;
+  animarCamera(limitarCamera({ z, cx: x + base.w / z / 2, cy: y + base.h / z / 2 }, base));
 }
+function mapaInteiro() { animarCamera({ z: 1, cx: MAPA.w / 2, cy: MAPA.h / 2 }); }
 function pontoDoMapa(svg, clientX, clientY) {
   const p = svg.createSVGPoint();
   p.x = clientX; p.y = clientY;
@@ -1501,24 +1567,24 @@ document.addEventListener('wheel', (ev) => {
 document.addEventListener('pointerdown', (ev) => {
   const svg = ev.target.closest?.('svg.mapa');
   if (!svg || ev.button !== 0) return;
-  arrasto = { svg, x: ev.clientX, y: ev.clientY, vista: { ...E.vista }, moveu: false, id: ev.pointerId };
+  arrasto = { svg, x: ev.clientX, y: ev.clientY, camera: { ...E.camera }, moveu: false, id: ev.pointerId };
 });
 document.addEventListener('pointermove', (ev) => {
-  if (!arrasto || E.vista.w >= MAPA.w - 0.5) return;
+  if (!arrasto || E.camera.z <= 1.001) return;
   const dx = ev.clientX - arrasto.x; const dy = ev.clientY - arrasto.y;
   if (!arrasto.moveu && Math.hypot(dx, dy) < 5) return;
   if (!arrasto.moveu) {
     arrasto.moveu = true;
-    arrasto.svg.setPointerCapture?.(arrasto.id);
+    try { arrasto.svg.setPointerCapture(arrasto.id); } catch { /* ponteiro já solto: segue sem captura */ }
     arrasto.svg.classList.add('arrastando');
-    cancelAnimationFrame(animacaoVista);
-    E.vistaAlvo = null;
-    arrasto.vista = { ...E.vista };
+    cancelAnimationFrame(animacaoCamera);
+    E.cameraAlvo = null;
+    arrasto.camera = { ...E.camera };
     arrasto.x = ev.clientX; arrasto.y = ev.clientY;
     return;
   }
-  const k = 1 / arrasto.svg.getScreenCTM().a; // unidades do mapa por pixel
-  E.vista = limitarVista({ ...arrasto.vista, x: arrasto.vista.x - dx * k, y: arrasto.vista.y - dy * k });
+  const k = 1 / arrasto.svg.getScreenCTM().a; // unidades do mundo por pixel
+  E.camera = limitarCamera({ ...arrasto.camera, cx: arrasto.camera.cx - dx * k, cy: arrasto.camera.cy - dy * k });
   aplicarVista();
 });
 function soltarArrasto() {
@@ -1530,6 +1596,11 @@ function soltarArrasto() {
 }
 document.addEventListener('pointerup', soltarArrasto);
 document.addEventListener('pointercancel', soltarArrasto);
+/* A vista acompanha o tamanho do mapa: janela redimensionada, maximizada ou qualquer outra
+   mudança de layout. */
+const observadorMapa = typeof ResizeObserver === 'function'
+  ? new ResizeObserver(() => { if (E.tela === 'mapa') aplicarVista(); }) : null;
+if (!observadorMapa) window.addEventListener('resize', () => { if (E.tela === 'mapa') aplicarVista(); });
 
 /* ---- render ----------------------------------------------------------- */
 function render() {
@@ -1539,7 +1610,10 @@ function render() {
   if (c && E.manterRolagem) c.scrollTop = rolagem;
   E.manterRolagem = false;
   clearInterval(E.relogio);
+  observadorMapa?.disconnect();
   if (E.tela === 'mapa') {
+    aplicarVista();
+    observadorMapa?.observe(document.querySelector('svg.mapa'));
     ajustarFaixas();
     document.fonts?.ready.then(() => { if (E.tela === 'mapa') ajustarFaixas(); });
   }
@@ -1677,7 +1751,7 @@ const ACOES = {
   zoom: (d) => {
     if (d.v === 'mais') zoomMapa(1.25);
     else if (d.v === 'menos') zoomMapa(1 / 1.25);
-    else animarVista({ x: 0, y: 0, w: MAPA.w, h: MAPA.h });
+    else mapaInteiro();
   },
   'rever-erradas': () => { E.conferir = 0; ir('conferencia'); },
   'conferir-prox': () => { E.conferir += 1; ir('conferencia'); },
@@ -1806,7 +1880,7 @@ document.addEventListener('keydown', (ev) => {
   if (E.tela === 'mapa' && !campo && !E.modal && !ev.ctrlKey && !ev.altKey) {
     if (ev.key === '+' || ev.key === '=') { zoomMapa(1.25); return; }
     if (ev.key === '-' || ev.key === '_') { zoomMapa(1 / 1.25); return; }
-    if (ev.key === '0') { animarVista({ x: 0, y: 0, w: MAPA.w, h: MAPA.h }); return; }
+    if (ev.key === '0') { mapaInteiro(); return; }
   }
   if (campo || E.modal || E.tela !== 'questao' || !E.save?.atual) return;
   const s = E.save.atual;
