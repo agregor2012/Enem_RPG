@@ -9,10 +9,11 @@ import pymupdf
 
 RAIZ = Path(__file__).resolve().parent.parent
 RE_ANULADA = re.compile(r"^(ANULAD[AO]S?|ANULA|X|\*+)$", re.I)
+AREAS = ("LC", "CH", "CN", "MT")
 
 
 def ler_itens(ano):
-    """Linhas do ITENS_PROVA do ano (Linguagens e Humanas), com tipos já convertidos."""
+    """Linhas do ITENS_PROVA do ano (as quatro áreas), com tipos já convertidos."""
     arquivos = [f for f in glob.glob(str(RAIZ / "dados" / "microdados" / str(ano) / "*"))
                 if f.lower().endswith(".csv")]
     bruto = Path(arquivos[0]).read_bytes()
@@ -22,7 +23,7 @@ def ler_itens(ano):
         texto = bruto.decode("latin-1")
     linhas = []
     for r in csv.DictReader(texto.splitlines(), delimiter=";"):
-        if r["SG_AREA"] not in ("LC", "CH"):
+        if r["SG_AREA"] not in AREAS:
             continue
         linhas.append({
             "area": r["SG_AREA"],
@@ -164,11 +165,12 @@ def gabarito_antigo_pdf(ano):
     return {}
 
 
-def concordancia(gabarito, prova, deslocamentos=(0, 45, -45, 90, -90), lingua_fixa=None):
+def concordancia(gabarito, prova, deslocamentos=(0, 45, -45, 90, -90, 135), lingua_fixa=None):
     """Compara um gabarito em PDF com uma prova dos microdados.
 
     Os números impressos e o CO_POSICAO nem sempre coincidem (ex.: Humanas de 2017
-    aparece como 1-45 no CSV e 46-90 na prova), por isso testa deslocamentos.
+    aparece como 1-45 no CSV e 46-90 na prova, e Matemática de 2017 como 1-45 no CSV
+    e 136-180 na prova), por isso testa deslocamentos.
     Devolve (fração de acertos, comparados, deslocamento).
     """
     melhor = (0.0, 0, 0)

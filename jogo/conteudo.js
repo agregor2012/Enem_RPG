@@ -19,9 +19,11 @@ const TITULOS = [
   [11, 'Estrategista'], [15, 'Erudito(a)'], [20, 'Mestre(a)'], [26, 'Lenda do Enem'],
 ];
 
+/* Um reino por área do Enem; as regiões são as competências da Matriz de Referência do INEP.
+   Linguagens e Humanas caem no 1º dia de prova, Natureza e Matemática no 2º. */
 const REINOS = {
   LC: {
-    nome: 'Reino das Letras', area: 'Linguagens, Códigos e suas Tecnologias',
+    nome: 'Reino das Letras', area: 'Linguagens, Códigos e suas Tecnologias', curto: 'Linguagens', dia: 1,
     texto: 'Português, literatura, língua estrangeira, artes e comunicação.',
     regioes: {
       1: ['Torre dos Mensageiros', 'Tecnologias da comunicação'],
@@ -36,7 +38,7 @@ const REINOS = {
     },
   },
   CH: {
-    nome: 'Reino das Humanidades', area: 'Ciências Humanas e suas Tecnologias',
+    nome: 'Reino das Humanidades', area: 'Ciências Humanas e suas Tecnologias', curto: 'Humanas', dia: 1,
     texto: 'História, geografia, filosofia e sociologia.',
     regioes: {
       1: ['Aldeia das Identidades', 'Cultura e identidade'],
@@ -45,6 +47,33 @@ const REINOS = {
       4: ['Oficina do Progresso', 'Técnica, trabalho e produção'],
       5: ['Fórum da Cidadania', 'Cidadania e democracia'],
       6: ['Margens do Grande Rio', 'Sociedade e natureza'],
+    },
+  },
+  CN: {
+    nome: 'Reino da Natureza', area: 'Ciências da Natureza e suas Tecnologias', curto: 'Natureza', dia: 2,
+    texto: 'Física, química e biologia.',
+    regioes: {
+      1: ['Galeria dos Inventores', 'Ciência como construção humana'],
+      2: ['Oficina das Engenhocas', 'Tecnologia no cotidiano'],
+      3: ['Vale dos Ciclos', 'Ambiente, recursos e poluição'],
+      4: ['Jardim da Vida', 'Seres vivos, ambiente e saúde'],
+      5: ['Laboratório do Método', 'Métodos das ciências'],
+      6: ['Torre dos Raios', 'Física'],
+      7: ['Caldeirão dos Elementos', 'Química'],
+      8: ['Floresta das Espécies', 'Biologia'],
+    },
+  },
+  MT: {
+    nome: 'Reino dos Números', area: 'Matemática e suas Tecnologias', curto: 'Matemática', dia: 2,
+    texto: 'Números, geometria, medidas, álgebra, gráficos e probabilidade.',
+    regioes: {
+      1: ['Mercado dos Números', 'Números e operações'],
+      2: ['Planície das Formas', 'Geometria'],
+      3: ['Balança das Medidas', 'Grandezas e medidas'],
+      4: ['Ponte das Proporções', 'Variação de grandezas'],
+      5: ['Forja da Álgebra', 'Álgebra e modelagem'],
+      6: ['Mirante dos Gráficos', 'Gráficos e tabelas'],
+      7: ['Templo do Acaso', 'Estatística e probabilidade'],
     },
   },
 };
@@ -59,7 +88,15 @@ const GUARDIOES = {
        ['Minotauro do Labirinto', 'Vigia os corredores de séculos entrelaçados.'],
        ['Titã da Geopolítica', 'Move fronteiras com a ponta dos dedos.'],
        ['Quimera das Ideologias', 'Três cabeças, três visões do mesmo fato.']],
-  misto: [['Dragão do Enem', 'Guarda o portão do primeiro dia de prova.']],
+  CN: [['Golem de Carbono', 'Muda de forma a cada reação química.'],
+       ['Fênix da Energia', 'Nada se perde: ela renasce transformada.'],
+       ['Basilisco Mutante', 'Esconde nos genes a chave da sua força.'],
+       ['Elemental do Relâmpago', 'Carrega a corrente de mil tempestades.']],
+  MT: [['Grifo da Geometria', 'Voa em ângulos que só a régua entende.'],
+       ['Serpe dos Logaritmos', 'Cresce em ordens de grandeza.'],
+       ['Ciclope da Proporção', 'Só enxerga o mundo em escala.'],
+       ['Kraken da Probabilidade', 'Cada tentáculo lança um dado.']],
+  misto: [['Dragão do Enem', 'Guarda os portões dos dois dias de prova.']],
   revisao: [['Sombra do Erro Antigo', 'Volta sempre, até você vencê-la de verdade.']],
 };
 
@@ -68,6 +105,8 @@ const GUARDIOES = {
 const REINOS_INIMIGOS = {
   LC: { nome: 'Reino das Letras', cor: 'letras' },
   CH: { nome: 'Reino das Humanidades', cor: 'humanas' },
+  CN: { nome: 'Reino da Natureza', cor: 'natureza' },
+  MT: { nome: 'Reino dos Números', cor: 'numeros' },
   torre: { nome: 'Torre da Redação', cor: 'torre' },
   revisao: { nome: 'Masmorra dos Erros', cor: 'masmorra' },
   arena: { nome: 'Arena do Simulado', cor: 'arena' },
@@ -80,6 +119,12 @@ const INIMIGOS = {
   CH: [...GUARDIOES.CH,
        ['Faraó dos Séculos', 'Guarda a memória de impérios que caíram.'],
        ['Leviatã do Estado', 'Exige um contrato social a cada passo.']],
+  CN: [...GUARDIOES.CN,
+       ['Feiticeiro dos Reagentes', 'Troca os frascos quando você se distrai.'],
+       ['Vírus Errante', 'Se espalha por quem não lê o enunciado.']],
+  MT: [...GUARDIOES.MT,
+       ['Autômato do Cálculo', 'Faz contas sem parar e às vezes erra o sinal.'],
+       ['Espectro do Infinito', 'Nunca termina, a não ser com o limite certo.']],
   torre: [['Escriba Sombrio', 'Escreve sem tese e quer que você faça o mesmo.'],
           ['Golem do Rascunho', 'Feito de folhas amassadas e ideias soltas.'],
           ['Corvo da Coesão', 'Rouba os conectivos das frases.']],
@@ -93,7 +138,7 @@ const INIMIGOS = {
           ['Arquimago do Conhecimento', 'Domina todas as áreas e testa todas.'],
           ['Esfinge Suprema', 'Faz a pergunta que decide a jornada.']],
 };
-const CICLO_SABIO = ['LC', 'CH', 'torre', 'arena', 'revisao'];
+const CICLO_SABIO = ['LC', 'CH', 'CN', 'MT', 'torre', 'arena', 'revisao'];
 const ONDAS_POR_CHEFE = 5;
 const XP_INIMIGO = 4;
 const XP_CHEFE = 15;
@@ -147,11 +192,13 @@ const CONQUISTAS = [
   { id: 'perfeito', grau: 3, nome: 'Sessão impecável', titulo: 'Lâmina Impecável', texto: 'Acertou todas as questões de uma sessão de 10 ou mais.', teste: c => c.perfeita },
   { id: 'dias14', grau: 3, nome: 'Duas semanas de chama', titulo: 'Fogo que Não Se Apaga', texto: 'Estudou 14 dias seguidos.', teste: c => c.melhorDias >= 14 },
   { id: 'rev50', grau: 3, nome: 'Masmorra domada', titulo: 'Senhor(a) da Masmorra', texto: 'Recuperou 50 questões na revisão.', teste: c => c.recuperadas >= 50 },
-  { id: 'regioes', grau: 3, nome: 'Cartógrafo(a)', titulo: 'Explorador(a) de Domínios', texto: 'Acertou ao menos uma questão em cada uma das 15 competências.', teste: c => c.regioes >= 15 },
+  { id: 'regioes', grau: 3, nome: 'Cartógrafo(a)', titulo: 'Explorador(a) de Domínios', texto: 'Acertou ao menos uma questão em cada uma das 15 competências de Linguagens e Humanas.', teste: c => c.regioes >= 15 },
+  { id: 'regioesn', grau: 3, nome: 'Bússola do Norte', titulo: 'Bússola Viva', texto: 'Acertou ao menos uma questão em cada uma das 15 competências de Natureza e Matemática.', teste: c => c.regioesN >= 15 },
   { id: 'sim3', grau: 3, nome: 'Arena conhecida', titulo: 'Gladiador(a) da Arena', texto: 'Concluiu 3 simulados.', teste: c => c.simulados >= 3 },
   { id: 'ini50', grau: 3, nome: 'Flagelo dos monstros', titulo: 'Terror dos Monstros', texto: 'Derrotou 50 inimigos no Reino do Sábio.', teste: c => c.sabio.inimigos >= 50 },
   { id: 'onda10', grau: 3, nome: 'Dez ondas', titulo: 'Inabalável', texto: 'Chegou à 10ª onda em uma jornada do Sábio.', teste: c => c.sabio.melhorOnda >= 10 },
   { id: 'dom100', grau: 3, nome: 'Duas terras', titulo: 'Senhor(a) de Duas Terras', texto: 'Dominou 100 questões de Linguagens e 100 de Humanas.', teste: c => c.domLC >= 100 && c.domCH >= 100 },
+  { id: 'dom100n', grau: 3, nome: 'Terras do Norte', titulo: 'Senhor(a) do Norte', texto: 'Dominou 100 questões de Natureza e 100 de Matemática.', teste: c => c.domCN >= 100 && c.domMT >= 100 },
   { id: 'leitor10', grau: 3, nome: 'Leitura dedicada', titulo: 'Pena de Ouro', texto: 'Leu 10 redações de exemplo.', teste: c => c.lidas >= 10 },
   { id: 'nivel15', grau: 3, nome: 'Erudição', titulo: 'Mente Brilhante', texto: 'Chegou ao nível 15.', teste: c => c.nivel >= 15 },
   // Platina: a maestria
@@ -161,10 +208,12 @@ const CONQUISTAS = [
   { id: 'dias30', grau: 4, nome: 'Um mês de chama', titulo: 'Chama Eterna', texto: 'Estudou 30 dias seguidos.', teste: c => c.melhorDias >= 30 },
   { id: 'rev150', grau: 4, nome: 'Masmorra vazia', titulo: 'Quebra-Correntes', texto: 'Recuperou 150 questões na revisão.', teste: c => c.recuperadas >= 150 },
   { id: 'sim80', grau: 4, nome: 'Nota de elite', titulo: 'Campeão(ã) da Arena', texto: 'Fez 80% ou mais em um simulado de 40 questões ou mais.', teste: c => c.simulado80 },
-  { id: 'simcompleto', grau: 4, nome: 'Prova completa', titulo: 'Vencedor(a) do 1º Dia', texto: 'Fez 60% ou mais em um simulado completo, de Linguagens e Humanas.', teste: c => c.simuladoCompleto },
+  { id: 'simcompleto', grau: 4, nome: 'Prova completa', titulo: 'Vencedor(a) do 1º Dia', texto: 'Fez 60% ou mais em um simulado completo do 1º dia, de Linguagens e Humanas.', teste: c => c.simuladoCompleto },
+  { id: 'simcompleto2', grau: 4, nome: 'Segundo dia', titulo: 'Vencedor(a) do 2º Dia', texto: 'Fez 60% ou mais em um simulado completo do 2º dia, de Natureza e Matemática.', teste: c => c.simuladoCompleto2 },
   { id: 'chefe10', grau: 4, nome: 'Caçada aos chefes', titulo: 'Matador(a) de Dragões', texto: 'Derrotou 10 chefes no Reino do Sábio.', teste: c => c.sabio.chefes >= 10 },
   { id: 'anos', grau: 4, nome: 'Viagem no tempo', titulo: 'Viajante do Tempo', texto: 'Acertou questões de todas as edições do Enem, de 2005 a 2025.', teste: c => c.anos >= c.anosTotal },
   { id: 'dom400', grau: 4, nome: 'Reinos dominados', titulo: 'Soberano(a) dos Reinos', texto: 'Dominou 400 questões de Linguagens e 400 de Humanas.', teste: c => c.domLC >= 400 && c.domCH >= 400 },
+  { id: 'dom400n', grau: 4, nome: 'Norte conquistado', titulo: 'Imperador(a) do Norte', texto: 'Dominou 400 questões de Natureza e 400 de Matemática.', teste: c => c.domCN >= 400 && c.domMT >= 400 },
   { id: 'nivel20', grau: 4, nome: 'Maestria', titulo: 'Arquimago(a)', texto: 'Chegou ao nível 20.', teste: c => c.nivel >= 20 },
   // Lendária: para poucos
   { id: 'q2500', grau: 5, nome: 'Peregrinação', titulo: 'Peregrino(a) Eterno(a)', texto: 'Respondeu 2.500 questões.', teste: c => c.respondidas >= 2500 },
@@ -172,7 +221,8 @@ const CONQUISTAS = [
   { id: 'seq30', grau: 5, nome: 'Perfeição em série', titulo: 'Invencível', texto: 'Acertou 30 questões seguidas.', teste: c => c.melhorSeq >= 30 },
   { id: 'onda25', grau: 5, nome: 'Além da 25ª onda', titulo: 'Escolhido(a) do Sábio', texto: 'Chegou à 25ª onda em uma jornada do Sábio.', teste: c => c.sabio.melhorOnda >= 25 },
   { id: 'ini200', grau: 5, nome: 'Lenda da caçada', titulo: 'Flagelo dos Reinos', texto: 'Derrotou 200 inimigos no Reino do Sábio.', teste: c => c.sabio.inimigos >= 200 },
-  { id: 'regioes70', grau: 5, nome: 'Domínio total', titulo: 'Sábio(a) dos Quinze Domínios', texto: 'Fez 70% ou mais em todas as 15 competências, com ao menos 10 tentativas em cada.', teste: c => c.regioes70 },
+  { id: 'regioes70', grau: 5, nome: 'Domínio total', titulo: 'Sábio(a) dos Quinze Domínios', texto: 'Fez 70% ou mais em todas as 15 competências de Linguagens e Humanas, com ao menos 10 tentativas em cada.', teste: c => c.regioes70 },
+  { id: 'quatro', grau: 5, nome: 'Quatro reinos', titulo: 'Guardião(ã) dos Quatro Reinos', texto: 'Dominou 300 questões em cada um dos quatro reinos.', teste: c => Math.min(c.domLC, c.domCH, c.domCN, c.domMT) >= 300 },
   { id: 'todas', grau: 5, nome: 'Grimório completo', titulo: 'Lenda Viva', texto: 'Respondeu todas as questões disponíveis na sua língua estrangeira.', teste: c => c.disponiveis > 0 && c.vistas >= c.disponiveis },
 ];
 

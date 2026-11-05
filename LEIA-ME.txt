@@ -11,11 +11,11 @@ Fica em progresso\save.json, e uma cópia de segurança em save.copia.json.
 Como a pasta está no OneDrive, ele acompanha você entre computadores.
 
 O QUE HÁ NO JOGO
-- Mapa com os dois reinos: Linguagens e Ciências Humanas. As regiões são as
-  competências reais da Matriz de Referência do Enem. A roda do mouse aproxima e
+- Mapa com os quatro reinos do Enem: Letras (Linguagens), Humanidades (Ciências
+  Humanas), Natureza (Ciências da Natureza) e Números (Matemática). As regiões são
+  as competências reais da Matriz de Referência do Enem. A roda do mouse aproxima e
   afasta o mapa; aproximado, é só arrastar para mover (teclas + e - também servem,
-  e 0 mostra o mapa inteiro). As "Terras não mapeadas" sob a névoa guardam lugar
-  para os reinos que ainda vão chegar.
+  e 0 mostra o mapa inteiro).
 - Reino do Sábio: todas as questões numa jornada sem fim, contra inimigos de todos
   os reinos. Cada acerto tira um ponto de vida do inimigo, a cada 5 ondas surge um
   chefe e a dificuldade sobe aos poucos. Dá para encerrar quando quiser.
@@ -23,7 +23,8 @@ O QUE HÁ NO JOGO
   libera um título, que você escolhe no painel do herói, abaixo do nome.
 - Expedições de 5 a 45 questões, com pontos, XP, nível e porcentagem de acerto.
 - Masmorra dos Erros: revisão espaçada do que você errou (1, 2, 4, 8 e 16 dias).
-- Arena do Simulado: provas reais, na ordem original, com cronômetro.
+- Arena do Simulado: provas reais, na ordem original, com cronômetro: o 1º dia,
+  o 2º dia ou uma área só.
 - Torre da Redação: estrutura, competências, nota zero, temas de 2005 a 2025 e
   redações comentadas.
 - Grimório: histórico, gráfico de acerto, competências e conquistas.
@@ -40,7 +41,8 @@ Redação: Cartilhas do Participante, manuais de correção e Matrizes de Refer�
 
 Os gabaritos foram conferidos entre os PDFs e os microdados do INEP. A dificuldade
 vem do parâmetro da TRI publicado pelo INEP. As provas de 2005 a 2008 não separam
-áreas: a classificação em Linguagens ou Humanas foi feita lendo cada questão.
+áreas: a classificação em Linguagens, Humanas, Natureza ou Matemática foi feita lendo
+cada questão.
 
 A lista do que ficou de fora, com o motivo, está no jogo em Ajustes.
 

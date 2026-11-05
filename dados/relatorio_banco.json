@@ -1,8 +1,24 @@
 {
- "total_registros": 3685,
- "no_banco": 3545,
- "repetidas": 93,
+ "total_registros": 7176,
+ "no_banco": 6867,
+ "repetidas": 96,
  "fora": [
+  {
+   "ano": 2009,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 27,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2009,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 31,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
   {
    "ano": 2009,
    "aplicacao": "regular",
@@ -10,6 +26,22 @@
    "numero": 101,
    "lingua": null,
    "motivo": "anulada pelo INEP (Pedagógico)"
+  },
+  {
+   "ano": 2009,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 171,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2009,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 180,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
   },
   {
    "ano": 2010,
@@ -38,6 +70,38 @@
   {
    "ano": 2010,
    "aplicacao": "regular",
+   "area": "CN",
+   "numero": 55,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 67,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 70,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 72,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
    "area": "LC",
    "numero": 114,
    "lingua": null,
@@ -56,6 +120,182 @@
    "aplicacao": "regular",
    "area": "LC",
    "numero": 128,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 136,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 138,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 142,
+   "lingua": null,
+   "motivo": "gabaritos oficiais divergentes (PDF D, microdados A)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 141,
+   "lingua": null,
+   "motivo": "gabaritos oficiais divergentes (PDF A, microdados D)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 143,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 145,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 146,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 148,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 152,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 154,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 159,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 161,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 163,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 165,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 167,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 168,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 169,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 170,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 177,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 178,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 179,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 180,
    "lingua": null,
    "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
   },
@@ -92,11 +332,131 @@
    "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
   },
   {
+   "ano": 2010,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 140,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 145,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 149,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 158,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 163,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 164,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 168,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 173,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 175,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2010,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 180,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 71,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (NÃ£o permitiu a convergÃªncia do algoritmo de estimaÃ§Ã£o da TRI)"
+  },
+  {
    "ano": 2011,
    "aplicacao": "regular",
    "area": "LC",
    "numero": 94,
    "lingua": 0,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 152,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 155,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 178,
+   "lingua": null,
+   "motivo": "recorte reprovado na conferência visual"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 179,
+   "lingua": null,
    "motivo": "recorte não confiável na auditoria automática"
   },
   {
@@ -126,6 +486,30 @@
   {
    "ano": 2011,
    "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 60,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 73,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 75,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
    "area": "LC",
    "numero": 93,
    "lingua": 1,
@@ -148,6 +532,70 @@
    "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
   },
   {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 144,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 151,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 153,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 155,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 163,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 168,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 180,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2012,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 60,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
    "ano": 2012,
    "aplicacao": "regular",
    "area": "LC",
@@ -156,10 +604,74 @@
    "motivo": "recorte não confiável na auditoria automática"
   },
   {
+   "ano": 2012,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 156,
+   "lingua": null,
+   "motivo": "recorte reprovado na conferência visual"
+  },
+  {
+   "ano": 2012,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 157,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
    "ano": 2013,
    "aplicacao": "regular",
    "area": "CH",
    "numero": 1,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2013,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 55,
+   "lingua": null,
+   "motivo": "recorte reprovado na conferência visual"
+  },
+  {
+   "ano": 2013,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 72,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2013,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 73,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2013,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 85,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2013,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 87,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2013,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 70,
    "lingua": null,
    "motivo": "recorte não confiável na auditoria automática"
   },
@@ -174,8 +686,32 @@
   {
    "ano": 2014,
    "aplicacao": "regular",
+   "area": "CN",
+   "numero": 51,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2014,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 53,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2014,
+   "aplicacao": "regular",
    "area": "LC",
    "numero": 126,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2014,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 159,
    "lingua": null,
    "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
   },
@@ -190,8 +726,72 @@
   {
    "ano": 2014,
    "aplicacao": "terceira_aplicacao",
+   "area": "CN",
+   "numero": 64,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2014,
+   "aplicacao": "terceira_aplicacao",
+   "area": "CN",
+   "numero": 73,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2014,
+   "aplicacao": "terceira_aplicacao",
    "area": "LC",
    "numero": 125,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2014,
+   "aplicacao": "terceira_aplicacao",
+   "area": "MT",
+   "numero": 141,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2015,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 48,
+   "lingua": null,
+   "motivo": "recorte reprovado na conferência visual"
+  },
+  {
+   "ano": 2015,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 90,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2015,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 63,
+   "lingua": null,
+   "motivo": "recorte reprovado na conferência visual"
+  },
+  {
+   "ano": 2015,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 64,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2015,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 72,
    "lingua": null,
    "motivo": "recorte não confiável na auditoria automática"
   },
@@ -230,10 +830,34 @@
   {
    "ano": 2016,
    "aplicacao": "segunda_aplicacao",
+   "area": "CN",
+   "numero": 52,
+   "lingua": null,
+   "motivo": "anulada no gabarito oficial"
+  },
+  {
+   "ano": 2016,
+   "aplicacao": "segunda_aplicacao",
    "area": "LC",
    "numero": 111,
    "lingua": null,
    "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2016,
+   "aplicacao": "segunda_aplicacao",
+   "area": "MT",
+   "numero": 168,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2016,
+   "aplicacao": "segunda_aplicacao",
+   "area": "MT",
+   "numero": 176,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
   },
   {
    "ano": 2016,
@@ -244,10 +868,82 @@
    "motivo": "recorte não confiável na auditoria automática"
   },
   {
+   "ano": 2016,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 73,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2016,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 156,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
    "ano": 2017,
    "aplicacao": "reaplicacao_ppl",
    "area": "CH",
    "numero": 89,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2018,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 107,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2018,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 116,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2018,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 163,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Anulado)"
+  },
+  {
+   "ano": 2018,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 173,
+   "lingua": null,
+   "motivo": "recorte reprovado na conferência visual"
+  },
+  {
+   "ano": 2018,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 106,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2018,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 108,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2018,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 124,
    "lingua": null,
    "motivo": "recorte não confiável na auditoria automática"
   },
@@ -276,6 +972,54 @@
    "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
   },
   {
+   "ano": 2019,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 96,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2019,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 122,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2019,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 145,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2019,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 129,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2019,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 136,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2019,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 166,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
    "ano": 2020,
    "aplicacao": "regular",
    "area": "CH",
@@ -285,6 +1029,30 @@
   },
   {
    "ano": 2020,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 93,
+   "lingua": null,
+   "motivo": "recorte reprovado na conferência visual"
+  },
+  {
+   "ano": 2020,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 135,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Anulado)"
+  },
+  {
+   "ano": 2020,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 157,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Anulado)"
+  },
+  {
+   "ano": 2020,
    "aplicacao": "digital",
    "area": "LC",
    "numero": 34,
@@ -298,6 +1066,30 @@
    "numero": 34,
    "lingua": null,
    "motivo": "anulada pelo INEP (Anulado pela TRI)"
+  },
+  {
+   "ano": 2020,
+   "aplicacao": "digital",
+   "area": "MT",
+   "numero": 157,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Anulado)"
+  },
+  {
+   "ano": 2020,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 96,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Anulado)"
+  },
+  {
+   "ano": 2020,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 98,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
   },
   {
    "ano": 2021,
@@ -325,11 +1117,107 @@
   },
   {
    "ano": 2021,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 99,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 101,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 105,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 118,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 122,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 124,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 126,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 138,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Anulado)"
+  },
+  {
+   "ano": 2021,
    "aplicacao": "reaplicacao_ppl",
    "area": "LC",
    "numero": 34,
    "lingua": null,
    "motivo": "anulada pelo INEP (Anulado)"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 162,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 164,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 163,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2021,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 171,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
   },
   {
    "ano": 2022,
@@ -341,11 +1229,275 @@
   },
   {
    "ano": 2022,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 108,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 112,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (BLG não rodou)"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 113,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Bilog não converge)"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 119,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (bisblg < -0.15)"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 126,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 131,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 134,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (BLG não rodou)"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 137,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 141,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Convergência)"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 152,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 157,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (anulado pedagogicamente)"
+  },
+  {
+   "ano": 2022,
    "aplicacao": "reaplicacao_ppl",
    "area": "CH",
    "numero": 81,
    "lingua": null,
    "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 108,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 120,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2022,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 159,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 114,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 123,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 127,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 132,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 135,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 134,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 141,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 148,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 161,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Bis<0,01 e Problemas na convergência)"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 164,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Exclusão pedagógica)"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 172,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 105,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 106,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 136,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 161,
+   "lingua": null,
+   "motivo": "recorte reprovado na conferência visual"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 174,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2023,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 175,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2024,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 129,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Pedagógico)"
+  },
+  {
+   "ano": 2024,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 171,
+   "lingua": null,
+   "motivo": "recorte reprovado na conferência visual"
   },
   {
    "ano": 2024,
@@ -356,10 +1508,90 @@
    "motivo": "anulada pelo INEP (Algoritmo não convergiu)"
   },
   {
+   "ano": 2024,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "CN",
+   "numero": 128,
+   "lingua": null,
+   "motivo": "recorte reprovado na conferência visual"
+  },
+  {
    "ano": 2025,
    "aplicacao": "regular",
    "area": "LC",
    "numero": 42,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2025,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 123,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Previamente exposto)"
+  },
+  {
+   "ano": 2025,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 125,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Problema de convergência)"
+  },
+  {
+   "ano": 2025,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 132,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Previamente exposto)"
+  },
+  {
+   "ano": 2025,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 172,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Problema de convergência)"
+  },
+  {
+   "ano": 2025,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 174,
+   "lingua": null,
+   "motivo": "anulada pelo INEP (Previamente exposto)"
+  },
+  {
+   "ano": 2025,
+   "aplicacao": "belem",
+   "area": "CN",
+   "numero": 121,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2025,
+   "aplicacao": "belem",
+   "area": "CN",
+   "numero": 134,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2025,
+   "aplicacao": "belem",
+   "area": "MT",
+   "numero": 157,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2025,
+   "aplicacao": "belem",
+   "area": "MT",
+   "numero": 159,
    "lingua": null,
    "motivo": "recorte não confiável na auditoria automática"
   },
@@ -378,6 +1610,102 @@
    "numero": 62,
    "lingua": null,
    "motivo": "anulada pelo INEP (Bis<0,01)"
+  },
+  {
+   "ano": 2005,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 30,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2005,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 38,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2005,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 52,
+   "lingua": null,
+   "motivo": "recorte reprovado na conferência visual"
+  },
+  {
+   "ano": 2006,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 9,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2006,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 10,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2006,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 35,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2006,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 49,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2006,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 57,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2006,
+   "aplicacao": "regular",
+   "area": "MT",
+   "numero": 60,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2006,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 61,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
+  },
+  {
+   "ano": 2007,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 34,
+   "lingua": null,
+   "motivo": "recorte reprovado na conferência visual"
+  },
+  {
+   "ano": 2008,
+   "aplicacao": "regular",
+   "area": "CN",
+   "numero": 24,
+   "lingua": null,
+   "motivo": "recorte não confiável na auditoria automática"
   }
  ],
  "cortes_dificuldade": {
@@ -388,96 +1716,106 @@
   "CH": [
    0.658,
    1.31972
+  ],
+  "CN": [
+   0.96735,
+   1.606
+  ],
+  "MT": [
+   1.52395,
+   2.15215
   ]
  },
  "por_ano": [
   [
    2005,
-   23
+   60
   ],
   [
    2006,
-   24
+   56
   ],
   [
    2007,
-   21
+   62
   ],
   [
    2008,
-   23
+   62
   ],
   [
    2009,
-   89
+   174
   ],
   [
    2010,
-   178
+   322
   ],
   [
    2011,
-   183
+   347
   ],
   [
    2012,
-   186
+   363
   ],
   [
    2013,
-   186
+   360
   ],
   [
    2014,
-   282
+   546
   ],
   [
    2015,
-   190
+   365
   ],
   [
    2016,
-   277
+   542
   ],
   [
    2017,
-   189
+   368
   ],
   [
    2018,
-   190
+   363
   ],
   [
    2019,
-   186
+   360
   ],
   [
    2020,
-   283
+   547
   ],
   [
    2021,
-   186
+   354
   ],
   [
    2022,
-   188
+   354
   ],
   [
    2023,
-   190
+   353
   ],
   [
    2024,
-   189
+   366
   ],
   [
    2025,
-   282
+   543
   ]
  ],
  "por_area": {
   "LC": 1849,
-  "CH": 1696
+  "CH": 1699,
+  "CN": 1689,
+  "MT": 1630
  }
 }

@@ -218,13 +218,21 @@ function provasDeSimulado() {
   for (const q of E.banco) {
     if (q.ano < 2009) continue;
     const k = `${q.ano}-${q.apl}`;
-    if (!mapa.has(k)) mapa.set(k, { ano: q.ano, apl: q.apl, LC: 0, CH: 0 });
+    if (!mapa.has(k)) mapa.set(k, { ano: q.ano, apl: q.apl, LC: 0, CH: 0, CN: 0, MT: 0 });
     if (linguaOk(q)) mapa.get(k)[q.area] += 1;
   }
   return [...mapa.values()].sort((a, b) => b.ano - a.ano || ('rpsbtd'.indexOf(a.apl) - 'rpsbtd'.indexOf(b.apl)));
 }
-function partirSimulado(ano, apl, parte) {
-  const areas = parte === 'ambas' ? ['LC', 'CH'] : [parte];
+/* Os dias seguem o formato atual do Enem: 1º dia com Linguagens e Humanas (5h30, com a
+   redação) e 2º dia com Natureza e Matemática (5h). Uma área sozinha tem 3 min por questão. */
+const DIAS_SIMULADO = {
+  dia1: { areas: ['LC', 'CH'], minutos: 330, nome: '1º dia' },
+  dia2: { areas: ['CN', 'MT'], minutos: 300, nome: '2º dia' },
+};
+function partirSimulado(ano, apl, pedido) {
+  const parte = pedido === 'ambas' ? 'dia1' : pedido; // "ambas" era o 1º dia antes do 2º dia existir
+  const dia = DIAS_SIMULADO[parte];
+  const areas = dia ? dia.areas : [parte];
   const ids = [];
   for (const area of areas) {
     ids.push(...E.banco
@@ -233,8 +241,10 @@ function partirSimulado(ano, apl, parte) {
       .map(q => q.id));
   }
   if (!ids.length) { avisar('Sem questões nessa prova para a língua escolhida.'); return; }
-  const limite = parte === 'ambas' ? 330 * 60000 : ids.length * 3 * 60000; // 1º dia real: 5h30
-  iniciarSessao('simulado', `Simulado Enem ${ano} (${ROTULO_APL[apl]})`, ids, { limite, guardiao: guardiao('misto') });
+  const limite = (dia ? dia.minutos : ids.length * 3) * 60000;
+  const qual = dia ? dia.nome : REINOS[parte].curto;
+  iniciarSessao('simulado', `Simulado Enem ${ano} (${ROTULO_APL[apl]}) · ${qual}`, ids,
+    { limite, parte, guardiao: guardiao('misto') });
 }
 function partirTreinoRapido() {
   const pendentes = filaRevisao(true);
@@ -282,7 +292,7 @@ function questaoDoSabio(s) {
   const livres = E.banco.filter(q => linguaOk(q) && !usadas.has(q.id));
   if (!livres.length) return null;
   let base;
-  if (ini.reino === 'LC' || ini.reino === 'CH') base = livres.filter(q => q.area === ini.reino);
+  if (REINOS[ini.reino]) base = livres.filter(q => q.area === ini.reino);
   else if (ini.reino === 'torre') base = livres.filter(q => q.area === 'LC' && [6, 7, 8].includes(q.comp)); // texto e argumentação
   else if (ini.reino === 'revisao') {
     const fila = filaRevisao(false).filter(q => !usadas.has(q.id));
@@ -431,6 +441,7 @@ function concluirSessao() {
     dia: hoje(), tipo: s.tipo, titulo: s.titulo, total: respondidas.length, previstas: sabio ? respondidas.length : s.ids.length,
     acertos: s.acertos, pontos: s.pontos, xp: s.xp, tempo: gasto, venceu, maxSeq: s.maxSeq,
     ...(sabio ? { onda: s.onda, derrotados: s.derrotados, chefes: s.chefes } : {}),
+    ...(s.parte ? { parte: s.parte } : {}),
   };
   if (respondidas.length) E.save.sessoes.push(registro);
   if (sabio && respondidas.length) E.save.sabio.jornadas += 1;
@@ -471,9 +482,13 @@ function contexto() {
     const p = porComp[k] || (porComp[k] = { a: 0, t: 0 });
     p.a += st.a; p.t += st.a + st.e;
   }
-  const comps = Object.values(REINOS).reduce((n, r) => n + Object.keys(r.regioes).length, 0);
+  // as conquistas de competência contam por dia de prova: as de antes valem para o 1º dia
+  const doDia = (dia, k) => REINOS[k.slice(0, 2)].dia === dia;
+  const comps1 = ['LC', 'CH'].reduce((n, a) => n + Object.keys(REINOS[a].regioes).length, 0);
+  const comp1 = Object.entries(porComp).filter(([k]) => doDia(1, k)).map(([, p]) => p);
   const sessoes = S.sessoes;
   const taxa = s => (s.total ? s.acertos / s.total : 0);
+  const completo = (s, dia) => s.tipo === 'simulado' && (s.parte || 'dia1') === dia && s.total >= 80 && taxa(s) >= 0.6;
   return {
     sessoes: sessoes.length, respondidas: totalRespondidas(), melhorSeq: S.melhorSeq,
     acertos: Object.values(S.dias).reduce((t, d) => t + d.a, 0),
@@ -482,13 +497,16 @@ function contexto() {
     perfeita: sessoes.some(s => s.total >= 10 && s.acertos === s.total),
     simulados: sessoes.filter(s => s.tipo === 'simulado').length,
     simulado80: sessoes.some(s => s.tipo === 'simulado' && s.total >= 40 && taxa(s) >= 0.8),
-    simuladoCompleto: sessoes.some(s => s.tipo === 'simulado' && s.total >= 80 && taxa(s) >= 0.6),
+    simuladoCompleto: sessoes.some(s => completo(s, 'dia1')),
+    simuladoCompleto2: sessoes.some(s => completo(s, 'dia2')),
     melhorDias: S.seqDias.melhor, recuperadas: S.recuperadas, filaZerada: S.filaZerada,
-    regioes: regioes.size,
-    regioes70: Object.keys(porComp).length >= comps && Object.values(porComp).every(p => p.t >= 10 && p.a / p.t >= 0.7),
+    regioes: [...regioes].filter(k => doDia(1, k)).length,
+    regioesN: [...regioes].filter(k => doDia(2, k)).length,
+    regioes70: comp1.length >= comps1 && comp1.every(p => p.t >= 10 && p.a / p.t >= 0.7),
     lidas: lidas.length, edicoesLidas: new Set(lidas.map(k => k.split('-')[0])).size,
     nivel: nivelDe(S.xp).n, sabio: S.sabio,
     domLC: resumoArea('LC').dominadas, domCH: resumoArea('CH').dominadas,
+    domCN: resumoArea('CN').dominadas, domMT: resumoArea('MT').dominadas,
     anos: anos.size, anosTotal: new Set(E.banco.map(q => q.ano)).size, disponiveis, vistas,
   };
 }
@@ -586,7 +604,6 @@ const TELAS = {
   },
 
   mapa: () => {
-    const lc = resumoArea('LC'); const ch = resumoArea('CH');
     const fila = filaRevisao(true).length;
     const atual = E.save.atual;
     return `${menu('mapa')}<div class="tela-mapa">
@@ -596,7 +613,7 @@ const TELAS = {
           <button class="botao primario" data-acao="ir" data-tela="questao">Continuar</button></div>`
           : `<div class="faixa-continuar"><div><strong>Sem tempo para escolher?</strong> A Patrulha do dia mistura 10 questões, com suas revisões pendentes.</div>
           <button class="botao primario" data-acao="patrulha">Partir agora</button></div>`}
-        <div class="mapa-palco"><div class="mapa-moldura">${mapaSVG(lc, ch, fila)}${controlesMapa()}</div></div>
+        <div class="mapa-palco"><div class="mapa-moldura">${mapaSVG(fila)}${controlesMapa()}</div></div>
       </main>
     </div>`;
   },
@@ -649,7 +666,7 @@ const TELAS = {
         <div class="cartao regras-sabio">
           <h2>Como é a jornada</h2>
           <ul>
-            <li>Cada inimigo vem de um reino do mapa e traz questões de lá: Letras, Humanidades, Torre da Redação, Arena do Simulado e, quando há erros para rever, Masmorra dos Erros.</li>
+            <li>Cada inimigo vem de um reino do mapa e traz questões de lá: Letras, Humanidades, Natureza, Números, Torre da Redação, Arena do Simulado e, quando há erros para rever, Masmorra dos Erros.</li>
             <li>Cada acerto tira um ponto de vida do inimigo. Errar não custa nada a você, e a questão vai para a Masmorra.</li>
             <li>A cada ${ONDAS_POR_CHEFE} ondas surge um chefe do Sábio, com mais vida e questões difíceis. Os inimigos ficam mais fortes conforme a jornada avança.</li>
             <li>Inimigo derrotado vale +${XP_INIMIGO} XP, e chefe vale +${XP_CHEFE} XP, além do XP de cada acerto.</li>
@@ -754,21 +771,28 @@ const TELAS = {
   simulado: () => {
     const provas = provasDeSimulado().filter(p => E.simFiltro === 'todos' || (E.simFiltro === 'regular' ? p.apl === 'r' : p.apl !== 'r'));
     const ling = { ing: 'Inglês', esp: 'Espanhol', ambas: 'as duas línguas' }[E.save.cfg.lingua];
+    const areas = ['LC', 'CH', 'CN', 'MT'];
+    // o número de questões de cada área é o botão para fazer só aquela área
+    const soArea = (p, a) => (p[a]
+      ? `<button class="pilula num-sim" data-acao="simular" data-ano="${p.ano}" data-apl="${p.apl}" data-parte="${a}" title="Só ${REINOS[a].curto}: ${p[a]} questões, 3 minutos por questão">${p[a]}</button>`
+      : '<span class="vazio">–</span>');
+    const diaCompleto = (p, chave) => {
+      const d = DIAS_SIMULADO[chave];
+      const total = d.areas.reduce((t, a) => t + p[a], 0);
+      return `<button class="pilula" data-acao="simular" data-ano="${p.ano}" data-apl="${p.apl}" data-parte="${chave}" ${total ? '' : 'disabled'}
+        title="${d.areas.map(a => REINOS[a].curto).join(' e ')}, ${total} questões, com o tempo real: ${d.minutos === 330 ? '5h30' : '5h'}">${d.nome}</button>`;
+    };
     return `${menu('simulado')}<main class="conteudo">
       <header class="cabecalho"><div><h1>Arena do Simulado</h1>
         <p>Prova real, na ordem original, com cronômetro e sem resposta na hora. O resultado sai ao final. Língua estrangeira: ${ling}.</p></div></header>
       <div class="grupo filtro-sim">${[['todos', 'Todas'], ['regular', 'Aplicação regular'], ['outras', 'Outras aplicações']].map(([v, t]) => `<button class="pilula ${E.simFiltro === v ? 'ativa' : ''}" data-acao="sim-filtro" data-v="${v}">${t}</button>`).join('')}</div>
       <div class="tabela-rolagem"><table class="tabela tabela-sim">
-        <thead><tr><th>Prova</th><th class="num">Linguagens</th><th class="num">Humanas</th><th>Começar</th></tr></thead>
+        <thead><tr><th>Prova</th>${areas.map(a => `<th class="num">${REINOS[a].curto}</th>`).join('')}<th>Prova completa</th></tr></thead>
         <tbody>${provas.map(p => `<tr>
           <th scope="row">Enem ${p.ano}<small>${ROTULO_APL[p.apl]}</small></th>
-          <td class="num">${p.LC}</td><td class="num">${p.CH}</td>
-          <td><div class="botoes-sim">
-            <button class="pilula" data-acao="simular" data-ano="${p.ano}" data-apl="${p.apl}" data-parte="ambas" title="Com o tempo do 1º dia: 5h30">Prova completa</button>
-            <button class="pilula" data-acao="simular" data-ano="${p.ano}" data-apl="${p.apl}" data-parte="LC" title="3 minutos por questão">Só Linguagens</button>
-            <button class="pilula" data-acao="simular" data-ano="${p.ano}" data-apl="${p.apl}" data-parte="CH" title="3 minutos por questão">Só Humanas</button>
-          </div></td></tr>`).join('')}</tbody></table></div>
-      <p class="nota-rodape">As contagens mostram o que ficou no banco: anuladas não entram, e questões repetidas entre aplicações aparecem só uma vez. A prova completa usa o tempo real do 1º dia (5h30), que inclui a redação. As provas de 2005 a 2008 eram únicas e misturavam áreas, por isso ficam só nas expedições.</p>
+          ${areas.map(a => `<td class="num">${soArea(p, a)}</td>`).join('')}
+          <td><div class="botoes-sim">${diaCompleto(p, 'dia1')}${diaCompleto(p, 'dia2')}</div></td></tr>`).join('')}</tbody></table></div>
+      <p class="nota-rodape">Clique no número de questões de uma área para fazer só ela, com 3 minutos por questão. A prova completa segue o formato atual do Enem: 1º dia com Linguagens e Humanas (5h30, tempo que inclui a redação) e 2º dia com Natureza e Matemática (5h). As contagens mostram o que ficou no banco: anuladas não entram, e questões repetidas entre aplicações aparecem só uma vez. As provas de 2005 a 2008 eram únicas e misturavam áreas, por isso ficam só nas expedições.</p>
     </main>`;
   },
 
@@ -787,7 +811,7 @@ const TELAS = {
       </section>
       <section class="ajustes">
         <h2>Sobre as questões</h2>
-        <p>${milhar(E.banco.length)} questões de Linguagens e Ciências Humanas, de 2005 a 2025, recortadas das provas oficiais do INEP. ${E.relatorio ? `Ficaram fora ${E.relatorio.anuladas} anuladas pelo INEP, ${E.relatorio.divergentes} com gabaritos oficiais divergentes e ${E.relatorio.recorte} cujo recorte não ficou confiável.` : ''} Os gabaritos foram conferidos entre os PDFs oficiais e os microdados do INEP.</p>
+        <p>${milhar(E.banco.length)} questões de Linguagens, Ciências Humanas, Ciências da Natureza e Matemática, de 2005 a 2025, recortadas das provas oficiais do INEP. ${E.relatorio ? `Ficaram fora ${E.relatorio.anuladas} anuladas pelo INEP, ${E.relatorio.divergentes} com gabaritos oficiais divergentes e ${E.relatorio.recorte} cujo recorte não ficou confiável.` : ''} Os gabaritos foram conferidos entre os PDFs oficiais e os microdados do INEP.</p>
         <p>Dificuldade: parâmetro da TRI publicado nos microdados, dividido em terços dentro de cada área. Provas de 2005 a 2008 não têm esse dado.</p>
         <button class="botao" data-acao="abrir-relatorio">Ver a lista do que ficou de fora</button>
       </section>
@@ -1015,7 +1039,7 @@ function telaGrimorio() {
   const acertos = Object.values(S.dias).reduce((s, d) => s + d.a, 0);
   const sess = S.sessoes.slice(-20);
   const linhas = [];
-  for (const area of ['LC', 'CH']) {
+  for (const area of Object.keys(REINOS)) {
     for (const [n, [nome, sub]] of Object.entries(REINOS[area].regioes)) {
       linhas.push({ area, nome, sub, ...resumoArea(area, Number(n)) });
     }
@@ -1034,7 +1058,7 @@ function telaGrimorio() {
     <section class="cartao"><h2>Acerto por sessão</h2><p class="sub">Últimas ${sess.length || 20} sessões</p>${graficoSessoes(sess)}</section>
     <section class="cartao"><h2>Competências</h2>
       <div class="tabela-rolagem"><table class="tabela comp-tabela"><thead><tr><th>Região</th><th>Acerto</th><th>Dominadas</th></tr></thead>
-      <tbody>${linhas.map(l => `<tr><th scope="row">${l.nome}<small>${l.area === 'LC' ? 'Linguagens' : 'Humanas'} · ${l.sub}</small></th>
+      <tbody>${linhas.map(l => `<tr><th scope="row">${l.nome}<small>${REINOS[l.area].curto} · ${l.sub}</small></th>
         <td><div class="medidor">${l.tentativas ? `${barra(l.acertos, l.tentativas, 'fina')}<span>${pct(l.acertos, l.tentativas)}%</span>` : '<span class="vazio">sem dados</span>'}</div></td>
         <td>${l.dominadas} de ${l.total}</td></tr>`).join('')}</tbody></table></div>
     </section>
@@ -1074,15 +1098,16 @@ function graficoSessoes(lista) {
 
    O mundo é uma grade de três faixas com a Torre da Redação no meio, e cada casa da grade
    comporta um lugar do tamanho do castelo (uns 300 de largura e 290 de altura com a faixa).
-   As duas casas de cima nas pontas são VAGAS_MAPA, guardadas para reinos futuros.
+   As duas casas de cima nas pontas eram VAGAS_MAPA e hoje abrigam os reinos do 2º dia
+   (Natureza e Números).
 
    Para pôr um reino novo no mapa:
    1. desenhe o lugar numa função como castelo() ou templo(), em volta de (0, 0), com a faixa
       do nome no fim (faixa(titulo, sub, dy, cor) e a cor em COR_REINO);
-   2. acrescente-o em LUGARES_MAPA com o x e o y de uma das VAGAS_MAPA e o id dela em
-      "vaga": a névoa daquela vaga some sozinha;
-   3. se quiser, dê a ele um território em TERRITORIOS_MAPA e uma estrada até a Torre em
-      ESTRADAS_MAPA. */
+   2. crie uma vaga em VAGAS_MAPA onde houver espaço e acrescente o lugar em LUGARES_MAPA com
+      o x e o y dela e o id dela em "vaga": enquanto nenhum lugar ocupa a vaga, ela aparece
+      sob névoa como "Terras não mapeadas";
+   3. se quiser, dê a ele uma estrada até as outras em ESTRADAS_MAPA. */
 const MAPA = { w: 1400, h: 1040 };
 const ZOOM_MAX = 3;
 const ESCALA_LUGAR = 1.1;
@@ -1090,6 +1115,7 @@ const ILHA = 'M118 620C108 520 118 420 150 330C180 240 230 170 300 132C380 96 50
 const COR_REINO = {
   letras: ['#2f4f8f', '#1f3768'], humanas: ['#9c3f27', '#6c2918'], sabio: ['#5b3a8c', '#3d2664'],
   torre: ['#26375e', '#172443'], masmorra: ['#433d4c', '#29252f'], arena: ['#8d2f2f', '#5f1f1f'],
+  natureza: ['#3f7a3e', '#2a5229'], numeros: ['#1f6f78', '#134a50'],
 };
 /* Lugares do mapa. "desenho" recebe o resumo de progresso e devolve o SVG do lugar;
    "acao" e "dados" viram data-acao e data-* do botão, como no resto do jogo. */
@@ -1104,22 +1130,25 @@ const LUGARES_MAPA = [
   { id: 'masmorra', x: 420, y: 895, nome: p => `Masmorra dos Erros, ${p.fila} para rever hoje`, acao: 'ir', dados: { tela: 'revisao' },
     desenho: p => masmorra(p.fila) },
   { id: 'arena', x: 1010, y: 885, nome: 'Arena do Simulado', acao: 'ir', dados: { tela: 'simulado' }, desenho: () => coliseu() },
+  // reinos do 2º dia de prova, nas duas vagas do norte
+  { id: 'numeros', vaga: 'noroeste', x: 330, y: 320, nome: 'Reino dos Números, Matemática', acao: 'reino', dados: { area: 'MT' },
+    desenho: p => cidadela(`Matemática · ${pct(p.mt.dominadas, p.mt.total)}% dominado`) },
+  { id: 'natureza', vaga: 'nordeste', x: 1070, y: 320, nome: 'Reino da Natureza, Ciências da Natureza', acao: 'reino', dados: { area: 'CN' },
+    desenho: p => estufa(`Ciências da Natureza · ${pct(p.cn.dominadas, p.cn.total)}% dominado`) },
 ];
-/* Terras reservadas para reinos futuros: ficam sob névoa até um lugar ocupar a vaga. x e y são o
-   ponto de base do futuro lugar, como em LUGARES_MAPA. */
+/* Terras reservadas para reinos: ficam sob névoa até um lugar ocupar a vaga. x e y são o ponto
+   de base do lugar, como em LUGARES_MAPA. */
 const VAGAS_MAPA = [
   { id: 'noroeste', x: 330, y: 320, montanhas: [[-40, -50, 1.2], [15, -75, 1], [60, -38, .8]] },
   { id: 'nordeste', x: 1070, y: 320, montanhas: [[-60, -38, .8], [-15, -75, 1], [40, -50, 1.2]] },
 ];
-const TERRITORIOS_MAPA = {
-  sabio: ['M540 30H860L850 250C830 330 776 372 700 374C624 372 570 330 550 250Z', '#7a55c2', '#5b3a8c'],
-  letras: ['M60 430H560C580 500 592 570 586 640C580 704 546 760 490 790L60 800Z', '#3f63ad', '#2f4f8f'],
-  humanidades: ['M1340 450H960C944 520 934 580 938 640C942 700 966 744 1010 770L1340 780Z', '#b5553a', '#9c3f27'],
-};
 /* O rio desce do lago, passa entre a Torre e as Humanidades e deságua na baía do sul. */
 const RIO = 'M925 490C945 570 940 660 920 730C900 790 800 880 740 972';
-/* Estradas até a Torre, no centro. "ponte" marca onde a estrada cruza o rio. */
+/* Estradas até a Torre, no centro. "ponte" marca onde a estrada cruza o rio. Os reinos do norte
+   entram nas estradas do Sábio (Números) e das Humanidades (Natureza, por fora do lago). */
 const ESTRADAS_MAPA = [
+  { de: 'numeros', d: 'M452 352C512 364 576 394 621 432' },
+  { de: 'natureza', d: 'M958 362C988 410 1002 470 994 530C988 576 976 610 960 633' },
   { de: 'letras', d: 'M405 630C480 640 570 652 642 654' },
   { de: 'sabio', d: 'M640 372C612 440 604 540 624 610C630 632 636 646 642 654' },
   { de: 'masmorra', d: 'M526 836C526 786 528 736 540 706C552 676 598 660 642 654' },
@@ -1341,6 +1370,81 @@ function coliseu() {
       <path d="M-5 -5l10 10M5 -5L-5 5" stroke="#f2e6c6" stroke-width="1.6" stroke-linecap="round"/></g>
     ${faixa('Arena do Simulado', 'Prova real, com cronômetro', 56, 'arena')}`;
 }
+/* Reino da Natureza: estufa de vidro com cúpula e átomo no alto, uma árvore antiga ao lado
+   (biologia) e um frasco borbulhando (química). */
+function estufa(sub) {
+  const vidro = '#d3eadf'; const caixilho = '#5f7f6a';
+  const folha = '<path d="M7 -9c2-5 6-7 10-7c-1 5-5 8-10 8Z" fill="#e3c27a"/>';
+  const colunas = [-44, -22, 0, 22, 44].map(x => `<path d="M${x} -8V-58" stroke="${caixilho}" stroke-width="1.2"/>`).join('');
+  return `<ellipse cy="4" rx="114" ry="15" fill="#1d2a14" opacity=".16"/>
+    <g transform="translate(-94 2)">
+      <path d="M-5 0C-4 -16 -7 -30 -3 -46H4C8 -30 6 -16 7 0Z" fill="#6b4c30" stroke="#4a3320" stroke-width="1.2"/>
+      <path d="M-3 -34C-10 -40 -16 -40 -20 -46M4 -30C10 -36 16 -36 20 -42" stroke="#5a3f27" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <circle cy="-70" r="24" fill="#4f8a4a"/><circle cx="-17" cy="-58" r="16" fill="#5f9a55"/>
+      <circle cx="17" cy="-60" r="17" fill="#447c42"/><circle cx="2" cy="-88" r="15" fill="#6aa65e"/>
+      <circle cx="-9" cy="-75" r="3" fill="#d8484a"/><circle cx="11" cy="-66" r="3" fill="#d8484a"/><circle cx="-3" cy="-54" r="2.6" fill="#d8484a"/>
+    </g>
+    <rect x="-74" y="-8" width="148" height="10" fill="#d9ccae" stroke="#6b5a3f" stroke-width="1.6"/>
+    <rect x="-66" y="-58" width="132" height="50" fill="${vidro}" stroke="${caixilho}" stroke-width="1.6"/>
+    ${colunas}<path d="M-66 -33H66" stroke="${caixilho}" stroke-width="1.1"/>
+    <path d="M-56 -10c2-14 8-22 14-26c-2 10-4 18-6 26ZM-34 -10c0-12 4-20 10-24c0 9-2 17-4 24Z" fill="#4f8a4a"/>
+    <circle cx="14" cy="-22" r="12" fill="#5f9a55" opacity=".92"/><circle cx="38" cy="-17" r="9" fill="#4f8a4a" opacity=".92"/>
+    <path d="M-52 -58A52 48 0 0 1 52 -58Z" fill="${vidro}" stroke="${caixilho}" stroke-width="1.6"/>
+    <circle cx="-6" cy="-74" r="13" fill="#6aa65e" opacity=".75"/><circle cx="14" cy="-68" r="8" fill="#4f8a4a" opacity=".7"/>
+    <path d="M-26 -58Q-23 -92 0 -106M26 -58Q23 -92 0 -106M0 -58V-106M-46 -78Q0 -88 46 -78" stroke="${caixilho}" stroke-width="1.1" fill="none"/>
+    <path d="M-60 -52H-46M-24 -96l9 -5" stroke="#fff" stroke-width="2.2" opacity=".6" stroke-linecap="round"/>
+    <path d="M-10 2V-22a10 10 0 0 1 20 0V2Z" fill="#3f6b4f" stroke="#2d4d39" stroke-width="1.4"/>
+    <circle cx="5" cy="-10" r="1.4" fill="#e3c27a"/>
+    <g transform="translate(0 -118)"><path d="M0 12V4" stroke="#8a6a2c" stroke-width="1.8"/>
+      <ellipse rx="14" ry="5.2" fill="none" stroke="#d8b25a" stroke-width="1.5"/>
+      <ellipse rx="14" ry="5.2" fill="none" stroke="#d8b25a" stroke-width="1.5" transform="rotate(60)"/>
+      <ellipse rx="14" ry="5.2" fill="none" stroke="#d8b25a" stroke-width="1.5" transform="rotate(-60)"/>
+      <circle r="2.8" fill="#e9604a"/></g>
+    <g transform="translate(96 2)">
+      <path d="M-6 -44V-30L-18 -5C-20 -1 -18 0 -14 0H14C18 0 20 -1 18 -5L6 -30V-44Z" fill="#eef7f2" stroke="${caixilho}" stroke-width="1.5"/>
+      <path d="M-13 -12H13L18 -5C20 -1 18 0 14 0H-14C-18 0 -20 -1 -18 -5Z" fill="#7cc46a"/>
+      <rect x="-8" y="-48" width="16" height="5" rx="1.5" fill="#8a6a2c"/>
+      <circle cx="-3" cy="-56" r="3" fill="#bfe6b0"/><circle cx="4" cy="-64" r="2.2" fill="#bfe6b0" opacity=".85"/><circle cx="-1" cy="-71" r="1.6" fill="#bfe6b0" opacity=".7"/>
+    </g>
+    ${bandeira(-66, -58, 20, '#3f7a3e', '#2a5229', folha)}${bandeira(66, -58, 20, '#3f7a3e', '#2a5229', folha)}
+    ${faixa('Reino da Natureza', sub, 38, 'natureza')}`;
+}
+/* Reino dos Números: zigurate de três degraus com frisos geométricos, compasso dourado no
+   templo do alto, um obelisco marcado como régua e sólidos geométricos flutuando. */
+function cidadela(sub) {
+  const degrau = (y, w, h, cor) => `<rect x="${-w / 2}" y="${y - h}" width="${w}" height="${h}" fill="${cor}" stroke="#6b5a3f" stroke-width="1.5"/>`;
+  const pi = '<path d="M7 -17H18M10 -17V-9M15 -17V-9" stroke="#e3c27a" stroke-width="1.7" stroke-linecap="round" fill="none"/>';
+  const friso = (y, x0, x1) => {
+    let s = `<path d="M${x0} ${y}H${x1}" stroke="#1f6f78" stroke-width="3"/>`;
+    for (let x = x0 + 8; x <= x1 - 8; x += 14) s += `<path d="M${x - 4} ${y + 1}l4 -4l4 4" fill="none" stroke="#e3c27a" stroke-width="1.1"/>`;
+    return s;
+  };
+  let marcas = '';
+  for (let i = 0; i < 8; i++) marcas += `<path d="M-5 ${-10 - 7 * i}h${i % 2 ? 4 : 7}" stroke="#7a6748" stroke-width="1"/>`;
+  return `<ellipse cy="4" rx="112" ry="15" fill="#10282a" opacity=".16"/>
+    ${degrau(2, 184, 22, '#dccfae')}${degrau(-20, 142, 22, '#e3d8bd')}${degrau(-42, 100, 22, '#ebe1c8')}
+    ${friso(-10, -90, 90)}${friso(-32, -69, 69)}${friso(-54, -48, 48)}
+    <path d="M-13 2V-62H13V2Z" fill="#d4c6a6" stroke="#6b5a3f" stroke-width="1.2"/>
+    ${[-6, -14, -22, -30, -38, -46, -54].map(y => `<path d="M-13 ${y}H13" stroke="#b5a582" stroke-width="1"/>`).join('')}
+    <rect x="-30" y="-90" width="60" height="26" fill="#f1e7d2" stroke="#6b5a3f" stroke-width="1.5"/>
+    <path d="M-10 -64V-76a10 10 0 0 1 20 0V-64Z" fill="#1d3f44" stroke="#134a50" stroke-width="1.3"/>
+    <path d="M-36 -90L0 -114L36 -90Z" fill="#1f6f78" stroke="#134a50" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M0 -114L36 -90H0Z" fill="#185a61"/>
+    <g transform="translate(0 -100)"><circle cy="-6" r="2.2" fill="#e3c27a"/>
+      <path d="M0 -4L-6 8M0 -4L6 8" stroke="#e3c27a" stroke-width="1.9" stroke-linecap="round"/>
+      <path d="M-4 3.5A6 6 0 0 0 4 3.5" stroke="#e3c27a" stroke-width="1.2" fill="none"/></g>
+    <g transform="translate(108 2)"><path d="M-7 0L-5 -72H5L7 0Z" fill="#e3d6b6" stroke="#7a6748" stroke-width="1.3"/>
+      <path d="M-5 -72L0 -84L5 -72Z" fill="#d8b25a" stroke="#7a6748" stroke-width="1.2"/>${marcas}</g>
+    <g transform="translate(-76 -98)"><path d="M0 -9L10 -4V7L0 12L-10 7V-4Z" fill="#7cc9d1" stroke="#134a50" stroke-width="1.1"/>
+      <path d="M0 -9L10 -4L0 1L-10 -4Z" fill="#b6e6ea" stroke="#134a50" stroke-width="1.1"/>
+      <path d="M0 1V12" stroke="#134a50" stroke-width="1.1"/></g>
+    <g transform="translate(74 -112)"><path d="M0 -11L11 8H-11Z" fill="#e3c27a" stroke="#8a6a2c" stroke-width="1.1"/>
+      <path d="M0 -11L11 8H3Z" fill="#c9a24a" stroke="#8a6a2c" stroke-width="1"/></g>
+    <g transform="translate(-44 -126)"><circle r="6.5" fill="#f3e7c8" stroke="#8a6a2c" stroke-width="1.1"/>
+      <ellipse rx="6.5" ry="2.4" fill="none" stroke="#8a6a2c" stroke-width=".9"/></g>
+    ${bandeira(-80, -20, 22, '#1f6f78', '#134a50', pi)}${bandeira(80, -20, 22, '#1f6f78', '#134a50', pi)}
+    ${faixa('Reino dos Números', sub, 38, 'numeros')}`;
+}
 
 /* ---- enfeites do atlas ---- */
 function rosaDosVentos(x, y, r) {
@@ -1377,7 +1481,7 @@ function cartela() {
     <path d="M7 7H245V53H7Z" fill="none" stroke="#c9a865" stroke-width=".9"/>
     <path d="M14 30h22M216 30h22" stroke="#c9a865" stroke-width="1"/><circle cx="12" cy="30" r="2" fill="#c9a865"/><circle cx="240" cy="30" r="2" fill="#c9a865"/>
     <text x="126" y="31" text-anchor="middle" class="cartela-t">Reinos do Enem</text>
-    <text x="126" y="48" text-anchor="middle" class="cartela-s">Linguagens · Humanas · Redação</text></g>`;
+    <text x="126" y="48" text-anchor="middle" class="cartela-s">Os dois dias de prova</text></g>`;
 }
 /* Névoa sobre uma vaga ainda sem reino: montanhas apagadas sob um banco de nuvens, no espaço
    que o futuro lugar vai ocupar; o rótulo fica onde estaria a faixa do nome. */
@@ -1391,8 +1495,9 @@ function nevoaVaga(v) {
     <text y="34" text-anchor="middle" class="rotulo-vaga">Terras não mapeadas</text></g>`;
 }
 
-function mapaSVG(lc, ch, fila) {
-  const progresso = { lc, ch, fila, sabio: E.save.sabio };
+function mapaSVG(fila) {
+  const progresso = { lc: resumoArea('LC'), ch: resumoArea('CH'), cn: resumoArea('CN'), mt: resumoArea('MT'),
+                      fila, sabio: E.save.sabio };
   const no = (l) => {
     const nome = typeof l.nome === 'function' ? l.nome(progresso) : l.nome;
     const dados = Object.entries(l.dados || {}).map(([k, v]) => `data-${k}="${esc(v)}"`).join(' ');
@@ -1404,7 +1509,6 @@ function mapaSVG(lc, ch, fila) {
   const ponte = ([x, y, a]) => `<g transform="translate(${x} ${y}) rotate(${a})"><rect x="-15" y="-8" width="30" height="16" rx="2" fill="#a07a4e" stroke="#5f4529" stroke-width="1.2"/>
     <path d="M-9 -8v16M-3 -8v16M3 -8v16M9 -8v16" stroke="#7a5a37" stroke-width="1"/><path d="M-16 -9H16M-16 9H16" stroke="#5f4529" stroke-width="1.8"/></g>`;
   const ocupadas = new Set(LUGARES_MAPA.map(l => l.vaga).filter(Boolean));
-  const territorios = LUGARES_MAPA.map(l => TERRITORIOS_MAPA[l.id]).filter(Boolean);
   const arvores = [
     [430, 470], [466, 454, .95, 1], [505, 478], [446, 512, .9], [488, 526, .9, 1], [530, 506, .85], [560, 546, .85, 1],
     [180, 790], [214, 806, .9, 1], [240, 776, .85], [168, 836, .85],
@@ -1439,8 +1543,6 @@ function mapaSVG(lc, ch, fila) {
     <path d="${ILHA}" fill="#bfa877" transform="translate(5 7)" opacity=".5"/>
     <path d="${ILHA}" fill="url(#m-terra)" stroke="#8b7048" stroke-width="2.2"/>
     <g clip-path="url(#m-ilha)">
-      ${territorios.map(([d, cor]) => `<path d="${d}" fill="${cor}" opacity=".12"/>`).join('')}
-      <g fill="none" stroke-width="1.7" stroke-dasharray="8 6" opacity=".55">${territorios.map(([d, , borda]) => `<path d="${d}" stroke="${borda}"/>`).join('')}</g>
       <ellipse cx="1010" cy="902" rx="168" ry="64" fill="#e9d6a3" opacity=".55"/>
       <rect width="${MAPA.w}" height="${MAPA.h}" fill="url(#m-luz)"/>
     </g>

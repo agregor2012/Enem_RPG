@@ -34,6 +34,7 @@ RE_TITULO_SECAO = re.compile(
 RE_TEXTO_COMPARTILHADO = re.compile(
     r"quest[õo]es\s+(?:de\s+)?(\d+)\s*(?:,|e|a|até)\s*(\d+)(?:\s*(?:,|e|a)\s*(\d+))?", re.I)
 RE_AUTOR = re.compile(r"^\((?=[^()]*[A-Za-zÀ-ú])[^()]{2,60}\)\.?$")  # "(Paulo Leminski)"
+RE_FONTE_LETRA = re.compile(r"Bundesbahn|Circled|Pi|Ding|Zapf|Symbol", re.I)  # letras A-E desenhadas
 LETRAS = "ABCDE"
 FOLGA_CALHA = 12  # quanto um elemento precisa invadir cada lado para contar como largo
 MIN_LARGAS = 0.25  # fração das linhas da zona que precisa atravessar a calha
@@ -112,7 +113,7 @@ def letra_da_linha(spans):
         return m.group(1)
     if re.fullmatch(r"[A-E]", primeiro):
         fonte = uteis[0]["font"]
-        if re.search(r"Bundesbahn|Circled|Pi|Ding|Zapf|Symbol", fonte, re.I):
+        if RE_FONTE_LETRA.search(fonte):
             return primeiro
         if len(uteis) > 1 and uteis[1]["font"] != fonte:
             return primeiro
@@ -155,9 +156,10 @@ class Prova:
                     texto = "".join(s["text"] for s in l["spans"]).strip()
                     if texto:
                         uteis = [s for s in l["spans"] if s["text"].strip()]
-                        linhas.append(Linha(pno, *l["bbox"], texto, letra_da_linha(l["spans"]),
-                                            fonte=uteis[0]["font"], base=uteis[0]["origin"][1],
-                                            tam=max(s["size"] for s in uteis)))
+                        y0, y1 = self._altura_da_linha(l, uteis)
+                        linhas.append(Linha(pno, l["bbox"][0], y0, l["bbox"][2], y1, texto,
+                                            letra_da_linha(l["spans"]), fonte=uteis[0]["font"],
+                                            base=uteis[0]["origin"][1], tam=max(s["size"] for s in uteis)))
             self.linhas[pno] = linhas
             marc = (self._achar_numeros_soltos(linhas) if self.uma_coluna
                     else self._achar_marcadores(page, pno))
@@ -169,11 +171,41 @@ class Prova:
                 self.ignorar.add(pno)
             self.objetos[pno], self.circulos[pno] = self._ler_objetos(page, pno)
 
+    @staticmethod
+    def _altura_da_linha(l, uteis):
+        """Topo e base da linha.
+
+        Alguns símbolos das fórmulas (o ponto de multiplicação, o "×") vêm de uma fonte com
+        medidas exageradas: o span chega a 56 pt de altura numa linha de 10 pt, e a linha
+        passava do rodapé (a alternativa E sumia) ou ficava antes do denominador da
+        alternativa anterior (Matemática de 2020). Nesses spans vale a faixa em volta da
+        linha de base; as linhas sem exagero ficam como o PDF declara. A tarja vertical
+        "ENEM 2022 ENEM 2022" na margem também tem caixa enorme, mas é uma linha só dela e
+        continua como está (fica fora do corpo das questões).
+        """
+        exagerado = lambda s: s["bbox"][3] - s["bbox"][1] > 2.5 * max(s["size"], 1)
+        normais = [s for s in uteis if not exagerado(s)]
+        simbolos = [s for s in uteis if exagerado(s)]
+        if (not any(exagerado(s) for s in l["spans"]) or not normais
+                or any(len(s["text"].strip()) > 3 for s in simbolos)):
+            return l["bbox"][1], l["bbox"][3]
+        topos, bases = [], []
+        for s in uteis:
+            if exagerado(s):
+                topos.append(s["origin"][1] - 0.78 * s["size"])
+                bases.append(s["origin"][1] + 0.26 * s["size"])
+            else:
+                topos.append(s["bbox"][1])
+                bases.append(s["bbox"][3])
+        return min(topos), max(bases)
+
     def _filtrar_marcadores(self):
         """Em 2005 há números soltos que são legendas de figuras, não questões."""
         if not self.numeracao_continua:
             return
-        coluna = lambda m: 0 if self.uma_coluna or m.x0 < self.larguras[m.pag] / 2 else 1
+        # em 2007 a coluna da direita da página 17 começa antes do meio (x = 287 de 595): com o
+        # corte no meio, 53 caía na coluna da esquerda, quebrava a sequência e sumiam 53 a 63
+        coluna = lambda m: 0 if self.uma_coluna or m.x0 < self.larguras[m.pag] * 0.4 else 1
         validos, esperado = [], 1
         for m in sorted(self.marcadores, key=lambda m: (m.pag, coluna(m), m.y0)):
             if m.num == esperado:
@@ -194,6 +226,12 @@ class Prova:
             if not fontes:
                 continue
             dominante = fontes.most_common(1)[0][0]
+            # numa página de Matemática os rótulos das figuras (A, B, C de um triângulo) podem
+            # ser mais numerosos que as letras das alternativas; a fonte própria das letras
+            # circuladas, quando aparece, é a das alternativas
+            proprias = [f for f, _ in fontes.most_common() if RE_FONTE_LETRA.search(f)]
+            if proprias:
+                dominante = proprias[0]
             for l in ls:
                 if l.letra and not l.texto.startswith("(") and l.fonte != dominante:
                     l.letra = None
@@ -570,7 +608,11 @@ class Prova:
                     ultimo = j
                     continue
                 break
-            continua = (l.y0 - ant.y1 < vao_max and e.x0 + 3 < l.x0 < e.x0 + 30 and l.letra is None
+            # pedaço curto de fórmula logo abaixo, como o denominador de uma fração
+            # (Matemática): o PDF põe cada pedaço numa linha, e ele pode ficar longe da letra
+            formula = len(l.texto) <= 15 and l.x0 > e.x0 + 3
+            continua = (l.y0 - ant.y1 < vao_max and (e.x0 + 3 < l.x0 < e.x0 + 30 or formula)
+                        and l.letra is None
                         and not RE_TITULO_SECAO.search(l.texto) and not RE_TEXTO_COMPARTILHADO.search(l.texto))
             mesma_linha = abs(l.y0 - ant.y0) < 3
             # autor do texto da alternativa E, alinhado à direita: "(Henriqueta Lisboa)"
@@ -580,7 +622,9 @@ class Prova:
             else:
                 break
         fim = linhas[ultimo]
-        y_fim = fim.y1
+        # a última linha da continuação pode ser o denominador da alternativa D, que fica
+        # acima da base da linha E
+        y_fim = max(fim.y1, e.y1)
         c = self.celulas_pag[fim.pag][fim.cel]
         for o in self.objetos[fim.pag]:
             if (c.x0 - 4 <= (o.x0 + o.x1) / 2 <= c.x1 + 4 and o.y0 < e.y1 - 2 and o.y1 > e.y0

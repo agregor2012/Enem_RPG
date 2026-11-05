@@ -35,8 +35,11 @@ SINAIS_GRAVES = ("linha_cortada_na_lateral", "mais_de_uma_questao", "sem_recorte
 CONFERIDAS = set(json.loads((RAIZ / "ferramentas" / "conferidas.json").read_text(encoding="utf-8")))
 # recortes que passaram na auditoria, mas estão errados quando vistos
 REPROVADAS = set(json.loads((RAIZ / "ferramentas" / "reprovadas.json").read_text(encoding="utf-8")))
+# habilidades de cada competência, como nas Matrizes de Referência do Enem (INEP)
 FAIXAS_HAB = {"LC": [(1, 4), (5, 8), (9, 11), (12, 14), (15, 17), (18, 20), (21, 24), (25, 27), (28, 30)],
-              "CH": [(1, 5), (6, 10), (11, 15), (16, 20), (21, 25), (26, 30)]}
+              "CH": [(1, 5), (6, 10), (11, 15), (16, 20), (21, 25), (26, 30)],
+              "CN": [(1, 4), (5, 7), (8, 12), (13, 16), (17, 19), (20, 23), (24, 27), (28, 30)],
+              "MT": [(1, 5), (6, 9), (10, 14), (15, 18), (19, 23), (24, 26), (27, 30)]}
 
 
 def chave(r):

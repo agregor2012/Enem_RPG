@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Baixa do site oficial do INEP as provas e gabaritos que têm Linguagens,
-Ciências Humanas ou Redação (o mesmo conteúdo do 1º dia do Enem 2026).
+"""Baixa do site oficial do INEP as provas e gabaritos dos dois dias do Enem:
+Linguagens, Ciências Humanas, Redação, Ciências da Natureza e Matemática.
 
 Regra por período:
 - 2005-2008: prova única (vem dos microdados oficiais, script 02);
-- 2009-2016: Humanas no 1º dia, Linguagens e Redação no 2º dia => os dois dias;
-- 2017-2025: Linguagens, Humanas e Redação no 1º dia => só o 1º dia.
+- 2009-2016: Humanas e Natureza no 1º dia, Linguagens, Matemática e Redação no 2º;
+- 2017-2025: Linguagens, Humanas e Redação no 1º dia, Natureza e Matemática no 2º.
 
 Versões de acessibilidade (ampliada, superampliada, ledor, leitor de tela) têm as
 mesmas questões das versões comuns; use --sem-acessibilidade para deixá-las de fora.
@@ -83,9 +83,6 @@ def selecionar(acessibilidade=False):
             dia = 1 if "tema_redacao" in nome else dia_do_link(link["secao"], nome)
             if dia is None:
                 ignorados.append({"ano": ano, "nome": nome, "motivo": "dia não identificado"})
-                continue
-            if ano >= 2017 and dia == 2:
-                ignorados.append({"ano": ano, "nome": nome, "motivo": "2º dia: Natureza e Matemática"})
                 continue
             tipo = "gabarito" if link["texto"].lower().startswith("gabarito") else "prova"
             itens.append({

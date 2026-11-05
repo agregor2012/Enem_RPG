@@ -241,8 +241,10 @@ code { font-family: Consolas, monospace; font-size: .92em; background: rgba(0,0,
 .tabela tbody th { font-weight: 600; }
 .tabela small { display: block; color: var(--texto-3); font-weight: 400; font-size: 12px; }
 .botoes-sim { display: flex; flex-wrap: wrap; gap: 5px; }
-.tabela-sim th:first-child { width: 30%; }
-.tabela-sim .num { text-align: center; width: 13%; }
+.tabela-sim th:first-child { width: 24%; }
+.tabela-sim .num { text-align: center; width: 11%; }
+.tabela-sim .num-sim { min-width: 46px; padding: 4px 10px; font-variant-numeric: tabular-nums; }
+.tabela-sim .vazio { color: var(--texto-3); }
 .filtro-sim { margin-bottom: 10px; }
 .nota-rodape { margin-top: 12px; color: var(--texto-3); font-size: 13px; max-width: 90ch; }
 
@@ -365,7 +367,7 @@ code { font-family: Consolas, monospace; font-size: .92em; background: rgba(0,0,
 :root {
   --grau-1: #c98b54; --grau-2: #c3cad6; --grau-3: #e3be5e; --grau-4: #8fdde4; --grau-5: #c39bff;
   --reino-letras: #4a6fbd; --reino-humanas: #c0603f; --reino-torre: #4a64a0; --reino-masmorra: #5fae84;
-  --reino-arena: #c24b4b; --reino-sabio: #9a74e0;
+  --reino-arena: #c24b4b; --reino-sabio: #9a74e0; --reino-natureza: #7cbf5e; --reino-numeros: #4fb7c4;
 }
 .heroi > .sub { margin-bottom: 8px; }
 .titulo-heroi { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0 auto 14px; max-width: 100%; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--ouro-escuro); background: rgba(220,181,101,.08); color: var(--ouro-forte); font: 600 13.5px var(--titulo); }
@@ -415,6 +417,7 @@ button.opcao-titulo:hover { border-color: var(--ouro-escuro); }
 .reino-letras { --cor-reino: var(--reino-letras); } .reino-humanas { --cor-reino: var(--reino-humanas); }
 .reino-torre { --cor-reino: var(--reino-torre); } .reino-masmorra { --cor-reino: var(--reino-masmorra); }
 .reino-arena { --cor-reino: var(--reino-arena); } .reino-sabio { --cor-reino: var(--reino-sabio); }
+.reino-natureza { --cor-reino: var(--reino-natureza); } .reino-numeros { --cor-reino: var(--reino-numeros); }
 .inimigo-topo { margin-left: auto; flex: none; display: grid; justify-items: end; gap: 1px; padding: 5px 10px 6px; border-radius: 8px; border: 1px solid var(--linha); border-right: 3px solid var(--cor-reino); background: var(--noite-2); max-width: 280px; }
 .inimigo-topo .onda { font-size: 11.5px; color: var(--cor-reino); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
 .inimigo-topo strong { font: 600 14.5px var(--titulo); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
