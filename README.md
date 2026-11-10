@@ -21,6 +21,22 @@ os microdados do INEP.
 - **Progressão:** XP, níveis, pontos, porcentagem de acerto por sessão e 59 conquistas em cinco
   graus (Bronze, Prata, Ouro, Platina e Lendária). Cada conquista libera um título para o herói.
 - **Mapa:** atlas com os oito lugares do jogo, zoom pela roda do mouse e arraste para mover.
+- **Itens e raridades:**
+  - **O que há:** 34 itens em seis raridades (Comum, Incomum, Raro, Épico, Lendário e Mítico) e
+    dez categorias.
+  - **Inventário:** filtros, seis espaços de equipamento (arma, armadura, dois acessórios,
+    artefato e mascote), fabricação com receitas que se liberam, loja com limite diário e
+    missões do dia.
+  - **De onde vêm:**
+    - inimigos e guardiões;
+    - monstros errantes do Reino do Sábio;
+    - baús que aparecem entre as questões (às vezes um Mímico);
+    - conquistas, missões e a loja.
+  - **Regras:**
+    - os itens ajudam sem dar a resposta: tiram no máximo duas alternativas erradas, mostram a
+      habilidade cobrada, dão uma segunda chance ou protegem a sequência, e o acerto com ajuda
+      vale metade;
+    - no Simulado nenhum item muda a prova.
 
 Ficam fora do banco as questões anuladas pelo INEP, as que têm gabaritos oficiais divergentes e
 aquelas cujo recorte automático não ficou confiável. A lista, com o motivo de cada uma, aparece
@@ -63,9 +79,45 @@ no fim), crie uma vaga nova onde houver espaço e acrescente o lugar em `LUGARES
 o `y` dela e o id dela em `vaga`. Enquanto nenhum lugar ocupa uma vaga, ela aparece sob névoa
 como "Terras não mapeadas". A estrada até os outros lugares (`ESTRADAS_MAPA`) é opcional.
 
+## Itens novos
+
+Os itens são só dados, em `jogo/itens.js`. Para criar um, acrescente uma entrada em `ITENS` com:
+
+- id, nome, raridade e categoria;
+- um ícone (os símbolos `it-*` de `jogo/index.html`) e a cor;
+- a descrição e o texto do efeito;
+- o que ele faz:
+  - `uso`, para consumíveis e pergaminhos;
+  - `bonus`, para equipamentos e relíquias;
+  - `poder`, para artefatos e mascotes.
+
+Os efeitos e bônus disponíveis estão descritos no começo do arquivo.
+
+Com `drop: true` o item já entra nos sorteios da raridade dele. Ele também pode ganhar:
+
+- uma receita (`RECEITAS`);
+- um lugar na loja (`LOJA`);
+- um monstro que o deixe cair (`MONSTROS_ERRANTES`);
+- um posto de prêmio de conquista (`PREMIO_CONQUISTA`).
+
+Ficam no mesmo arquivo:
+
+- os limites que seguram o equilíbrio (`LIMITES`), como o máximo de bônus de XP e de alternativas
+  eliminadas;
+- o que cada modo de jogo permite (`REGRAS_MODO`);
+- as regras de fim de sessão (`ESPOLIO_GUARDIAO` e `PREMIO_SIMULADO`).
+
+A lógica e as telas do inventário ficam em `jogo/inventario.js`.
+
+Enquanto o sistema está em teste, Ajustes tem um **modo desenvolvedor** temporário que:
+
+- libera todos os itens, receitas e a loja numa cópia de teste do inventário, que não é gravada no
+  save;
+- tem opções para forçar baús, Mímicos e monstros errantes.
+
 ## Pastas
 
-- `jogo/`: o jogo (Electron): `index.html`, `app.js`, `conteudo.js`, `estilo.css`, `main.js` e `preload.js`;
+- `jogo/`: o jogo (Electron): `index.html`, `app.js`, `conteudo.js`, `itens.js` (catálogo de itens), `inventario.js` (inventário, recompensas e fabricação), `estilo.css`, `main.js` e `preload.js`;
 - `ferramentas/`: scripts que baixam, recortam e conferem as questões;
 - `dados/`: mapeamentos e relatórios pequenos usados pelas ferramentas.
 

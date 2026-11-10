@@ -27,6 +27,22 @@ O QUE HÁ NO JOGO
   o 2º dia ou uma área só.
 - Torre da Redação: estrutura, competências, nota zero, temas de 2005 a 2025 e
   redações comentadas.
+- Inventário: 34 itens em seis raridades (Comum, Incomum, Raro, Épico, Lendário e
+  Mítico).
+  - Equipamento: arma, armadura, dois acessórios, artefato e mascote.
+  - Também tem fabricação, loja com limite diário e missões do dia.
+  - Os itens vêm de:
+    - inimigos e guardiões vencidos;
+    - monstros errantes do Reino do Sábio;
+    - baús achados entre as questões (cuidado com o Mímico);
+    - conquistas, missões e a loja.
+  - Durante a questão, a bolsa ao lado das alternativas usa poções e pergaminhos. Eles:
+    - tiram no máximo duas alternativas erradas;
+    - mostram a habilidade cobrada;
+    - dão uma segunda chance ou protegem a sequência.
+  - Acerto com ajuda vale metade. No Simulado nenhum item muda a prova.
+- Modo desenvolvedor (temporário, em Ajustes): libera tudo numa cópia de teste do
+  inventário, para experimentar os itens sem mexer no seu progresso.
 - Grimório: histórico, gráfico de acerto, competências e conquistas.
 - Contagem para o 1º dia do Enem: começa na data oficial de 2026 (08/11) e pode ser
   trocada em "alterar", no painel do herói.

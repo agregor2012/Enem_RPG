@@ -17,6 +17,7 @@ const E = {
   torreAba: 'estrutura', torreAno: null, leitor: null, modal: null, relogio: null,
   simFiltro: 'todos', criacao: { nome: '', classe: 'escriba' }, checklist: new Set(), relatorio: null,
   camera: { z: 1, cx: 700, cy: 520 }, cameraAlvo: null, fimArrasto: 0,
+  inv: { aba: 'itens', cat: 'todos', rar: 'todas', bloqueados: true }, dev: null, premiosConquista: {},
 };
 
 /* ---- utilidades ------------------------------------------------------- */
@@ -65,11 +66,13 @@ function avisar(texto, tipo = 'info') {
 function saveNovo() {
   return {
     versao: 1, heroi: null, xp: 0, pontos: 0,
-    cfg: { lingua: 'ing', meta: 20, zoom: 100, papel: 'pergaminho', dataProva: null },
+    cfg: { lingua: 'ing', meta: 20, zoom: 100, papel: 'pergaminho', dataProva: null,
+           dev: false, devBau: false, devMimico: false, devErrante: false }, // dev*: modo desenvolvedor temporário
     q: {}, sessoes: [], dias: {}, seqDias: { atual: 0, melhor: 0, ultimo: null },
     conquistas: {}, lidas: {}, melhorSeq: 0, recuperadas: 0, filaZerada: false, atual: null,
     titulo: null, // id da conquista cujo título aparece no painel; null usa o título do nível
     sabio: { jornadas: 0, inimigos: 0, chefes: 0, melhorOnda: 0 },
+    itens: itensNovos(), // inventário, equipamento, moedas, missões e loja (inventario.js)
   };
 }
 async function carregarSave() {
@@ -81,7 +84,7 @@ async function carregarSave() {
   try {
     const s = JSON.parse(texto);
     const novo = saveNovo();
-    return { ...novo, ...s, cfg: { ...novo.cfg, ...s.cfg }, sabio: { ...novo.sabio, ...s.sabio } };
+    return { ...novo, ...s, cfg: { ...novo.cfg, ...s.cfg }, sabio: { ...novo.sabio, ...s.sabio }, itens: mesclarItens(s.itens) };
   } catch (e) {
     console.error(e);
     return saveNovo();
@@ -272,6 +275,14 @@ function vidaDoInimigo(onda, chefe) {
 function novoInimigo(s) {
   const onda = (s.onda || 0) + 1;
   const chefe = onda % ONDAS_POR_CHEFE === 0;
+  // de vez em quando, um monstro errante (itens.js) aparece no lugar do inimigo comum
+  const errante = chefe ? null : sortearErrante(onda);
+  if (errante) {
+    const hp = Math.max(errante.hp, vidaDoInimigo(onda, false));
+    s.onda = onda;
+    E.save.sabio.melhorOnda = Math.max(E.save.sabio.melhorOnda, onda);
+    return { nome: errante.nome, frase: errante.frase, reino: 'errante', errante: errante.id, hp, hpMax: hp, onda, chefe: false };
+  }
   let reino = 'sabio';
   if (!chefe) {
     // a Masmorra só manda inimigos quando há erros para rever
@@ -314,14 +325,16 @@ function partirSabio() {
 function golpear(s, r) {
   const ini = s.inimigo;
   if (!r.acertou || ini.hp <= 0) return;
-  ini.hp -= 1;
+  const dano = danoDoGolpe(s); // arma com golpe duplo a partir de certa sequência
+  ini.hp = Math.max(0, ini.hp - dano);
+  if (dano > 1) r.golpeForte = true;
   if (ini.hp > 0) return;
   const xp = ini.chefe ? XP_CHEFE : XP_INIMIGO;
   s.derrotados += 1;
   E.save.sabio.inimigos += 1;
   if (ini.chefe) { s.chefes += 1; E.save.sabio.chefes += 1; }
   s.xp += xp; E.save.xp += xp;
-  r.derrotou = { nome: ini.nome, xp, chefe: ini.chefe };
+  r.derrotou = { nome: ini.nome, xp, chefe: ini.chefe, errante: ini.errante || null, forte: ini.hpMax >= 3 };
 }
 function avancarSabio(s) {
   if (s.inimigo.hp <= 0) s.inimigo = novoInimigo(s);
@@ -334,26 +347,41 @@ function avancarSabio(s) {
 /* ---- responder -------------------------------------------------------- */
 function premio(q, acertou, st, sessao) {
   const classe = E.save.heroi.classe;
-  const comBonus = (xp) => {
-    const afinidade = (classe === 'escriba' && q.area === 'LC') || (classe === 'cronista' && q.area === 'CH')
-      || (classe === 'alquimista' && sessao.tipo === 'revisao');
-    return afinidade ? Math.round(xp * 1.1) : xp;
-  };
-  if (!acertou) return { pontos: 0, xp: comBonus(XP_ERRO) };
-  const pontos = PONTOS_NIVEL[q.nivel] + Math.min(Math.max(sessao.seq - 1, 0), BONUS_SEQUENCIA_MAX);
-  if (sessao.tipo === 'revisao') return { pontos, xp: comBonus(XP_REVISAO) };
+  const afinidade = (classe === 'escriba' && q.area === 'LC') || (classe === 'cronista' && q.area === 'CH')
+    || (classe === 'alquimista' && sessao.tipo === 'revisao');
+  // classe (+10%) e itens equipados (até LIMITES.xp, em inventario.js)
+  const fator = 1 + (afinidade ? 0.1 : 0) + bonusXpItens(q, sessao) / 100;
+  const comBonus = xp => Math.round(xp * fator);
+  if (!acertou) return { pontos: 0, xp: comBonus(XP_ERRO + xpErroItens(sessao)) };
+  let pontos = PONTOS_NIVEL[q.nivel] + Math.min(Math.max(sessao.seq - 1, 0), BONUS_SEQUENCIA_MAX);
   const repetida = st && st.a > 0; // refazer questão já acertada rende pouco, para não virar decoreba
-  return { pontos, xp: comBonus(repetida ? Math.ceil(pontos / 4) : pontos) };
+  let xp = sessao.tipo === 'revisao' ? XP_REVISAO : (repetida ? Math.ceil(pontos / 4) : pontos);
+  if (ajudaNaQuestao(sessao, q.id)) { // alternativa eliminada ou segunda chance: o acerto vale metade
+    pontos = Math.ceil(pontos * AJUDA_FATOR);
+    xp = Math.ceil(xp * AJUDA_FATOR);
+  }
+  return { pontos, xp: comBonus(xp) };
 }
-function registrar(q, letra, sessao) {
+function registrar(q, letra, sessao, opcoes = {}) {
   const acertou = letra === q.gab;
   const dia = hoje();
   const st = E.save.q[q.id] || { a: 0, e: 0, cx: 0, prox: null, ultima: null, dia: null };
-  if (acertou) { sessao.seq += 1; sessao.acertos += 1; } else { sessao.seq = 0; }
+  let protegeu = null;
+  if (acertou) {
+    if (!opcoes.segunda) sessao.seq += 1; // acerto na segunda chance não aumenta a sequência
+    sessao.acertos += 1;
+  } else {
+    protegeu = protegerSequencia(sessao, q); // poção ou armadura podem salvar a sequência
+    if (!protegeu) sessao.seq = 0;
+  }
   sessao.maxSeq = Math.max(sessao.maxSeq, sessao.seq);
   E.save.melhorSeq = Math.max(E.save.melhorSeq, sessao.seq);
   const ganho = premio(q, acertou, st, sessao);
-  if (acertou) {
+  if (acertou && opcoes.segunda) {
+    // acertou só na segunda tentativa: conta o acerto, mas a questão volta amanhã na revisão
+    st.a += 1; st.e += 1; st.cx = 0;
+    st.prox = somarDias(dia, INTERVALOS_REVISAO[0]);
+  } else if (acertou) {
     if (st.prox) {
       if (st.prox <= dia || sessao.tipo === 'revisao') E.save.recuperadas += 1;
       st.cx += 1;
@@ -364,7 +392,7 @@ function registrar(q, letra, sessao) {
     st.e += 1; st.cx = 0;
     st.prox = somarDias(dia, INTERVALOS_REVISAO[0]);
   }
-  st.ultima = acertou ? 1 : 0;
+  st.ultima = acertou && !opcoes.segunda ? 1 : 0;
   st.dia = dia;
   E.save.q[q.id] = st;
   sessao.pontos += ganho.pontos;
@@ -375,7 +403,7 @@ function registrar(q, letra, sessao) {
   d.q += 1; d.a += acertou ? 1 : 0;
   E.save.dias[dia] = d;
   marcarDia(dia);
-  return { acertou, ...ganho };
+  return { acertou, ...ganho, protegeu, segunda: Boolean(opcoes.segunda) };
 }
 function marcarDia(dia) {
   const s = E.save.seqDias;
@@ -396,9 +424,18 @@ function confirmar() {
     return;
   }
   if (s.respostas[q.id]) return;
-  const r = registrar(q, E.selecao, s);
+  if (eliminadasDa(s, q.id).includes(E.selecao)) { E.selecao = null; atualizarMarcas(); return; }
+  // segunda chance pronta (elixir ou ampulheta): a resposta errada não conta e a questão continua
+  if (E.selecao !== q.gab && tentarSegundaChance(s, q, E.selecao)) {
+    E.selecao = null;
+    salvar();
+    renderMantendoRolagem();
+    return;
+  }
+  const r = registrar(q, E.selecao, s, { segunda: Boolean(s.efeitos?.[q.id]?.errouAntes) });
   s.respostas[q.id] = E.selecao;
   if (s.tipo === 'sabio') golpear(s, r);
+  aoResponderItens(s, q, r); // espólio, baús, Mímico e missões (inventario.js)
   E.respostaAtual = r;
   salvar();
   render();
@@ -448,8 +485,10 @@ function concluirSessao() {
   if (s.tipo === 'revisao' && !filaRevisao(true).length) E.save.filaZerada = true;
   const erradas = respondidas.filter(id => s.respostas[id] !== E.porId.get(id).gab);
   const novas = verificarConquistas();
+  const itens = aoConcluirItens(s, registro); // guardião, baú do simulado e missões (inventario.js)
   E.resultado = { ...registro, erradas, respostas: s.respostas, guardiao: s.guardiao, bonus, novas,
-                  nivelAntes: antes, nivelDepois: nivelDe(E.save.xp).n, ids: s.ids };
+                  nivelAntes: antes, nivelDepois: nivelDe(E.save.xp).n, ids: s.ids,
+                  espolio: itens.espolio, mimicoFugiu: itens.mimicoFugiu, missoesItens: itens.missoes };
   E.save.atual = null;
   clearInterval(E.relogio);
   salvar(true);
@@ -520,6 +559,7 @@ function verificarConquistas() {
     for (const q of desta) {
       E.save.conquistas[q.id] = hoje();
       E.save.xp += XP_CONQUISTA[q.grau];
+      premiarConquista(q); // moedas e item da conquista (inventario.js)
       novas.push(q);
     }
   }
@@ -546,7 +586,8 @@ function menu(ativo) {
   const fila = filaRevisao(true).length;
   const itens = [
     ['mapa', 'mapa', 'Mapa'], ['revisao', 'caveira', 'Revisão'], ['simulado', 'espadas', 'Simulado'],
-    ['redacao', 'torre', 'Redação'], ['grimorio', 'livro', 'Grimório'], ['ajustes', 'engrenagem', 'Ajustes'],
+    ['redacao', 'torre', 'Redação'], ['grimorio', 'livro', 'Grimório'], ['inventario', 'bau', 'Inventário'],
+    ['ajustes', 'engrenagem', 'Ajustes'],
   ];
   return `<nav class="menu" aria-label="Navegação principal">
     <div class="marca">${ico('escudo')}<span>ENEM RPG</span></div>
@@ -578,6 +619,7 @@ function painelHeroi() {
     <dl class="fichas">
       <div><dt>${ico('chama')} Dias seguidos</dt><dd>${E.save.seqDias.atual}</dd></div>
       <div><dt>${ico('estrela')} Pontos</dt><dd>${milhar(E.save.pontos)}</dd></div>
+      <div><dt>${ico('moeda')} Moedas</dt><dd>${inventario().dev ? '∞' : milhar(inventario().moedas || 0)}</dd></div>
       <div class="contagem"><dt>${ico('ampulheta')} 1º dia do Enem</dt><dd>${textoContagem(faltam)}</dd>
         <button class="mudar-data" data-acao="pedir-data" title="Definir a data da sua prova">${formatarData(dataProva())} · alterar</button></div>
     </dl>
@@ -655,7 +697,7 @@ const TELAS = {
     const emCurso = E.save.atual?.tipo === 'sabio' ? E.save.atual : null;
     const bestiario = Object.entries(REINOS_INIMIGOS).map(([chave, r]) => `<article class="reino-bestiario reino-${r.cor}">
         <h3>${r.nome}${chave === 'sabio' ? ' <small>chefes</small>' : ''}</h3>
-        <ul>${INIMIGOS[chave].map(([nome, frase]) => `<li><strong>${nome}</strong><span>${frase}</span></li>`).join('')}</ul></article>`).join('');
+        <ul>${INIMIGOS[chave].map(([nome, frase]) => `<li><strong>${nome}</strong><span>${frase}</span>${chave === 'errante' ? dropsDoErrante(nome) : ''}</li>`).join('')}</ul></article>`).join('');
     return `${menu('mapa')}<main class="conteudo">
       <header class="cabecalho">
         <button class="voltar" data-acao="ir" data-tela="mapa">${ico('seta')} Mapa</button>
@@ -669,7 +711,8 @@ const TELAS = {
             <li>Cada inimigo vem de um reino do mapa e traz questões de lá: Letras, Humanidades, Natureza, Números, Torre da Redação, Arena do Simulado e, quando há erros para rever, Masmorra dos Erros.</li>
             <li>Cada acerto tira um ponto de vida do inimigo. Errar não custa nada a você, e a questão vai para a Masmorra.</li>
             <li>A cada ${ONDAS_POR_CHEFE} ondas surge um chefe do Sábio, com mais vida e questões difíceis. Os inimigos ficam mais fortes conforme a jornada avança.</li>
-            <li>Inimigo derrotado vale +${XP_INIMIGO} XP, e chefe vale +${XP_CHEFE} XP, além do XP de cada acerto.</li>
+            <li>Inimigo derrotado vale +${XP_INIMIGO} XP, e chefe vale +${XP_CHEFE} XP, além do XP de cada acerto. Todos deixam moedas e, às vezes, itens.</li>
+            <li>De vez em quando surge um monstro errante, com questões de qualquer área e espólio próprio.</li>
           </ul>
           ${emCurso ? `<button class="botao primario grande" data-acao="ir" data-tela="questao">Continuar a jornada (onda ${emCurso.onda})</button>`
             : `<button class="botao primario grande" data-acao="sabio">Iniciar jornada</button>`}
@@ -715,6 +758,7 @@ const TELAS = {
         ${subiu ? `<p class="subiu">${ico('estrela')} Você chegou ao nível ${r.nivelDepois}: ${tituloDe(r.nivelDepois)}</p>` : ''}
         ${r.novas.map(c => `<p class="subiu conquista-nova grau-${c.grau}">${ico('medalha')} Conquista ${GRAUS[c.grau]}: ${c.nome}. Título liberado: <b>${c.titulo}</b> (+${XP_CONQUISTA[c.grau]} XP)</p>`).join('')}
         ${r.novas.length ? '<p class="dica-fim">Escolha o título que quer exibir no painel do herói, no mapa.</p>' : ''}
+        ${espolioResultado(r)}
         ${r.erradas.length ? `<p class="dica-fim">${r.erradas.length === 1 ? 'A questão errada foi' : `As ${r.erradas.length} questões erradas foram`} para a Masmorra dos Erros e ${r.erradas.length === 1 ? 'volta' : 'voltam'} amanhã. Rever ajuda a fixar.</p>` : ''}
         <div class="acoes">
           ${r.erradas.length ? `<button class="botao" data-acao="rever-erradas">Rever as erradas agora</button>` : ''}
@@ -798,6 +842,7 @@ const TELAS = {
 
   redacao: () => telaRedacao(),
   grimorio: () => telaGrimorio(),
+  inventario: () => telaInventario(),
 
   ajustes: () => {
     const c = E.save.cfg;
@@ -815,6 +860,7 @@ const TELAS = {
         <p>Dificuldade: parâmetro da TRI publicado nos microdados, dividido em terços dentro de cada área. Provas de 2005 a 2008 não têm esse dado.</p>
         <button class="botao" data-acao="abrir-relatorio">Ver a lista do que ficou de fora</button>
       </section>
+      ${secaoDev()}
       <section class="ajustes perigo">
         <h2>Recomeçar</h2>
         <p>Apaga personagem, XP e histórico. Não dá para desfazer.</p>
@@ -833,6 +879,7 @@ function larguraRecorte(px, dpi) {
   return Math.round((px / dpi) * 72 * 1.75 * (E.save.cfg.zoom / 100));
 }
 function folha(q, marca = null) {
+  const fora = marca ? [] : eliminadasDa(E.save?.atual, q.id); // alternativas tiradas por item
   const zonas = (idx) => LETRAS.map((l) => {
     const z = q.alt?.[l];
     if (!z || z[0] !== idx) return '';
@@ -840,9 +887,10 @@ function folha(q, marca = null) {
     if (marca) {
       if (l === marca.certa) cls = 'certa';
       else if (l === marca.sua) cls = 'errada';
-    } else if (E.selecao === l) cls = 'selecionada';
+    } else if (fora.includes(l)) cls = 'eliminada';
+    else if (E.selecao === l) cls = 'selecionada';
     const riscada = E.riscadas.has(l) ? 'riscada' : '';
-    const dentro = marca ? 'disabled' : `data-acao="marcar" data-letra="${l}"`;
+    const dentro = marca || fora.includes(l) ? 'disabled' : `data-acao="marcar" data-letra="${l}"`;
     const [esq, dir] = z.length > 3 ? [z[3], z[4]] : [0, 1];
     const caixa = `top:${z[1] * 100}%;height:${(z[2] - z[1]) * 100}%;left:${esq * 100}%;width:${(dir - esq) * 100}%`;
     return `<button class="zona ${cls} ${riscada}" style="${caixa}" ${dentro} aria-label="Alternativa ${l}"></button>`;
@@ -892,18 +940,22 @@ function telaQuestao() {
         : barra(s.i + (respondida ? 1 : 0), s.ids.length, 'fina')}
       ${sabio && !respondida ? `<p class="frase-inimigo">“${esc(s.inimigo.frase)}”</p>` : ''}
       ${!simulado && s.seq >= 2 ? `<p class="sequencia">${ico('chama')} ${s.seq} seguidas</p>` : ''}
+      ${!simulado && !respondida ? avisosDaQuestao(s, q) : ''}
       <div class="alternativas" role="radiogroup" aria-label="Alternativas">
         ${LETRAS.map((l) => {
+          const fora = !respondida && eliminadasDa(s, q.id).includes(l);
           let cls = '';
           if (respondida) {
             if (l === q.gab) cls = 'certa';
             else if (l === s.respostas[q.id]) cls = 'errada';
-          } else if (E.selecao === l) cls = 'selecionada';
-          return `<button class="letra ${cls} ${E.riscadas.has(l) ? 'riscada' : ''}" role="radio" aria-checked="${E.selecao === l}" ${respondida ? 'disabled' : `data-acao="marcar" data-letra="${l}"`} data-riscar="${l}" title="Botão direito para riscar esta alternativa">${l}</button>`;
+          } else if (fora) cls = 'eliminada';
+          else if (E.selecao === l) cls = 'selecionada';
+          return `<button class="letra ${cls} ${E.riscadas.has(l) ? 'riscada' : ''}" role="radio" aria-checked="${E.selecao === l}" ${respondida || fora ? 'disabled' : `data-acao="marcar" data-letra="${l}"`} data-riscar="${l}" title="${fora ? 'Eliminada por um item' : 'Botão direito para riscar esta alternativa'}">${l}</button>`;
         }).join('')}
       </div>
       ${respondida ? painelRetorno(q, r, s) : `<button class="botao primario largo" data-acao="confirmar" ${E.selecao ? '' : 'disabled'}>${simulado ? 'Marcar e seguir' : 'Confirmar resposta'}</button>
-        <p class="atalhos">Teclas A a E escolhem, Enter confirma. Botão direito risca uma alternativa.</p>`}
+        <p class="atalhos">Teclas A a E escolhem, Enter confirma. Botão direito risca uma alternativa.</p>
+        ${simulado ? '' : bolsaQuestao(s, q)}`}
       ${simulado ? gradeSimulado(s) : ''}
       ${sabio ? `<button class="botao largo encerrar-jornada" data-acao="pedir-fim-sabio">${ico('coruja')} Encerrar a jornada</button>` : ''}
     </aside>
@@ -919,11 +971,13 @@ function painelRetorno(q, r, s) {
       <p class="veredito">${ico(certo ? 'check' : 'xis')} ${certo ? 'Resposta certa' : `Resposta certa: ${q.gab}`}</p>
       ${r ? `<p class="ganho">${r.pontos ? `+${r.pontos} pontos · ` : ''}+${r.xp} XP</p>` : ''}
       ${certo ? '' : '<p class="ganho">Esta questão volta amanhã na revisão.</p>'}
+      ${certo && ajudaNaQuestao(s, q.id) ? `<p class="ganho">${r?.segunda ? 'Acerto na segunda chance: vale metade, e a questão volta amanhã na revisão.' : 'Acerto com ajuda de item: vale metade.'}</p>` : ''}
       ${sabio && certo && s.inimigo.hp > 0 ? `<p class="ganho">Golpe certeiro! ${esc(s.inimigo.nome)} ainda tem ${s.inimigo.hp} de vida.</p>` : ''}
       ${sabio && !certo ? `<p class="ganho">${esc(s.inimigo.nome)} resistiu ao golpe.</p>` : ''}
     </div>
     ${r?.derrotou ? `<div class="vitoria-inimigo ${r.derrotou.chefe ? 'chefe' : ''}">${ico('espadas')}<div><strong>${r.derrotou.chefe ? 'Chefe derrotado' : 'Inimigo derrotado'}</strong>
       <span>${esc(r.derrotou.nome)} · +${r.derrotou.xp} XP</span></div></div>` : ''}
+    ${eventosRetorno(r)}
     ${blocoHabilidade(q)}
     <button class="botao primario largo" data-acao="proxima">${proximo}</button>`;
 }
@@ -1784,6 +1838,12 @@ function renderModal() {
       </div>
       <div class="acoes"><button class="botao" data-acao="fechar-modal">Fechar</button></div></div>`;
     $modal.querySelector('.opcao-titulo.ativa')?.focus();
+  } else if (m.tipo === 'item') {
+    $modal.innerHTML = modalItem(m.id);
+    $modal.querySelector('.acoes .botao')?.focus();
+  } else if (m.tipo === 'bau') {
+    $modal.innerHTML = modalBau(m);
+    $modal.querySelector('.acoes .primario')?.focus();
   } else if (m.tipo === 'relatorio') {
     $modal.innerHTML = `<div class="janela leitor" role="dialog" aria-modal="true"><header><div><h2>Questões que ficaram de fora</h2><p>${m.linhas.length} questões, com o motivo de cada uma</p></div>
       <button class="fechar" data-acao="fechar-modal" aria-label="Fechar">${ico('xis')}</button></header>
@@ -1811,6 +1871,7 @@ const ACOES = {
   nivel: (d) => { E.filtro.nivel = d.v; E.manterRolagem = true; render(); },
   partir: partirExpedicao,
   marcar: (d) => {
+    if (eliminadasDa(E.save.atual, E.save.atual?.ids[E.save.atual.i]).includes(d.letra)) return;
     if (E.riscadas.has(d.letra)) E.riscadas.delete(d.letra);
     E.selecao = E.selecao === d.letra && E.save.atual?.tipo !== 'simulado' ? null : d.letra;
     atualizarMarcas();
@@ -1877,7 +1938,10 @@ const ACOES = {
       E.save.lidas[chave] = hoje();
       E.save.xp += XP_LEITURA;
       avisar(`+${XP_LEITURA} XP pela leitura`);
-      for (const c of verificarConquistas()) avisar(`Conquista ${GRAUS[c.grau]}: ${c.nome}. Título liberado: ${c.titulo}`);
+      for (const c of verificarConquistas()) {
+        avisar(`Conquista ${GRAUS[c.grau]}: ${c.nome}. Título liberado: ${c.titulo}`);
+        avisarEspolio(`Prêmio da conquista ${c.nome}`, E.premiosConquista[c.id]);
+      }
       salvar();
       E.manterRolagem = true;
       render();
@@ -1922,10 +1986,12 @@ const ACOES = {
   },
   reiniciar: () => {
     E.save = saveNovo();
+    E.dev = null;
     E.modal = null; renderModal();
     salvar(true);
     ir('criar');
   },
+  ...ACOES_ITENS, // inventário, itens nas questões, fabricação, loja e modo desenvolvedor
 };
 function guardarNome() {
   const el = document.getElementById('nome-heroi');
@@ -1989,6 +2055,7 @@ document.addEventListener('keydown', (ev) => {
   const q = E.porId.get(s.ids[s.i]);
   const respondida = s.tipo !== 'simulado' && s.respostas[q.id];
   const letra = ev.key.toUpperCase();
+  if (LETRAS.includes(letra) && eliminadasDa(s, q.id).includes(letra)) return;
   if (LETRAS.includes(letra) && !respondida && !ev.ctrlKey && !ev.altKey) {
     E.selecao = letra;
     E.riscadas.delete(letra);
@@ -2029,6 +2096,12 @@ async function iniciar() {
     E.matriz = matriz;
     E.relatorio = fora;
     E.save = await carregarSave();
+    // itens: completa o save e dá, uma vez, o prêmio das conquistas que já existiam
+    const retroativos = prepararItens();
+    if (retroativos) {
+      salvar();
+      setTimeout(() => avisarEspolio(`Recompensas das ${retroativos.conquistas} conquistas que você já tinha`, retroativos.entradas), 900);
+    }
     if (E.save.atual) {
       const s = E.save.atual;
       if (s.ids.some(id => !E.porId.has(id))) E.save.atual = null;
