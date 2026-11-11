@@ -22,8 +22,20 @@ os microdados do INEP.
   graus (Bronze, Prata, Ouro, Platina e Lendária). Cada conquista libera um título para o herói.
 - **Mapa:** atlas com os oito lugares do jogo, zoom pela roda do mouse e arraste para mover.
 - **Itens e raridades:**
-  - **O que há:** 34 itens em seis raridades (Comum, Incomum, Raro, Épico, Lendário e Mítico) e
+  - **O que há:** 52 itens em seis raridades (Comum, Incomum, Raro, Épico, Lendário e Mítico) e
     dez categorias.
+  - **Mascotes:** oito, e todos evoluem de aparência em três formas.
+    - Sete evoluem com as questões respondidas enquanto estão equipados.
+    - A Lumina evolui com as conquistas.
+  - **Relógio dos Destinos:** uma vez por mês, deixa escolher um item lendário.
+  - **Eventos especiais entre as questões:**
+    - passagem secreta, com um baú escondido que só abre se você acertar a próxima questão;
+    - mercador errante;
+    - Fonte do Saber;
+    - chuva de moedas.
+  - **Missões dos reinos:** uma por reino, todo dia, além das missões do dia.
+  - **Aprimoramento:** armas, armaduras, acessórios e artefatos podem ser aprimorados uma vez (+1)
+    com Escamas do Dragão e Penas da Fênix.
   - **Inventário:** filtros, seis espaços de equipamento (arma, armadura, dois acessórios,
     artefato e mascote), fabricação com receitas que se liberam, loja com limite diário e
     missões do dia.
@@ -91,7 +103,13 @@ Os itens são só dados, em `jogo/itens.js`. Para criar um, acrescente uma entra
   - `bonus`, para equipamentos e relíquias;
   - `poder`, para artefatos e mascotes.
 
-Os efeitos e bônus disponíveis estão descritos no começo do arquivo.
+Os efeitos e bônus disponíveis estão descritos no começo do arquivo. Lá também estão três campos
+opcionais:
+
+- `tabelas`: limita de onde o item cai;
+- `ativo`: uso pelo inventário uma vez por mês, como o do Relógio dos Destinos;
+- `evolucao`: as formas de um mascote. As camadas de cada forma ficam no ícone dele em
+  `jogo/index.html`, com `display: var(--f2, none)` e `display: var(--f3, none)`.
 
 Com `drop: true` o item já entra nos sorteios da raridade dele. Ele também pode ganhar:
 
@@ -105,7 +123,9 @@ Ficam no mesmo arquivo:
 - os limites que seguram o equilíbrio (`LIMITES`), como o máximo de bônus de XP e de alternativas
   eliminadas;
 - o que cada modo de jogo permite (`REGRAS_MODO`);
-- as regras de fim de sessão (`ESPOLIO_GUARDIAO` e `PREMIO_SIMULADO`).
+- as regras de fim de sessão (`ESPOLIO_GUARDIAO` e `PREMIO_SIMULADO`);
+- os eventos especiais (`EVENTOS`), as missões dos reinos (`MISSOES_REINO`) e o aprimoramento
+  (`APRIMORAMENTO`).
 
 A lógica e as telas do inventário ficam em `jogo/inventario.js`.
 
@@ -113,7 +133,8 @@ Enquanto o sistema está em teste, Ajustes tem um **modo desenvolvedor** tempor�
 
 - libera todos os itens, receitas e a loja numa cópia de teste do inventário, que não é gravada no
   save;
-- tem opções para forçar baús, Mímicos e monstros errantes.
+- tem opções para forçar baús, Mímicos, monstros errantes e eventos especiais, e para mostrar os
+  mascotes na última forma.
 
 ## Pastas
 

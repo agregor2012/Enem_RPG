@@ -67,7 +67,7 @@ function saveNovo() {
   return {
     versao: 1, heroi: null, xp: 0, pontos: 0,
     cfg: { lingua: 'ing', meta: 20, zoom: 100, papel: 'pergaminho', dataProva: null,
-           dev: false, devBau: false, devMimico: false, devErrante: false }, // dev*: modo desenvolvedor temporário
+           dev: false, devBau: false, devMimico: false, devErrante: false, devEvento: false, devEvolucao: false }, // dev*: modo desenvolvedor temporário
     q: {}, sessoes: [], dias: {}, seqDias: { atual: 0, melhor: 0, ultimo: null },
     conquistas: {}, lidas: {}, melhorSeq: 0, recuperadas: 0, filaZerada: false, atual: null,
     titulo: null, // id da conquista cujo título aparece no painel; null usa o título do nível
@@ -209,7 +209,7 @@ function partirExpedicao() {
   const ids = escolher(lista, n).map(q => q.id);
   const regiao = E.filtro.comp === 'todas' ? REINOS[E.area].nome
     : (E.filtro.comp === 0 ? TERRAS_SEM_CLASSE[0] : REINOS[E.area].regioes[E.filtro.comp][0]);
-  iniciarSessao('expedicao', regiao, ids, { guardiao: guardiao(E.area) });
+  iniciarSessao('expedicao', regiao, ids, { guardiao: guardiao(E.area), reino: E.area }); // reino: Diadema e Lumina
 }
 function partirRevisao(todas) {
   const lista = embaralhar(filaRevisao(!todas));
@@ -319,7 +319,7 @@ function partirSabio() {
   s.inimigo = novoInimigo(s);
   const q = questaoDoSabio(s);
   if (!q) { avisar('Não há questões disponíveis para a língua escolhida.'); return; }
-  iniciarSessao('sabio', 'Jornada do Sábio', [q.id], { onda: s.onda, inimigo: s.inimigo, derrotados: 0, chefes: 0 });
+  iniciarSessao('sabio', 'Jornada do Sábio', [q.id], { onda: s.onda, inimigo: s.inimigo, derrotados: 0, chefes: 0, reino: 'sabio' });
 }
 /* Acerto tira um ponto de vida do inimigo; erro não custa nada, a questão vai para a Masmorra. */
 function golpear(s, r) {
@@ -471,7 +471,11 @@ function concluirSessao() {
   const venceu = sabio ? s.derrotados > 0 : respondidas.length > 0 && s.acertos / respondidas.length >= META_GUARDIAO;
   let bonus = 0;
   if (sabio) { if (respondidas.length >= MIN_FIM_SABIO) bonus += XP_FIM_SESSAO; } // os inimigos já deram XP
-  else if (respondidas.length) { bonus += XP_FIM_SESSAO; if (venceu) bonus += XP_GUARDIAO; }
+  else if (respondidas.length) {
+    bonus += XP_FIM_SESSAO;
+    if (venceu) bonus += XP_GUARDIAO;
+    bonus += xpExtraConclusao(s, respondidas.length, bonus); // Manto do Explorador (inventario.js)
+  }
   s.xp += bonus; E.save.xp += bonus;
   const gasto = s.gasto + (Date.now() - s.inicio);
   const registro = {
@@ -479,6 +483,7 @@ function concluirSessao() {
     acertos: s.acertos, pontos: s.pontos, xp: s.xp, tempo: gasto, venceu, maxSeq: s.maxSeq,
     ...(sabio ? { onda: s.onda, derrotados: s.derrotados, chefes: s.chefes } : {}),
     ...(s.parte ? { parte: s.parte } : {}),
+    ...(s.reino ? { reino: s.reino } : {}),
   };
   if (respondidas.length) E.save.sessoes.push(registro);
   if (sabio && respondidas.length) E.save.sabio.jornadas += 1;
@@ -488,7 +493,8 @@ function concluirSessao() {
   const itens = aoConcluirItens(s, registro); // guardião, baú do simulado e missões (inventario.js)
   E.resultado = { ...registro, erradas, respostas: s.respostas, guardiao: s.guardiao, bonus, novas,
                   nivelAntes: antes, nivelDepois: nivelDe(E.save.xp).n, ids: s.ids,
-                  espolio: itens.espolio, mimicoFugiu: itens.mimicoFugiu, missoesItens: itens.missoes };
+                  espolio: itens.espolio, mimicoFugiu: itens.mimicoFugiu, passagemFechou: itens.passagemFechou,
+                  missoesItens: itens.missoes, extrasItens: itens.extras };
   E.save.atual = null;
   clearInterval(E.relogio);
   salvar(true);
@@ -1844,6 +1850,9 @@ function renderModal() {
   } else if (m.tipo === 'bau') {
     $modal.innerHTML = modalBau(m);
     $modal.querySelector('.acoes .primario')?.focus();
+  } else if (m.tipo === 'escolha') {
+    $modal.innerHTML = modalEscolha(m);
+    ($modal.querySelector('.carta-escolha') || $modal.querySelector('.acoes .botao'))?.focus();
   } else if (m.tipo === 'relatorio') {
     $modal.innerHTML = `<div class="janela leitor" role="dialog" aria-modal="true"><header><div><h2>Questões que ficaram de fora</h2><p>${m.linhas.length} questões, com o motivo de cada uma</p></div>
       <button class="fechar" data-acao="fechar-modal" aria-label="Fechar">${ico('xis')}</button></header>

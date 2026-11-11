@@ -27,9 +27,17 @@ O QUE HÁ NO JOGO
   o 2º dia ou uma área só.
 - Torre da Redação: estrutura, competências, nota zero, temas de 2005 a 2025 e
   redações comentadas.
-- Inventário: 34 itens em seis raridades (Comum, Incomum, Raro, Épico, Lendário e
+- Inventário: 52 itens em seis raridades (Comum, Incomum, Raro, Épico, Lendário e
   Mítico).
   - Equipamento: arma, armadura, dois acessórios, artefato e mascote.
+  - Os oito mascotes evoluem de aparência, em três formas, conforme acompanham você.
+  - O Relógio dos Destinos deixa escolher um item lendário uma vez por mês.
+  - Entre as questões podem surgir eventos especiais: passagem secreta (acerte a
+    próxima para abrir o baú escondido), mercador errante, Fonte do Saber e chuva
+    de moedas.
+  - Missões dos reinos: uma por reino, todo dia.
+  - Aprimoramento: armas, armaduras, acessórios e artefatos podem ser aprimorados
+    uma vez (+1), com Escamas do Dragão e Penas da Fênix.
   - Também tem fabricação, loja com limite diário e missões do dia.
   - Os itens vêm de:
     - inimigos e guardiões vencidos;

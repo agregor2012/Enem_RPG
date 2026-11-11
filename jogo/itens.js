@@ -11,10 +11,30 @@
      pista              mostra a competência e a habilidade que a questão cobra (Matriz do INEP)
      segunda_chance     se errar, a alternativa é riscada e você responde de novo
      protege_sequencia  se errar, a sequência de acertos não zera
-   Bônus de equipamento e relíquia (campo "bonus"):
+     fortuna (moedas, bau)  até o fim da sessão: +moedas % e +bau pontos de chance de baú
+     descoberta         a próxima recompensa da sessão traz um item a mais
+     protege_sessao     até o fim da sessão, o primeiro erro não zera a sequência
+   Segunda chance, proteções e descoberta ficam prontas e só gastam o item quando agem.
+   Bônus de equipamento, mascote e relíquia (campo "bonus"):
      xp, xpArea [área, %], xpRevisao, xpErro (pontos), moedas (%), bau (pontos de %), sorte,
-     golpe (golpe duplo no Sábio a partir de N acertos seguidos), escudo (erros protegidos por sessão)
-   Poderes (campo "poder", em artefatos e mascotes): um efeito de uso com cargas por sessão. */
+     golpe (golpe duplo no Sábio a partir de N acertos seguidos), escudo (erros protegidos por sessão),
+     moedasExpedicao (% só nas expedições), errante (pontos de % de monstro errante no Sábio),
+     moedasGuardiao (moedas por guardião ou chefe vencido), xpExpedicao (% do XP de conclusão de
+     expedição), chanceGuardiao (pontos de % de item do guardião nas expedições), materialExtra e
+     materialBasico (% de material depois de batalhas), missaoReino (moedas a mais em cada missão
+     de reino), evento (pontos de % de evento especial), segredos (multiplica a chance de a
+     passagem secreta ser o evento sorteado), revisaoCompleta (moedas ao completar a Masmorra),
+     bauRaro (multiplica a chance de baús de Prata e Ouro), tesouro (Mímicos segurados por sessão;
+     também guarda as moedas do guardião não vencido), raridade { epico: %, lendario: % } (itens
+     mais raros nas recompensas), cincoReinos (item dado ao concluir os cinco reinos no mesmo dia)
+   Os bônus em números de armas, armaduras, acessórios e artefatos crescem com o aprimoramento
+   (APRIMORAMENTO, no fim do arquivo).
+   Poderes (campo "poder", em artefatos e mascotes): um efeito de uso com cargas por sessão.
+   Outros campos:
+     tabelas   o item só cai nessas tabelas de TABELAS_DROP (vale mesmo fora das categorias delas)
+     ativo     uso pelo inventário, uma vez por mês (Relógio dos Destinos)
+     evolucao  formas do mascote: por questões respondidas com ele equipado ou por conquistas;
+               só a aparência muda (cores e as camadas --f2 e --f3 do ícone em index.html) */
 
 const RARIDADES = {
   comum: { nome: 'Comum', ordem: 1 },
@@ -71,6 +91,18 @@ const ITENS = [
     desc: 'Destilada nas torres do Reino do Sábio.',
     efeito: 'Elimina duas alternativas erradas. Acertar com ajuda vale metade.',
     uso: [{ efeito: 'eliminar', n: 2 }] },
+  { id: 'pocao_fortuna', nome: 'Poção da Fortuna', cat: 'consumivel', rar: 'incomum', icone: 'pocao', cor: '#ffcf3f', drop: true,
+    desc: 'Tem gosto de moeda nova.',
+    efeito: 'Até o fim da sessão: +15% de moedas e +5 de chance de achar baús, dentro dos limites. Vale nas expedições e no Sábio.',
+    uso: [{ efeito: 'fortuna', moedas: 15, bau: 5 }] },
+  { id: 'pocao_descoberta', nome: 'Poção da Descoberta', cat: 'consumivel', rar: 'raro', icone: 'pocao', cor: '#3fd0c0', drop: true,
+    desc: 'Faz o mundo mostrar um pouco mais do que costuma.',
+    efeito: 'A próxima recompensa desta sessão (inimigo, chefe, Mímico ou guardião) traz um item a mais. Só é gasta quando a recompensa vem.',
+    uso: [{ efeito: 'descoberta' }] },
+  { id: 'elixir_determinacao', nome: 'Elixir da Determinação', cat: 'consumivel', rar: 'epico', icone: 'elixir', cor: '#ff8a3c', drop: true,
+    desc: 'Para quem não deixa uma queda apagar o caminho feito.',
+    efeito: 'Até o fim da sessão, o primeiro erro não zera sua sequência de acertos nem o bônus de pontos que ela dá. Só é gasto se você errar.',
+    uso: [{ efeito: 'protege_sessao' }] },
 
   // ---- pergaminhos: valem só nas questões do seu reino ----
   { id: 'perg_letras', nome: 'Pergaminho das Letras', cat: 'pergaminho', rar: 'incomum', icone: 'pergaminho', cor: '#4a6fbd', area: 'LC', drop: true,
@@ -107,6 +139,18 @@ const ITENS = [
     desc: 'Volta a areia, e o momento, só um pouquinho.',
     efeito: 'Uma vez por sessão: se errar, você responde de novo. O acerto vale metade e a questão vai para a revisão.',
     poder: { efeito: 'segunda_chance', cargas: 1 } },
+  { id: 'bussola_explorador', nome: 'Bússola do Explorador', cat: 'artefato', rar: 'incomum', icone: 'bussola', cor: '#3fae6a', drop: true,
+    desc: 'Sempre aponta para a próxima trilha.',
+    efeito: '+10% de moedas nas expedições dos reinos e na Patrulha do dia.',
+    bonus: { moedasExpedicao: 10 } },
+  { id: 'lanterna_segredos', nome: 'Lanterna dos Segredos', cat: 'artefato', rar: 'raro', icone: 'lanterna', cor: '#ffd36b', drop: true,
+    desc: 'A luz dela mostra o que estava escondido.',
+    efeito: '+5 de chance de achar baús e +5 de chance de eventos especiais entre as questões, e as passagens secretas ficam duas vezes mais prováveis.',
+    bonus: { bau: 5, evento: 5, segredos: 2 } },
+  { id: 'relogio_destinos', nome: 'Relógio dos Destinos', cat: 'artefato', rar: 'mitico', icone: 'relogio', cor: '#d9b45a', cor2: '#1d2a4a',
+    desc: 'Os ponteiros giram para onde você quiser, uma vez a cada lua.',
+    efeito: 'Uma vez por mês, você escolhe um item lendário do jogo (menos mascotes). Não precisa estar equipado.',
+    ativo: { escolher: 'lendario', exceto: ['mascote'] } },
 
   // ---- armas ----
   { id: 'espada_aprendiz', nome: 'Espada do Aprendiz', cat: 'arma', rar: 'comum', icone: 'espada', cor: '#c9d2dc', cor2: '#9a7444', drop: true,
@@ -121,6 +165,10 @@ const ITENS = [
     desc: 'Só sai da pedra para quem estuda todo dia.',
     efeito: '+10% de XP em todas as áreas e golpe duplo no Sábio a partir de 2 acertos seguidos.',
     bonus: { xp: 10, golpe: 2 } },
+  { id: 'martelo_guardiao', nome: 'Martelo do Guardião', cat: 'arma', rar: 'incomum', icone: 'martelo', cor: '#9aa3ad', drop: true,
+    desc: 'Pesado o bastante para impressionar qualquer guardião.',
+    efeito: '+8 moedas a cada guardião ou chefe do Sábio vencido.',
+    bonus: { moedasGuardiao: 8 } },
 
   // ---- armaduras ----
   { id: 'tunica_estudante', nome: 'Túnica do Estudante', cat: 'armadura', rar: 'comum', icone: 'tunica', cor: '#7c8fb3', drop: true,
@@ -131,6 +179,10 @@ const ITENS = [
     desc: 'Forjada com cada recomeço.',
     efeito: 'Uma vez por sessão, o primeiro erro não zera a sua sequência de acertos.',
     bonus: { escudo: 1 } },
+  { id: 'manto_explorador', nome: 'Manto do Explorador', cat: 'armadura', rar: 'raro', icone: 'manto', cor: '#3f8a5a', drop: true,
+    desc: 'Já viu chuva, sol e muitas provas.',
+    efeito: 'Ao concluir uma expedição: +20% de XP no bônus de conclusão e +10 de chance de item no espólio do guardião.',
+    bonus: { xpExpedicao: 20, chanceGuardiao: 10 } },
 
   // ---- acessórios: até dois equipados ----
   { id: 'anel_curiosidade', nome: 'Anel da Curiosidade', cat: 'acessorio', rar: 'comum', icone: 'anel', cor: '#6fd3ff', drop: true,
@@ -145,16 +197,61 @@ const ITENS = [
     desc: 'Pesada como a responsabilidade de saber.',
     efeito: 'Os itens que você encontra tendem a ser mais raros, e as moedas rendem 10% a mais.',
     bonus: { sorte: 1, moedas: 10 } },
+  { id: 'anel_colecionador', nome: 'Anel do Colecionador', cat: 'acessorio', rar: 'raro', icone: 'anel', cor: '#ffb347', drop: true,
+    desc: 'Nunca deixa um caco para trás.',
+    efeito: 'Ao derrotar um monstro (inimigos, chefes, errantes, Mímico e guardiões), 25% de chance de 1 material a mais.',
+    bonus: { materialExtra: 25 } },
+  { id: 'diadema_reinos', nome: 'Diadema dos Reinos', cat: 'acessorio', rar: 'epico', icone: 'diadema', cor: '#d9b45a', drop: true,
+    desc: 'Uma pedra de cada reino, todas brilhando juntas.',
+    efeito: '+15 moedas a cada missão de reino cumprida (Letras, Humanidades, Natureza, Números e Sábio).',
+    bonus: { missaoReino: 15 } },
 
-  // ---- mascotes: um ativo por vez (preparados para evoluir no futuro) ----
+  // ---- mascotes: um ativo por vez; os que têm "evolucao" mudam de aparência ----
   { id: 'athena', nome: 'Athena, a Coruja Sábia', cat: 'mascote', rar: 'raro', icone: 'coruja', cor: '#b08a55',
     desc: 'Pousa no seu ombro e cochicha o que importa.',
     efeito: '+5% de XP e, uma vez por sessão, mostra de graça a habilidade cobrada.',
-    bonus: { xp: 5 }, poder: { efeito: 'pista', cargas: 1 } },
+    bonus: { xp: 5 }, poder: { efeito: 'pista', cargas: 1 },
+    evolucao: { por: 'questoes', limites: [0, 150, 500], formas: ['de olhos atentos', 'de óculos', 'de óculos e capelo de formatura'] } },
   { id: 'fenix_celestial', nome: 'Fênix Celestial', cat: 'mascote', rar: 'mitico', icone: 'fenix', cor: '#ff7a3c',
     desc: 'Renasce de cada erro, mais forte.',
     efeito: '+10% de XP, um erro por sessão sem perder a sequência e uma segunda chance por sessão.',
-    bonus: { xp: 10, escudo: 1 }, poder: { efeito: 'segunda_chance', cargas: 1 } },
+    bonus: { xp: 10, escudo: 1 }, poder: { efeito: 'segunda_chance', cargas: 1 },
+    evolucao: { por: 'questoes', limites: [0, 150, 500], formas: ['chama nascente', 'com crista de fogo', 'com coroa de chamas'] } },
+  { id: 'pingo', nome: 'Pingo, o Slime Companheiro', cat: 'mascote', rar: 'comum', icone: 'slime', cor: '#7fe08a', cor2: '#ffd36b',
+    desc: 'Brincalhão, curioso e atrapalhado. Some no meio da batalha e volta com alguma coisa grudada.',
+    efeito: 'Depois de cada batalha vencida (inimigo, chefe, errante ou guardião), 15% de chance de achar 1 material básico.',
+    bonus: { materialBasico: 15 },
+    evolucao: { por: 'questoes', limites: [0, 150, 500], cores: [['#7fe08a', '#ffd36b'], ['#6fc3ff', '#ffd36b'], ['#d48cff', '#ffd36b']],
+      formas: ['verde', 'azul, com antena', 'violeta, de coroa'] } },
+  { id: 'ossito', nome: 'Ossito, o Esqueleto Esquecido', cat: 'mascote', rar: 'incomum', icone: 'ossito', cor: '#ece6d3', cor2: '#c0392b',
+    tabelas: ['guardiao'], drop: true,
+    desc: 'Engraçado, desajeitado e um pouco distraído. Esquece tudo, menos as questões que você errou.',
+    efeito: '+15 moedas ao concluir a Masmorra dos Erros respondendo todas as questões dela.',
+    bonus: { revisaoCompleta: 15 },
+    evolucao: { por: 'questoes', limites: [0, 150, 500], formas: ['só ossos', 'de elmo', 'de elmo, ombreira e capa'] } },
+  { id: 'faisca', nome: 'Faísca, a Raposa Arcana', cat: 'mascote', rar: 'raro', icone: 'raposa', cor: '#ff9a3c', cor2: '#6fd3ff',
+    tabelas: ['mimico', 'bau_prata'], drop: true,
+    desc: 'Inteligente, veloz e brincalhona. Fareja tesouro de longe.',
+    efeito: '+5 de chance de eventos especiais entre as questões, e os baús achados têm o dobro de chance de ser de Prata ou de Ouro.',
+    bonus: { evento: 5, bauRaro: 2 },
+    evolucao: { por: 'questoes', limites: [0, 150, 500], formas: ['cauda lisa', 'cauda com uma runa', 'cauda coberta de runas'] } },
+  { id: 'pedregulho', nome: 'Pedregulho, o Guardião de Pedra', cat: 'mascote', rar: 'epico', icone: 'golem', cor: '#9aa3ad', cor2: '#7fe0ff',
+    tabelas: ['chefe'], drop: true,
+    desc: 'Forte, tranquilo e protetor. Não deixa ninguém levar o que é seu.',
+    efeito: 'Uma vez por sessão, quando você erra, segura o Mímico ou a porta da passagem secreta, e o tesouro fica com você. Se o guardião não for vencido numa sessão de 5 questões ou mais, você ainda leva as moedas dele.',
+    bonus: { tesouro: 1 },
+    evolucao: { por: 'questoes', limites: [0, 150, 500], formas: ['pedra bruta', 'com cristais', 'com cristais e runas acesas'] } },
+  { id: 'nox', nome: 'Nox, o Dragão das Sombras', cat: 'mascote', rar: 'lendario', icone: 'dragao', cor: '#5b4a8a', cor2: '#2e2350',
+    tabelas: ['chefe'], drop: true,
+    desc: 'Misterioso, inteligente e leal. Gosta de coisas raras, e as coisas raras gostam dele.',
+    efeito: 'Nas recompensas, itens épicos ficam 30% mais prováveis, e lendários, 15%.',
+    bonus: { raridade: { epico: 30, lendario: 15 } },
+    evolucao: { por: 'questoes', limites: [0, 150, 500], formas: ['asas pequenas', 'asas grandes', 'asas grandes e marcas luminosas'] } },
+  { id: 'lumina', nome: 'Lumina, a Guardiã Celestial', cat: 'mascote', rar: 'mitico', icone: 'lumina', cor: '#fff3c4', cor2: '#ff9fd1',
+    desc: 'Majestosa, gentil e raríssima. Desceu do observatório do Sábio para acompanhar quem não desiste.',
+    efeito: 'Quando você conclui sessões nos cinco reinos no mesmo dia (Letras, Humanidades, Natureza, Números e Sábio), Lumina traz um Baú de Ouro, uma vez por dia.',
+    bonus: { cincoReinos: 'bau_ouro' },
+    evolucao: { por: 'conquistas', limites: [0, 35, 50], formas: ['luz serena', 'com auréola', 'com asas de luz'] } },
 
   // ---- relíquias: ganhas por conquistas, valem sempre ----
   { id: 'medalha_primeiro_passo', nome: 'Medalha do Primeiro Passo', cat: 'reliquia', rar: 'incomum', icone: 'medalha', cor: '#fff3c4', cor2: '#4a6fbd',
@@ -181,6 +278,12 @@ const ITENS = [
     desc: 'Pedra gravada com um símbolo antigo.', efeito: 'Material de fabricação.' },
   { id: 'coracao_dragao', nome: 'Coração do Dragão', cat: 'material', rar: 'epico', icone: 'coracao', cor: '#e0453a', drop: true,
     desc: 'Ainda quente. Muito quente.', efeito: 'Material de fabricação.' },
+  { id: 'escama_dragao', nome: 'Escama do Dragão', cat: 'material', rar: 'raro', icone: 'escama', cor: '#3f9e8f', drop: true,
+    tabelas: ['inimigo_forte', 'chefe', 'mimico', 'bau_prata', 'bau_ouro'],
+    desc: 'Dura como prova difícil. Só cai de criaturas fortes.', efeito: 'Material de fabricação e de aprimoramento de equipamentos especiais.' },
+  { id: 'pena_fenix', nome: 'Pena da Fênix', cat: 'material', rar: 'epico', icone: 'pena', cor: '#ff7a3c', cor2: '#ffd36b', drop: true,
+    tabelas: ['chefe', 'bau_ouro'],
+    desc: 'Morna ao toque, mesmo depois de dias.', efeito: 'Material de fabricação de itens de proteção e de aprimoramento de artefatos e lendários.' },
 
   // ---- baús: abertos no inventário ----
   { id: 'bau_madeira', nome: 'Baú de Madeira', cat: 'bau', rar: 'comum', icone: 'bau', cor: '#9a6a3a', cor2: '#c9a24a', drop: true, abre: 'bau_madeira',
@@ -193,7 +296,8 @@ const ITENS = [
 
 /* Tabelas de recompensa. chance: probabilidade de cair item; qtd: quantos itens; raridades:
    pesos do sorteio de raridade; cats: categorias que podem cair; moedas: [mínimo, máximo].
-   O sorteio só usa itens com "drop: true". Mítico nunca cai: vem de grandes conquistas. */
+   O sorteio só usa itens com "drop: true". Mítico nunca cai: vem de grandes conquistas. Um item
+   com "tabelas" só cai nas tabelas listadas, mesmo que a categoria dele não esteja em "cats". */
 const TODAS_CATS_DROP = ['material', 'consumivel', 'pergaminho', 'arma', 'armadura', 'acessorio', 'artefato'];
 const TABELAS_DROP = {
   inimigo: { moedas: [2, 5], chance: 0.4, qtd: [1, 1], raridades: { comum: 78, incomum: 20, raro: 2 }, cats: ['material', 'consumivel'] },
@@ -222,20 +326,24 @@ const ESPOLIO_GUARDIAO = { minimo: 5, chance: 0.5, longa: 10, chanceLonga: 0.85 
 const PREMIO_SIMULADO = { minimo: 20, bau: 'bau_madeira', diaInteiro: 80, bauDiaInteiro: 'bau_prata' };
 
 /* Monstros errantes: aparecem de vez em quando no Reino do Sábio, no lugar de um inimigo comum,
-   trazem questões de qualquer área e deixam os itens da própria lista (pesos). */
+   trazem questões de qualquer área e deixam os itens da própria lista (pesos). Cada um pode
+   deixar o mascote da sua espécie. */
 const CHANCE_ERRANTE = 0.15;
 const MONSTROS_ERRANTES = [
   { id: 'slime', nome: 'Slime da Confusão', frase: 'Gruda nas ideias e deixa tudo meloso.', hp: 2, peso: 30, moedas: [3, 5],
-    drops: [['essencia_slime', 70], ['fragmento_cristal', 20], ['pocao_concentracao', 10]] },
+    drops: [['essencia_slime', 70], ['fragmento_cristal', 20], ['pocao_concentracao', 10], ['pingo', 12]] },
   { id: 'esqueleto', nome: 'Esqueleto Esquecido', frase: 'Lembra de tudo, menos do que você estudou.', hp: 3, peso: 25, moedas: [4, 7],
-    drops: [['fragmento_cristal', 55], ['po_conhecimento', 30], ['perg_humanidades', 15]] },
+    drops: [['fragmento_cristal', 55], ['po_conhecimento', 30], ['perg_humanidades', 15], ['ossito', 10]] },
   { id: 'mago', nome: 'Mago das Ilusões', frase: 'Faz a alternativa errada parecer a certa.', hp: 3, peso: 22, moedas: [5, 8],
-    drops: [['pocao_clareza', 45], ['po_conhecimento', 45], ['orbe_deducao', 10]] },
+    drops: [['pocao_clareza', 45], ['po_conhecimento', 45], ['orbe_deducao', 10], ['faisca', 8]] },
   { id: 'golem', nome: 'Golem da Ignorância', frase: 'Pesado, teimoso e sem vontade de aprender.', hp: 4, peso: 18, moedas: [6, 10],
-    drops: [['fragmento_cristal', 50], ['runa_sabedoria', 35], ['po_conhecimento', 15]] },
+    drops: [['fragmento_cristal', 50], ['runa_sabedoria', 35], ['po_conhecimento', 15], ['pedregulho', 8]] },
   { id: 'dragao', nome: 'Dragão do Tempo', frase: 'Cada segundo dele vale uma era.', hp: 5, peso: 5, ondaMinima: 6, moedas: [20, 30],
-    drops: [['runa_sabedoria', 45], ['coracao_dragao', 40], ['ampulheta_tempo', 15]] },
+    drops: [['runa_sabedoria', 45], ['coracao_dragao', 40], ['escama_dragao', 30], ['ampulheta_tempo', 15], ['nox', 10]] },
 ];
+/* Os cinco reinos da Lumina e do Diadema: as quatro áreas e o Reino do Sábio. Uma sessão conta
+   para o reino quando chega ao mínimo do guardião (ou ao mínimo do fim de jornada, no Sábio). */
+const REINOS_DA_JORNADA = ['LC', 'CH', 'CN', 'MT', 'sabio'];
 // entram no bestiário do Sábio como mais um grupo de inimigos
 REINOS_INIMIGOS.errante = { nome: 'Monstros errantes', cor: 'errante' };
 INIMIGOS.errante = MONSTROS_ERRANTES.map(m => [m.nome, m.frase]);
@@ -254,6 +362,8 @@ const PREMIO_CONQUISTA = {
   dias7: 'insignia_persistencia',
   quatro: 'fenix_celestial',
   todas: 'coracao_conhecimento',
+  q2500: 'relogio_destinos',
+  onda25: 'lumina',
 };
 
 /* Fabricação: materiais (e às vezes moedas) viram itens. "req" libera a receita por nível ou
@@ -266,10 +376,16 @@ const RECEITAS = [
   { id: 'r_perg_humanidades', item: 'perg_humanidades', mats: { fragmento_cristal: 3, po_conhecimento: 1 }, req: { nivel: 4 } },
   { id: 'r_perg_natureza', item: 'perg_natureza', mats: { fragmento_cristal: 3, po_conhecimento: 1 }, req: { nivel: 4 } },
   { id: 'r_perg_numeros', item: 'perg_numeros', mats: { fragmento_cristal: 3, po_conhecimento: 1 }, req: { nivel: 4 } },
+  { id: 'r_fortuna', item: 'pocao_fortuna', mats: { essencia_slime: 2, fragmento_cristal: 2 }, req: { nivel: 5 } },
   { id: 'r_segunda', item: 'elixir_segunda_chance', mats: { po_conhecimento: 2, runa_sabedoria: 1 }, req: { nivel: 6 } },
+  { id: 'r_descoberta', item: 'pocao_descoberta', mats: { po_conhecimento: 2, fragmento_cristal: 2, runa_sabedoria: 1 }, req: { nivel: 7 } },
+  { id: 'r_lanterna', item: 'lanterna_segredos', mats: { fragmento_cristal: 4, runa_sabedoria: 1, escama_dragao: 1 }, req: { nivel: 7 } },
   { id: 'r_orbe', item: 'orbe_deducao', mats: { fragmento_cristal: 4, runa_sabedoria: 2 }, moedas: 40, req: { nivel: 8 } },
+  { id: 'r_manto', item: 'manto_explorador', mats: { essencia_slime: 4, runa_sabedoria: 1, escama_dragao: 1 }, req: { nivel: 9 } },
+  { id: 'r_determinacao', item: 'elixir_determinacao', mats: { po_conhecimento: 2, pena_fenix: 1 }, req: { nivel: 10 } },
   { id: 'r_ampulheta', item: 'ampulheta_tempo', mats: { po_conhecimento: 3, runa_sabedoria: 2, coracao_dragao: 1 }, req: { conquista: 'chefe1' } },
   { id: 'r_sabedoria', item: 'pocao_sabedoria', mats: { runa_sabedoria: 2, coracao_dragao: 1 }, req: { nivel: 12 } },
+  { id: 'r_diadema', item: 'diadema_reinos', mats: { runa_sabedoria: 2, escama_dragao: 2, pena_fenix: 1 }, req: { nivel: 14 } },
 ];
 
 /* Loja: só itens simples, com limite por dia, para que acumular moedas não vire vantagem. */
@@ -283,6 +399,7 @@ const LOJA = [
   { item: 'espada_aprendiz', preco: 60, limite: 1 },
   { item: 'tunica_estudante', preco: 60, limite: 1 },
   { item: 'anel_curiosidade', preco: 80, limite: 1 },
+  { item: 'pingo', preco: 80, limite: 1 },
 ];
 /* Moedas recebidas ao vender um item (mítico não se vende). Equipamento repetido vira o dobro. */
 const VALOR_VENDA = { comum: 3, incomum: 8, raro: 20, epico: 50, lendario: 120 };
@@ -302,14 +419,60 @@ const MISSOES = [
 const REGRAS_MODO = {
   expedicao: { nome: 'Exploração e treino', consumiveis: 'todos', poderes: true, baus: true, bonus: true },
   sabio: { nome: 'Reino do Sábio', consumiveis: 'todos', poderes: true, baus: true, bonus: true },
-  revisao: { nome: 'Masmorra dos Erros', consumiveis: ['pista', 'protege_sequencia'], poderes: ['pista'], baus: true, bonus: true,
+  revisao: { nome: 'Masmorra dos Erros', consumiveis: ['pista', 'protege_sequencia', 'protege_sessao'], poderes: ['pista'], baus: true, bonus: true,
     aviso: 'Na Masmorra você enfrenta os próprios erros: só pistas e proteção de sequência.' },
   simulado: { nome: 'Simulado Enem', consumiveis: 'nenhum', poderes: false, baus: false, bonus: true,
     aviso: 'No simulado a prova é igual para todos: nenhum item muda as condições.' },
   ranking: { nome: 'Ranking competitivo', consumiveis: 'nenhum', poderes: false, baus: false, bonus: false }, // preparado para o futuro
 };
 
-/* Limites que seguram o equilíbrio: bônus somados de XP e moedas (%), chance extra de baú e quantas
-   alternativas um jogador pode eliminar numa questão (sobram sempre três para pensar). */
-const LIMITES = { xp: 25, moedas: 30, bau: 15, eliminadas: 2 };
+/* Limites que seguram o equilíbrio: bônus somados de XP e moedas (%), chance extra de baú, de
+   monstro errante e de evento especial (pontos de %) e quantas alternativas um jogador pode
+   eliminar numa questão (sobram sempre três para pensar). */
+const LIMITES = { xp: 25, moedas: 30, bau: 15, errante: 15, evento: 10, eliminadas: 2 };
 const AJUDA_FATOR = 0.5; // acerto com alternativa eliminada ou segunda chance vale metade
+
+/* Eventos especiais: depois de uma resposta em que não apareceu baú, nos modos que têm baús
+   (expedições, Masmorra e Sábio). chanceBase em %, mais o bônus "evento" (Lanterna, Faísca).
+   Nenhum evento mexe na questão: dão moedas e itens, ou um desafio que só paga com acerto.
+     passagem  passagem secreta com um baú escondido: abre se a próxima resposta for certa
+     mercador  oferece um item por um preço fixo, só até você avançar
+     fonte     renova os poderes e as proteções dos itens nesta sessão e dá um material
+     chuva     moedas */
+const EVENTOS = {
+  chanceBase: 3,
+  tipos: [['passagem', 30], ['mercador', 25], ['fonte', 15], ['chuva', 30]],
+  bauPassagem: [['bau_prata', 85], ['bau_ouro', 15]],
+  mercador: { raridades: [['incomum', 60], ['raro', 32], ['epico', 8]], cats: ['consumivel', 'pergaminho', 'material'],
+              precos: { incomum: 25, raro: 50, epico: 90 } },
+  fonte: { item: 'po_conhecimento' },
+  chuva: [10, 25],
+};
+
+/* Missões dos reinos: uma por reino, todo dia, além das missões do dia. Contam os acertos de cada
+   área (nas expedições, na Masmorra e no Sábio) e os inimigos derrotados no Sábio. O Diadema dos
+   Reinos dá moedas a mais em cada uma. */
+const MISSOES_REINO = [
+  { id: 'reino_LC', reino: 'LC', nome: 'Missão das Letras', texto: 'Acertar 5 questões de Linguagens hoje', alvo: 5, premio: { moedas: 12, item: 'fragmento_cristal' } },
+  { id: 'reino_CH', reino: 'CH', nome: 'Missão das Humanidades', texto: 'Acertar 5 questões de Ciências Humanas hoje', alvo: 5, premio: { moedas: 12, item: 'fragmento_cristal' } },
+  { id: 'reino_CN', reino: 'CN', nome: 'Missão da Natureza', texto: 'Acertar 5 questões de Ciências da Natureza hoje', alvo: 5, premio: { moedas: 12, item: 'fragmento_cristal' } },
+  { id: 'reino_MT', reino: 'MT', nome: 'Missão dos Números', texto: 'Acertar 5 questões de Matemática hoje', alvo: 5, premio: { moedas: 12, item: 'fragmento_cristal' } },
+  { id: 'reino_sabio', reino: 'sabio', nome: 'Missão do Sábio', texto: 'Derrotar 3 inimigos no Reino do Sábio hoje', alvo: 3, premio: { moedas: 12, item: 'po_conhecimento' } },
+];
+
+/* Aprimoramento: armas, armaduras, acessórios e artefatos com bônus em números podem ser
+   aprimorados uma vez (+1). Os números listados em "escalaveis" crescem 50% (arredondados para
+   cima) e continuam dentro de LIMITES. Golpe, escudo, sorte, tesouro e poderes não mudam.
+   Lendários e míticos pedem também "extraRaro". */
+const APRIMORAMENTO = {
+  fator: 1.5,
+  custo: {
+    arma: { mats: { escama_dragao: 2 }, moedas: 50 },
+    armadura: { mats: { escama_dragao: 2 }, moedas: 50 },
+    acessorio: { mats: { escama_dragao: 2 }, moedas: 50 },
+    artefato: { mats: { escama_dragao: 1, pena_fenix: 1 }, moedas: 50 },
+  },
+  extraRaro: { pena_fenix: 1 },
+  escalaveis: ['xp', 'xpRevisao', 'xpErro', 'moedas', 'bau', 'moedasExpedicao', 'errante', 'evento', 'moedasGuardiao',
+    'xpExpedicao', 'chanceGuardiao', 'materialExtra', 'missaoReino', 'materialBasico', 'revisaoCompleta'],
+};

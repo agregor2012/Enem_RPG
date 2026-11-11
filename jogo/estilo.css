@@ -617,6 +617,34 @@ button.opcao-titulo:hover { border-color: var(--ouro-escuro); }
 .ajustes.dev { border-style: dashed; border-color: var(--rar-mitico); }
 .ajustes.dev h2 small { font: 600 11px var(--corpo); text-transform: uppercase; letter-spacing: .08em; color: #ff8cc0; margin-left: 6px; }
 .ajustes.dev p { color: var(--texto-2); font-size: 13.5px; max-width: 75ch; }
+/* itens novos: evolução dos mascotes, extras e a escolha do Relógio dos Destinos */
+.evento-item.evolucao { padding: 6px 10px; border-radius: 9px; border: 1px solid var(--rar-mitico); background: rgba(255,95,168,.08); color: var(--texto); }
+.evento-item.evolucao .icone-item { width: 34px; height: 34px; flex: none; }
+.evolucao-mascote li.atual { color: var(--texto); font-weight: 600; }
+.evolucao-mascote li.atual::marker { color: var(--rar); }
+.evolucao-mascote p { margin: 4px 0 0; }
+.extras-fim { display: grid; gap: 6px; margin: 4px 0 8px; }
+.extras-fim .sub { margin: 0; font-size: 12.5px; color: var(--texto-3); }
+.janela-escolha { width: min(620px, 100%); border-top: 3px solid var(--rar); }
+.janela-escolha .sub { color: var(--texto-2); font-size: 13.5px; margin: 0; }
+.lista-escolha { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; max-height: 52vh; overflow: auto; padding: 2px; }
+.carta-escolha { display: flex; gap: 10px; align-items: center; text-align: left; padding: 10px; border-radius: 10px; border: 1.5px solid var(--rar); background: radial-gradient(circle at 20% 50%, color-mix(in srgb, var(--rar) 18%, transparent), var(--noite-2) 70%); color: var(--texto); transition: transform .12s, box-shadow .12s; }
+.carta-escolha:hover, .carta-escolha:focus-visible { transform: translateY(-2px); box-shadow: 0 0 12px color-mix(in srgb, var(--rar) 50%, transparent); }
+.carta-escolha .icone-item { width: 48px; height: 48px; flex: none; }
+.carta-escolha strong { display: block; font-size: 14px; }
+.carta-escolha small { display: block; color: var(--texto-3); font-size: 12px; line-height: 1.35; margin-top: 2px; }
+/* eventos especiais, passagem secreta, aprimoramento e missões dos reinos */
+.evento-item.especial { color: #cfe3ff; }
+.evento-item.especial.ok { color: var(--ok); }
+.evento-item.especial .ico { color: #8fc4ff; }
+.mimico-alerta.passagem { color: #d6e6ff; border-color: #4f7fc0; background: rgba(79,127,192,.12); }
+.mimico-alerta.passagem .icone-item { animation: none; }
+.bau-achado.mercador .botao { grid-column: 1 / -1; }
+.selo-aprimorado { position: absolute; top: 8px; right: 9px; font: 700 10px var(--corpo); font-style: normal; padding: 1px 5px; border-radius: 999px; background: #3f9e8f; color: #eafff9; }
+.selo-titulo { font: 700 13px var(--corpo); padding: 1px 7px; border-radius: 999px; background: #3f9e8f; color: #eafff9; vertical-align: middle; }
+.item-origem.aprimoramento p, .evolucao-mascote p { margin: 2px 0 0; }
+.titulo-missoes-reino { font-size: 18px; margin: 4px 0 2px; }
+.missao-card[class*="reino-"] { border-top: 3px solid var(--ouro-escuro); }
 @media (max-width: 1120px) {
   .inv-layout { grid-template-columns: 1fr; }
   .equipamento { position: static; }
