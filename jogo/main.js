@@ -104,6 +104,13 @@ function autoteste(janela, destino) {
         img.onload = () => fim(img.naturalWidth > 0); img.onerror = () => fim(false);
         img.src = 'enem://banco/img/' + amostra.img[0][0];
       });
+      // a primeira arte de item da lista precisa abrir de dentro do pacote
+      const arte = [...ARTES_ITENS][0];
+      const larguraArte = arte ? await new Promise((fim) => {
+        const a = new Image();
+        a.onload = () => fim(a.naturalWidth); a.onerror = () => fim(0);
+        a.src = 'img/itens/' + arte + '.webp';
+      }) : null;
       const tela = document.querySelector('#app').innerText.slice(0, 40);
       const espera = ms => new Promise(fim => setTimeout(fim, ms));
       document.getElementById('nome-heroi').value = 'Autoteste';
@@ -117,9 +124,12 @@ function autoteste(janela, destino) {
       document.querySelector('[data-acao="confirmar"]').click();
       await espera(200);
       const retorno = document.querySelector('.veredito')?.innerText;
+      // a correção aparece no anel da letra impressa, e o banco traz a caixa de cada letra
+      const certaNaLetra = q.alt?.A ? !!document.querySelector('.marca-letra.certa') : null;
+      const comLetras = banco.filter(x => Object.values(x.alt || {}).every(z => z.length === 9)).length;
       concluirSessao();
       await salvar(true);
-      return { questoes: banco.length, imagem: ok, tela, recortes: imagens.map(i => i.naturalWidth), retorno,
+      return { questoes: banco.length, imagem: ok, artes: ARTES_ITENS.size, larguraArte, comLetras, certaNaLetra, tela, recortes: imagens.map(i => i.naturalWidth), retorno,
                telaFinal: E.tela, xp: E.save.xp, sessoes: E.save.sessoes.length, redacao: E.redacao.length };
     })()`);
     fs.writeFileSync(destino, JSON.stringify(resultado));

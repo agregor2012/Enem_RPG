@@ -22,11 +22,18 @@ os microdados do INEP.
   graus (Bronze, Prata, Ouro, Platina e Lendária). Cada conquista libera um título para o herói.
 - **Mapa:** atlas com os oito lugares do jogo, zoom pela roda do mouse e arraste para mover.
 - **Itens e raridades:**
-  - **O que há:** 52 itens em seis raridades (Comum, Incomum, Raro, Épico, Lendário e Mítico) e
+  - **O que há:** 72 itens em seis raridades (Comum, Incomum, Raro, Épico, Lendário e Mítico) e
     dez categorias.
-  - **Mascotes:** oito, e todos evoluem de aparência em três formas.
-    - Sete evoluem com as questões respondidas enquanto estão equipados.
+  - **Mascotes:** doze, e todos evoluem de aparência em três formas.
+    - Onze evoluem com as questões respondidas enquanto estão equipados.
     - A Lumina evolui com as conquistas.
+  - **Pacote de cada reino:** um material, uma arma fabricada com ele (+10% de XP na área) e um
+    mascote. O material vem da missão e do guardião do reino.
+  - **Relíquias de conquista:** conquistas difíceis dão bônus permanentes, e quem já tinha a
+    conquista recebe a relíquia ao abrir o jogo.
+  - **Itens de estudo:** Amuleto do Eco (XP a mais ao acertar o que já errou), Anel da Chama
+    Constante (XP pelos dias seguidos) e Lente do Analista (mostra o seu acerto em cada
+    habilidade depois da resposta).
   - **Relógio dos Destinos:** uma vez por mês, deixa escolher um item lendário.
   - **Eventos especiais entre as questões:**
     - passagem secreta, com um baú escondido que só abre se você acertar a próxima questão;
@@ -76,7 +83,10 @@ Rode os scripts de `ferramentas/` na ordem dos números:
    os documentos oficiais da redação e das Matrizes de Referência;
 4. `05_montar_banco.py`: recorta as questões dos PDFs e confere os gabaritos (`gerar_matriz.py`
    lê as competências e habilidades das Matrizes de Referência para `dados/matriz.json`);
-5. `06_gerar_banco_final.py` e `07_gerar_redacao.py`: geram as imagens e os arquivos do jogo;
+5. `06_gerar_banco_final.py` e `07_gerar_redacao.py`: geram as imagens e os arquivos do jogo. O 06
+   também acha, na imagem, a letra impressa de cada alternativa, onde o jogo marca a escolha e a
+   correção; com `--so-alternativas`, ele só refaz as caixas das alternativas e das letras, sem
+   gerar as imagens de novo;
 6. `08_empacotar.sh`: monta o aplicativo em `app/` e o atalho `Jogar ENEM RPG.exe`.
 
 Para testar a interface no navegador, sem empacotar: `node ferramentas/servidor_dev.js` e abra
@@ -123,11 +133,26 @@ Ficam no mesmo arquivo:
 - os limites que seguram o equilíbrio (`LIMITES`), como o máximo de bônus de XP e de alternativas
   eliminadas;
 - o que cada modo de jogo permite (`REGRAS_MODO`);
-- as regras de fim de sessão (`ESPOLIO_GUARDIAO` e `PREMIO_SIMULADO`);
+- as regras de fim de sessão (`ESPOLIO_GUARDIAO` e `PREMIO_SIMULADO`) e o pacote de cada reino
+  (`ITENS_DO_REINO`);
 - os eventos especiais (`EVENTOS`), as missões dos reinos (`MISSOES_REINO`) e o aprimoramento
   (`APRIMORAMENTO`).
 
 A lógica e as telas do inventário ficam em `jogo/inventario.js`.
+
+### Artes dos itens
+
+Os itens podem ter uma arte pintada no lugar do símbolo vetorial. As artes são geradas no Nano
+Banana em 1024 x 1024, com fundo de cor chapada (verde `#00FF00`, ou magenta `#FF00FF` nos itens
+verdes e incomuns) e o id do item no nome do arquivo: `<id>.png`, ou `<id>_1.png` a `<id>_3.png`
+nas três formas de um mascote. Depois, rode:
+
+    python -I ferramentas/artes_itens.py <pasta das artes> [<pasta dos originais>]
+
+O script tira o fundo, centraliza o desenho e grava o ícone em `jogo/img/itens/<nome>.webp`
+(256 x 256). Ele também atualiza a lista `jogo/artes.js` e, se for dada a segunda pasta, guarda ali
+a arte sem fundo em 512 x 512. Item sem arte, ou forma de mascote sem arte, continua com o
+símbolo `it-*`.
 
 Enquanto o sistema está em teste, Ajustes tem um **modo desenvolvedor** temporário que:
 
@@ -138,8 +163,8 @@ Enquanto o sistema está em teste, Ajustes tem um **modo desenvolvedor** tempor�
 
 ## Pastas
 
-- `jogo/`: o jogo (Electron): `index.html`, `app.js`, `conteudo.js`, `itens.js` (catálogo de itens), `inventario.js` (inventário, recompensas e fabricação), `estilo.css`, `main.js` e `preload.js`;
-- `ferramentas/`: scripts que baixam, recortam e conferem as questões;
+- `jogo/`: o jogo (Electron): `index.html`, `app.js`, `conteudo.js`, `itens.js` (catálogo de itens), `inventario.js` (inventário, recompensas e fabricação), `estilo.css`, `main.js` e `preload.js`; as artes dos itens ficam em `img/itens/`, listadas em `artes.js`;
+- `ferramentas/`: scripts que baixam, recortam e conferem as questões, e o que prepara as artes dos itens (`artes_itens.py`);
 - `dados/`: mapeamentos e relatórios pequenos usados pelas ferramentas.
 
 ## Fontes dos dados

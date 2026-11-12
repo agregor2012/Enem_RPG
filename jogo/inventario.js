@@ -9,7 +9,8 @@ const UNICAS = new Set(['arma', 'armadura', 'acessorio', 'artefato', 'mascote', 
 const ARMADOS = new Set(['segunda_chance', 'protege_sequencia', 'descoberta', 'protege_sessao']);
 // bônus que se somam entre os itens equipados
 const SOMAS_BONUS = ['xp', 'xpRevisao', 'xpErro', 'moedas', 'bau', 'sorte', 'escudo', 'moedasExpedicao', 'errante', 'evento',
-  'moedasGuardiao', 'xpExpedicao', 'chanceGuardiao', 'materialExtra', 'missaoReino', 'materialBasico', 'revisaoCompleta', 'tesouro'];
+  'moedasGuardiao', 'xpExpedicao', 'chanceGuardiao', 'materialExtra', 'missaoReino', 'materialBasico', 'revisaoCompleta', 'tesouro',
+  'xpSimulado', 'chama', 'eco', 'lente', 'materialReino'];
 const NOME_TABELA = {
   inimigo: 'inimigos do Sábio', inimigo_forte: 'inimigos fortes do Sábio', chefe: 'chefes do Sábio',
   guardiao: `guardiões vencidos (a partir de ${ESPOLIO_GUARDIAO.minimo} questões)`, bau_madeira: 'Baú de Madeira', bau_prata: 'Baú de Prata', bau_ouro: 'Baú de Ouro',
@@ -36,6 +37,7 @@ function itensNovos() {
     ativos: {}, // mês (aaaa-mm) do último uso de cada item com "ativo" (Relógio dos Destinos)
     jornada: null, // dia do último Baú de Ouro da Lumina
     melhorias: {}, // itens aprimorados (+1)
+    especiais: {}, // conquistas cujo item especial (PREMIO_CONQUISTA) já foi entregue
   };
 }
 function mesclarItens(salvo) {
@@ -108,7 +110,10 @@ function bonusItens(inv = inventario(), s = E.save?.atual) {
   for (const def of equipados(inv)) {
     const x = def.bonus || {};
     for (const k of SOMAS_BONUS) b[k] += valorDoBonus(def, k, inv);
-    if (x.xpArea) b.xpArea[x.xpArea[0]] = (b.xpArea[x.xpArea[0]] || 0) + x.xpArea[1];
+    if (x.xpArea) {
+      const v = inv.melhorias?.[def.id] ? Math.ceil(x.xpArea[1] * APRIMORAMENTO.fator) : x.xpArea[1];
+      b.xpArea[x.xpArea[0]] = (b.xpArea[x.xpArea[0]] || 0) + v;
+    }
     if (x.golpe) b.golpe = b.golpe ? Math.min(b.golpe, x.golpe) : x.golpe;
     if (x.bauRaro) b.bauRaro = Math.max(b.bauRaro, x.bauRaro);
     if (x.segredos) b.segredos = Math.max(b.segredos, x.segredos);
@@ -132,7 +137,7 @@ function valorDoBonus(def, chave, inv = inventario()) {
 
 /* ---- aprimoramento: +1 com Escama do Dragão (e Pena da Fênix) ---------------- */
 function aprimoravel(def) {
-  return Boolean(APRIMORAMENTO.custo[def?.cat] && def.bonus && APRIMORAMENTO.escalaveis.some(k => def.bonus[k]));
+  return Boolean(APRIMORAMENTO.custo[def?.cat] && def.bonus && (def.bonus.xpArea || APRIMORAMENTO.escalaveis.some(k => def.bonus[k])));
 }
 function aprimorado(id, inv = inventario()) { return Boolean(inv.melhorias?.[id]); }
 function custoAprimoramento(def) {
@@ -203,11 +208,15 @@ function usarAtivo(idAtivo, idEscolhido) {
 }
 function regrasDoModo(s) { return REGRAS_MODO[s?.tipo] || REGRAS_MODO.expedicao; }
 function permitido(regra, efeito) { return regra === 'todos' || regra === true || (Array.isArray(regra) && regra.includes(efeito)); }
-/* Bônus de XP dos itens para esta questão, já com o teto de LIMITES.xp. */
-function bonusXpItens(q, s) {
+/* Bônus de XP dos itens para esta questão, já com o teto de LIMITES.xp. Chamada por premio (app.js)
+   antes de a resposta entrar no histórico da questão: estado(q.id) ainda é o de antes. */
+function bonusXpItens(q, s, acertou = true) {
   if (!regrasDoModo(s).bonus) return 0;
   const b = bonusItens();
-  return Math.min(LIMITES.xp, b.xp + (b.xpArea[q.area] || 0) + (s.tipo === 'revisao' ? b.xpRevisao : 0));
+  let v = b.xp + (b.xpArea[q.area] || 0) + (s.tipo === 'revisao' ? b.xpRevisao : 0) + (s.tipo === 'simulado' ? b.xpSimulado : 0);
+  if (b.chama) v += Math.min(b.chama, E.save.seqDias?.atual || 0); // Anel da Chama Constante
+  if (acertou && b.eco && s.tipo !== 'revisao' && (estado(q.id)?.e || 0) > 0) v += b.eco; // Amuleto do Eco
+  return Math.min(LIMITES.xp, v);
 }
 function xpErroItens(s) { return regrasDoModo(s).bonus ? bonusItens().xpErro : 0; }
 function danoDoGolpe(s) {
@@ -569,6 +578,14 @@ function aoResponderItens(s, q, r) {
       if (evento) ev.evento = evento;
     }
   }
+  // mascotes dos reinos: nos acertos da área deles, chance de achar o material do reino
+  if (r.acertou && ITENS_DO_REINO[q?.area]) {
+    for (const d of equipados().filter(x => x.bonus?.materialReino && x.area === q.area)) {
+      if (Math.random() * 100 >= valorDoBonus(d, 'materialReino')) continue;
+      const finais = receberDrop([{ id: ITENS_DO_REINO[q.area].material, n: 1 }], s);
+      if (finais.length) extras.push({ id: d.id, entradas: finais });
+    }
+  }
   if (extras.length) ev.extras = extras;
   const evoluiu = contarMascote();
   if (evoluiu) ev.evoluiu = evoluiu;
@@ -622,6 +639,10 @@ function aoConcluirItens(s, registro) {
         const chance = (registro.total >= g.longa ? g.chanceLonga : g.chance) + (registro.tipo === 'expedicao' ? b.chanceGuardiao / 100 : 0);
         receberDrop(rolarTabela('guardiao', chance), s);
         extras.push(...extrasDaBatalha(s, { tabela: 'guardiao' }, { guardiao: true }));
+        // guardião de um reino: o material do reino e, às vezes, o mascote do reino
+        const pacote = ITENS_DO_REINO[registro.reino];
+        if (pacote && Math.random() < g.materialReino) receberDrop([{ id: pacote.material, n: 1 }], s);
+        if (pacote && Math.random() < g.mascoteReino) receberDrop([{ id: pacote.mascote, n: 1 }], s);
       } else if (enfrentou && b.tesouro) {
         dar(fonteDoBonus('tesouro'), rolarTabela('guardiao', 0)); // Pedregulho guarda as moedas do guardião
       }
@@ -660,12 +681,19 @@ function darPremio(premio, inv) {
 }
 function premiarConquista(c) {
   const real = E.save.itens;
-  if (real.premiadas[c.id]) return [];
-  real.premiadas[c.id] = hoje();
-  const lista = darPremio(PREMIO_GRAU[c.grau] || {}, real);
-  if (PREMIO_CONQUISTA[c.id]) lista.push(...darPremio({ item: PREMIO_CONQUISTA[c.id] }, real));
+  real.especiais ||= {};
+  const lista = [];
+  if (!real.premiadas[c.id]) {
+    real.premiadas[c.id] = hoje();
+    lista.push(...darPremio(PREMIO_GRAU[c.grau] || {}, real));
+  }
+  // o item especial é controlado à parte: um item novo chega também a quem já tinha a conquista
+  if (PREMIO_CONQUISTA[c.id] && !real.especiais[c.id]) {
+    real.especiais[c.id] = hoje();
+    lista.push(...darPremio({ item: PREMIO_CONQUISTA[c.id] }, real));
+  }
   E.premiosConquista ||= {};
-  E.premiosConquista[c.id] = lista;
+  if (lista.length) E.premiosConquista[c.id] = lista;
   return lista;
 }
 function contextoMissoes() {
@@ -707,7 +735,14 @@ function prepararItens() {
   E.save.itens = mesclarItens(E.save.itens);
   E.dev = null;
   E.premiosConquista = {};
-  const antigas = CONQUISTAS.filter(c => E.save.conquistas[c.id] && !E.save.itens.premiadas[c.id]);
+  const real = E.save.itens;
+  real.especiais ||= {};
+  // saves de antes do controle de itens especiais: se o item já está no inventário, foi entregue
+  for (const [id, item] of Object.entries(PREMIO_CONQUISTA)) {
+    if (real.premiadas[id] && !real.especiais[id] && qtdItem(item, real)) real.especiais[id] = real.premiadas[id];
+  }
+  const antigas = CONQUISTAS.filter(c => E.save.conquistas[c.id]
+    && (!real.premiadas[c.id] || (PREMIO_CONQUISTA[c.id] && !real.especiais[c.id])));
   const entradas = antigas.flatMap(c => premiarConquista(c));
   E.premiosConquista = {};
   return antigas.length ? { conquistas: antigas.length, entradas } : null;
@@ -784,12 +819,17 @@ function secaoDev() {
 }
 
 /* ---- pedaços de tela ---------------------------------------------------- */
-/* Ícone do item. Mascotes que evoluem trocam de cores e mostram as camadas da forma atual
-   (--f2 e --f3, lidas pelos símbolos de index.html). */
+/* Ícone do item: a arte pintada (img/itens, listada em artes.js) quando ela existe; senão, o símbolo
+   vetorial de index.html. Os mascotes têm uma arte por forma. No símbolo, os mascotes que evoluem
+   trocam de cores e mostram as camadas da forma atual (--f2 e --f3). */
 function iconeItem(def, cls = '') {
+  const forma = def.evolucao && E.save ? formaDoMascote(def) : 0;
+  const arte = def.evolucao ? `${def.id}_${forma || 1}` : def.id;
+  if (typeof ARTES_ITENS !== 'undefined' && ARTES_ITENS.has(arte)) {
+    return `<img class="icone-item arte ${cls}" src="img/itens/${arte}.webp" alt="" draggable="false">`;
+  }
   let [cor, cor2] = [def.cor, def.cor2];
   let formas = '';
-  const forma = def.evolucao && E.save ? formaDoMascote(def) : 0;
   if (forma) {
     const c = def.evolucao.cores?.[forma - 1];
     if (c) [cor, cor2] = c;
@@ -880,7 +920,24 @@ function avisosDaQuestao(s, q) {
   return html;
 }
 /* Eventos de itens no painel depois da resposta. */
-function eventosRetorno(r) {
+/* Lente do Analista: o seu acerto nas questões da mesma habilidade (ou competência), contando
+   todas as respostas já dadas, inclusive esta. */
+function linhaLente(q) {
+  if (!q || !bonusItens().lente) return '';
+  const chave = q.hab ? 'hab' : (q.comp ? 'comp' : null);
+  if (!chave) return '';
+  let a = 0;
+  let e = 0;
+  for (const x of E.banco) {
+    if (x.area !== q.area || x[chave] !== q[chave]) continue;
+    const st = E.save.q[x.id];
+    if (st) { a += st.a; e += st.e; }
+  }
+  if (!(a + e)) return '';
+  const rotulo = chave === 'hab' ? `na habilidade H${q.hab}` : `na competência ${q.comp}`;
+  return `<p class="evento-item lente">${iconeItem(itemDef('lente_analista'))}<span><b>Lente do Analista:</b> em ${esc(REINOS[q.area].curto)}, ${rotulo}, você acertou ${a} de ${a + e} ${a + e === 1 ? 'resposta' : 'respostas'} (${Math.round(a / (a + e) * 100)}%).</span></p>`;
+}
+function eventosRetorno(r, q) {
   if (!r) return '';
   const ev = r.itens || {};
   let html = '';
@@ -906,6 +963,7 @@ function eventosRetorno(r) {
       <button class="botao pequeno" data-acao="abrir-bau" data-id="${def.id}" data-origem="retorno" ${ev.bauAberto ? 'disabled' : ''}>${ev.bauAberto ? 'Aberto' : 'Abrir agora'}</button></div>`;
   }
   for (const m of ev.missoes || []) html += `<div class="evento-item missao"><span>${ico('alvo')} Missão cumprida: ${esc(m.nome)}</span>${listaEspolio(m.premios)}</div>`;
+  html += linhaLente(q);
   return html;
 }
 /* Evento especial no painel depois da resposta. */
@@ -974,6 +1032,12 @@ function comoConseguir(def) {
   if (graus.length) fontes.push(`Prêmio das conquistas de grau ${graus.join(', ')}`);
   const missoes = MISSOES.filter(m => m.premio.item === def.id).map(m => m.nome);
   if (missoes.length) fontes.push(`Missão do dia: ${missoes.join(', ')}`);
+  const missoesReino = MISSOES_REINO.filter(m => m.premio.item === def.id).map(m => m.nome);
+  if (missoesReino.length) fontes.push(`Missão do reino: ${missoesReino.join(', ')}`);
+  const reinos = Object.entries(ITENS_DO_REINO).filter(([, p]) => p.material === def.id || p.mascote === def.id).map(([r]) => nomeDoReino(r));
+  if (reinos.length) fontes.push(`Guardião vencido numa expedição do ${reinos.join(', ')}`);
+  const mascotes = ITENS.filter(d => d.bonus?.materialReino && ITENS_DO_REINO[d.area]?.material === def.id).map(d => d.nome);
+  if (mascotes.length) fontes.push(`Mascote: ${mascotes.join(', ')}, nos acertos da área`);
   return fontes.length ? fontes : ['Ainda não há como conseguir este item.'];
 }
 /* Como cada bônus em números aparece para o jogador (bônus ativos e aprimoramento). */
@@ -993,18 +1057,33 @@ const TEXTOS_BONUS = {
   materialBasico: v => `${v}% de chance de material básico após batalhas`,
   missaoReino: v => `+${v} moedas por missão de reino cumprida`,
   revisaoCompleta: v => `+${v} moedas ao completar a Masmorra`,
+  xpSimulado: v => `+${v}% de XP no Simulado`,
+  chama: v => `+1% de XP por dia seguido de estudo, até +${v}%`,
+  eco: v => `+${v}% de XP ao acertar uma questão que você já errou`,
+  materialReino: v => `${v}% de chance de material do reino nos acertos da área do mascote`,
 };
 /* "+5% de moedas → +8% de moedas": o que o aprimoramento muda neste item. */
 function textoAprimoramento(def) {
-  return APRIMORAMENTO.escalaveis.filter(k => def.bonus?.[k] && TEXTOS_BONUS[k])
-    .map(k => `${TEXTOS_BONUS[k](def.bonus[k])} → ${TEXTOS_BONUS[k](Math.ceil(def.bonus[k] * APRIMORAMENTO.fator))}`).join('; ');
+  const partes = APRIMORAMENTO.escalaveis.filter(k => def.bonus?.[k] && TEXTOS_BONUS[k])
+    .map(k => `${TEXTOS_BONUS[k](def.bonus[k])} → ${TEXTOS_BONUS[k](Math.ceil(def.bonus[k] * APRIMORAMENTO.fator))}`);
+  const area = def.bonus?.xpArea;
+  if (area) {
+    const t = v => `+${v}% de XP em ${REINOS[area[0]].curto}`;
+    partes.push(`${t(area[1])} → ${t(Math.ceil(area[1] * APRIMORAMENTO.fator))}`);
+  }
+  return partes.join('; ');
 }
 function linhasBonus(inv) {
   const b = bonusItens(inv, null); // só o equipamento: efeitos de sessão aparecem na bolsa
   const linhas = [];
   if (b.xp) linhas.push(TEXTOS_BONUS.xp(Math.min(b.xp, LIMITES.xp)));
   for (const [a, v] of Object.entries(b.xpArea)) linhas.push(`+${v}% de XP em ${REINOS[a].curto}`);
-  for (const k of Object.keys(TEXTOS_BONUS)) if (k !== 'xp' && b[k]) linhas.push(TEXTOS_BONUS[k](b[k]));
+  for (const k of Object.keys(TEXTOS_BONUS)) if (!['xp', 'chama'].includes(k) && b[k]) linhas.push(TEXTOS_BONUS[k](b[k]));
+  if (b.chama) {
+    const dias = E.save.seqDias?.atual || 0;
+    linhas.push(`+${Math.min(b.chama, dias)}% de XP pela chama (${dias} ${dias === 1 ? 'dia seguido' : 'dias seguidos'}, até +${b.chama}%)`);
+  }
+  if (b.lente) linhas.push('Seu acerto na habilidade depois de cada resposta');
   if (b.bauRaro > 1) linhas.push(`Baús de Prata e de Ouro ${b.bauRaro}× mais prováveis`);
   if (b.segredos > 1) linhas.push(`Passagens secretas ${b.segredos}× mais prováveis`);
   if (b.sorte) linhas.push('Itens mais raros nos sorteios');

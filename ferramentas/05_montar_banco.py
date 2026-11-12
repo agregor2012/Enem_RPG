@@ -257,6 +257,7 @@ def processar_bloco(ano, aplicacao, bloco):
         if registro:
             registro["_frag"] = [(f.pag, f.x0, f.y0, f.x1, f.y1, f.papel) for f in q.fragmentos]
             registro["_alt"] = {k: list(v) for k, v in q.alternativas.items()}
+            registro["_letra"] = {k: list(v) for k, v in q.letras.items()}
             registro["_altfim"] = list(q.alt_fim)
             registro["_avisos"] = q.avisos + prova.auditar(q)
             registro["_texto"] = q.texto[:1500]
@@ -363,6 +364,7 @@ def processar_antiga(ano):
             reg["excluida"] = f"gabaritos oficiais divergentes (PDF {gab_pdf[q.num]}, microdados {letra})"
         reg["_frag"] = [(f.pag, f.x0, f.y0, f.x1, f.y1, f.papel) for f in q.fragmentos]
         reg["_alt"] = {k: list(v) for k, v in q.alternativas.items()}
+        reg["_letra"] = {k: list(v) for k, v in q.letras.items()}
         reg["_altfim"] = list(q.alt_fim)
         reg["_avisos"] = q.avisos + prova.auditar(q)
         reg["_texto"] = q.texto[:1500]

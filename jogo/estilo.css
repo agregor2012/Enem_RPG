@@ -178,12 +178,32 @@ code { font-family: Consolas, monospace; font-size: .92em; background: rgba(0,0,
 .recorte figcaption { font-size: 12px; color: var(--tinta-2); margin-bottom: 4px; }
 .moldura { position: relative; }
 .moldura img { display: block; width: 100%; height: auto; }
-.zona { position: absolute; box-sizing: border-box; border-radius: 4px; border: 1.5px solid transparent; background: transparent; transition: background .12s, border-color .12s; }
-.zona:not(:disabled):hover { background: rgba(190, 150, 60, .13); border-color: rgba(150, 110, 40, .45); }
-.zona.selecionada { background: var(--zona-sel); border-color: #a87f2c; }
-.zona.certa { background: var(--zona-ok); border-color: #2f8a55; }
-.zona.errada { background: var(--zona-erro); border-color: #b5463a; }
-.zona.riscada { background: repeating-linear-gradient(135deg, rgba(90, 80, 70, .12) 0 5px, transparent 5px 11px); }
+/* zona: a área clicável da alternativa, sem pintura. A escolha e a correção aparecem no anel em
+   volta da letra impressa (marca-letra, posto por marcaDaLetra em app.js), que também se clica.
+   Passar o mouse na zona ou no anel acende o anel (--realce); os estados têm cor própria. */
+.zona { position: absolute; box-sizing: border-box; border: 0; padding: 0; background: transparent; cursor: pointer; }
+.zona:disabled { cursor: default; }
+.marca-letra { position: absolute; transform: translate(-50%, -50%); box-sizing: border-box; padding: 0; border-radius: 999px;
+  border: 2.5px solid rgba(168, 127, 44, calc(var(--realce, 0) * .65)); background: rgba(220, 170, 60, calc(var(--realce, 0) * .16));
+  cursor: pointer; transition: background .12s, border-color .12s; }
+.marca-letra:disabled { cursor: default; }
+.marca-letra:focus-visible { outline: none; --realce: 1; }
+.marca-letra:not(:disabled):hover,
+.moldura:has(> .zona[data-l="A"]:not(:disabled):hover) > .marca-letra[data-l="A"],
+.moldura:has(> .zona[data-l="B"]:not(:disabled):hover) > .marca-letra[data-l="B"],
+.moldura:has(> .zona[data-l="C"]:not(:disabled):hover) > .marca-letra[data-l="C"],
+.moldura:has(> .zona[data-l="D"]:not(:disabled):hover) > .marca-letra[data-l="D"],
+.moldura:has(> .zona[data-l="E"]:not(:disabled):hover) > .marca-letra[data-l="E"] { --realce: 1; }
+.marca-letra.selecionada { border-color: #a87f2c; background: var(--zona-sel); box-shadow: 0 0 0 3px rgba(220, 170, 60, .3); }
+.marca-letra.certa { border-color: #2f8a55; background: var(--zona-ok); box-shadow: 0 0 0 3px rgba(70, 170, 110, .3); }
+.marca-letra.errada { border-color: #b5463a; background: var(--zona-erro); box-shadow: 0 0 0 3px rgba(210, 80, 65, .28); }
+.marca-letra.riscada { border-color: rgba(90, 80, 70, .5);
+  background: linear-gradient(to top right, transparent calc(50% - 1.3px), rgba(90, 80, 70, .75) calc(50% - 1.3px) calc(50% + 1.3px), transparent calc(50% + 1.3px)); }
+/* selo de certo ou errado, na margem à esquerda da letra */
+.selo-letra { position: absolute; top: 50%; right: 100%; height: 78%; aspect-ratio: 1; margin-right: 3px; transform: translateY(-50%); border-radius: 50%; display: grid; place-items: center; color: #fff; }
+.marca-letra.certa .selo-letra { background: #2f8a55; }
+.marca-letra.errada .selo-letra { background: #b5463a; }
+.selo-letra .ico { width: 70%; height: 70%; }
 .painel-resposta { width: 290px; flex: none; background: var(--noite-2); border-left: 1px solid var(--linha); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; overflow: auto; }
 .progresso-q { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; font-size: 13.5px; }
 .progresso-q strong { white-space: nowrap; }
@@ -453,6 +473,7 @@ button.opcao-titulo:hover { border-color: var(--ouro-escuro); }
 .rar-epico { --rar: var(--rar-epico); } .rar-lendario { --rar: var(--rar-lendario); } .rar-mitico { --rar: var(--rar-mitico); }
 .texto-rar { color: var(--rar, var(--texto)); }
 .icone-item { width: 100%; height: auto; display: block; }
+img.icone-item { aspect-ratio: 1; object-fit: contain; -webkit-user-drag: none; user-select: none; }
 .moldura-item { position: relative; display: block; aspect-ratio: 1; border-radius: 10px; padding: 10%;
   border: 2px solid var(--rar); background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--rar) 30%, transparent), #0d1322 72%);
   box-shadow: inset 0 0 12px color-mix(in srgb, var(--rar) 25%, transparent); }
@@ -550,7 +571,8 @@ button.opcao-titulo:hover { border-color: var(--ouro-escuro); }
 /* janelas do item e do baú */
 .janela-item { width: min(500px, 100%); border-top: 3px solid var(--rar); }
 .item-topo { display: flex; gap: 14px; align-items: center; }
-.moldura-item.grande { width: 84px; flex: none; }
+/* espaçamento fixo: em %, ele seria medido pela largura da janela inteira e não sobraria lugar para o ícone */
+.moldura-item.grande { width: 100px; padding: 10px; flex: none; }
 .janela.caixa .item-tipo { color: var(--texto-3); font-size: 13px; }
 .janela.caixa .item-desc { font-style: italic; }
 .janela.caixa .item-efeito { color: var(--texto); padding: 9px 11px; border-radius: 8px; background: var(--noite); border: 1px solid var(--linha); }
@@ -588,7 +610,11 @@ button.opcao-titulo:hover { border-color: var(--ouro-escuro); }
 .bolsa-ativos span { font-size: 11.5px; padding: 2px 8px; border-radius: 999px; background: rgba(220,181,101,.14); color: var(--ouro-forte); }
 .bolsa-regra { font-size: 11.5px; color: var(--texto-3); }
 .letra.eliminada { opacity: .22 !important; text-decoration: line-through; }
-.zona.eliminada { background: repeating-linear-gradient(135deg, rgba(60,50,40,.3) 0 6px, rgba(60,50,40,.1) 6px 12px); border-color: rgba(90,80,70,.45); }
+/* alternativa tirada por um item: um X sobre a letra impressa */
+.marca-letra.eliminada { border-color: rgba(60,50,40,.7); background:
+  linear-gradient(to top right, transparent calc(50% - 1.3px), rgba(60,50,40,.8) calc(50% - 1.3px) calc(50% + 1.3px), transparent calc(50% + 1.3px)),
+  linear-gradient(to bottom right, transparent calc(50% - 1.3px), rgba(60,50,40,.8) calc(50% - 1.3px) calc(50% + 1.3px), transparent calc(50% + 1.3px)),
+  rgba(60,50,40,.14); }
 .pista-q { padding: 9px 11px; border-radius: 9px; border: 1px solid #6c5aa8; background: rgba(154,116,224,.1); display: grid; gap: 5px; }
 .pista-titulo { display: flex; align-items: center; gap: 6px; font-weight: 700; color: #d4bfff; font-size: 13px; }
 .pista-titulo .ico { width: 16px; height: 16px; }
@@ -645,6 +671,8 @@ button.opcao-titulo:hover { border-color: var(--ouro-escuro); }
 .item-origem.aprimoramento p, .evolucao-mascote p { margin: 2px 0 0; }
 .titulo-missoes-reino { font-size: 18px; margin: 4px 0 2px; }
 .missao-card[class*="reino-"] { border-top: 3px solid var(--ouro-escuro); }
+.evento-item.lente { color: #cfe3ff; }
+.evento-item.lente .icone-item { width: 28px; height: 28px; flex: none; }
 @media (max-width: 1120px) {
   .inv-layout { grid-template-columns: 1fr; }
   .equipamento { position: static; }

@@ -350,7 +350,7 @@ function premio(q, acertou, st, sessao) {
   const afinidade = (classe === 'escriba' && q.area === 'LC') || (classe === 'cronista' && q.area === 'CH')
     || (classe === 'alquimista' && sessao.tipo === 'revisao');
   // classe (+10%) e itens equipados (até LIMITES.xp, em inventario.js)
-  const fator = 1 + (afinidade ? 0.1 : 0) + bonusXpItens(q, sessao) / 100;
+  const fator = 1 + (afinidade ? 0.1 : 0) + bonusXpItens(q, sessao, acertou) / 100;
   const comBonus = xp => Math.round(xp * fator);
   if (!acertou) return { pontos: 0, xp: comBonus(XP_ERRO + xpErroItens(sessao)) };
   let pontos = PONTOS_NIVEL[q.nivel] + Math.min(Math.max(sessao.seq - 1, 0), BONUS_SEQUENCIA_MAX);
@@ -884,27 +884,53 @@ function origem(q) {
 function larguraRecorte(px, dpi) {
   return Math.round((px / dpi) * 72 * 1.75 * (E.save.cfg.zoom / 100));
 }
+/* Marca da escolha e da correção: um anel em volta da letra impressa da alternativa, em vez de
+   pintar a alternativa inteira (a caixa dela dependia do espaçamento de cada prova e às vezes
+   ficava deslocada). z[5] a z[8] são a esquerda, o topo, a direita e a base da letra, em frações
+   da imagem; w e h, o tamanho original da imagem, para o anel sair redondo. O anel também é um
+   botão: clicar na letra sempre escolhe a letra certa. */
+function marcaDaLetra(z, w, h, l, estado, riscada, dentro) {
+  if (z.length < 9) return '';
+  const [lx0, ly0, lx1, ly1] = z.slice(5, 9);
+  const lw = (lx1 - lx0) * w, lh = (ly1 - ly0) * h;
+  if (lw <= 0 || lh <= 0) return '';
+  // letra sozinha: anel redondo e justo; rótulo largo, como "(A)": pílula
+  const lado = Math.max(lw, lh) + lh * 0.44;
+  const [pw, ph] = lw <= lh * 1.4 ? [lado, lado] : [lw + lh * 0.5, lh * 1.5];
+  const selo = estado === 'certa' ? ico('check') : (estado === 'errada' ? ico('xis') : '');
+  const pos = `left:${(lx0 + lx1) / 2 * 100}%;top:${(ly0 + ly1) / 2 * 100}%;width:${pw / w * 100}%;height:${ph / h * 100}%`;
+  return `<button class="marca-letra ${estado} ${riscada}" style="${pos}" data-l="${l}" ${dentro} aria-label="Alternativa ${l}">`
+    + `${selo ? `<span class="selo-letra">${selo}</span>` : ''}</button>`;
+}
 function folha(q, marca = null) {
   const fora = marca ? [] : eliminadasDa(E.save?.atual, q.id); // alternativas tiradas por item
-  const zonas = (idx) => LETRAS.map((l) => {
-    const z = q.alt?.[l];
-    if (!z || z[0] !== idx) return '';
-    let cls = '';
-    if (marca) {
-      if (l === marca.certa) cls = 'certa';
-      else if (l === marca.sua) cls = 'errada';
-    } else if (fora.includes(l)) cls = 'eliminada';
-    else if (E.selecao === l) cls = 'selecionada';
-    const riscada = E.riscadas.has(l) ? 'riscada' : '';
-    const dentro = marca || fora.includes(l) ? 'disabled' : `data-acao="marcar" data-letra="${l}"`;
-    const [esq, dir] = z.length > 3 ? [z[3], z[4]] : [0, 1];
-    const caixa = `top:${z[1] * 100}%;height:${(z[2] - z[1]) * 100}%;left:${esq * 100}%;width:${(dir - esq) * 100}%`;
-    return `<button class="zona ${cls} ${riscada}" style="${caixa}" ${dentro} aria-label="Alternativa ${l}"></button>`;
-  }).join('');
+  // a zona é a área clicável da alternativa, sem pintura; os anéis vêm depois, por cima dela
+  const zonas = (idx, w, h) => {
+    const areas = [], aneis = [];
+    for (const l of LETRAS) {
+      const z = q.alt?.[l];
+      if (!z || z[0] !== idx) continue;
+      let estado = '';
+      if (marca) {
+        if (l === marca.certa) estado = 'certa';
+        else if (l === marca.sua) estado = 'errada';
+      } else if (fora.includes(l)) estado = 'eliminada';
+      else if (E.selecao === l) estado = 'selecionada';
+      const riscada = E.riscadas.has(l) ? 'riscada' : '';
+      const dentro = marca || fora.includes(l) ? 'disabled' : `data-acao="marcar" data-letra="${l}"`;
+      const [esq, dir] = z.length > 3 ? [z[3], z[4]] : [0, 1];
+      if (dir > esq && z[2] > z[1]) {
+        const caixa = `top:${z[1] * 100}%;height:${(z[2] - z[1]) * 100}%;left:${esq * 100}%;width:${(dir - esq) * 100}%`;
+        areas.push(`<button class="zona" style="${caixa}" data-l="${l}" ${dentro} tabindex="-1" aria-hidden="true"></button>`);
+      }
+      aneis.push(marcaDaLetra(z, w, h, l, estado, riscada, dentro));
+    }
+    return areas.join('') + aneis.join('');
+  };
   return `<article class="folha papel-${E.save.cfg.papel}">
     ${q.img.map(([arquivo, w, h, apoio, dpi], i) => `<figure class="recorte ${apoio ? 'apoio' : ''}" style="width:min(100%, ${larguraRecorte(w, dpi)}px)">
       ${apoio ? '<figcaption>Texto de apoio</figcaption>' : ''}
-      <div class="moldura"><img src="${BASE_BANCO}img/${arquivo}" width="${w}" height="${h}" alt="Enunciado da questão ${q.n}, recortado da prova oficial">${zonas(i)}</div>
+      <div class="moldura"><img src="${BASE_BANCO}img/${arquivo}" width="${w}" height="${h}" alt="Enunciado da questão ${q.n}, recortado da prova oficial">${zonas(i, w, h)}</div>
     </figure>`).join('')}
   </article>`;
 }
@@ -983,7 +1009,7 @@ function painelRetorno(q, r, s) {
     </div>
     ${r?.derrotou ? `<div class="vitoria-inimigo ${r.derrotou.chefe ? 'chefe' : ''}">${ico('espadas')}<div><strong>${r.derrotou.chefe ? 'Chefe derrotado' : 'Inimigo derrotado'}</strong>
       <span>${esc(r.derrotou.nome)} · +${r.derrotou.xp} XP</span></div></div>` : ''}
-    ${eventosRetorno(r)}
+    ${eventosRetorno(r, q)}
     ${blocoHabilidade(q)}
     <button class="botao primario largo" data-acao="proxima">${proximo}</button>`;
 }
@@ -2014,9 +2040,9 @@ function atualizarMarcas() {
     b.classList.toggle('riscada', E.riscadas.has(l));
     b.setAttribute('aria-checked', E.selecao === l);
   });
-  document.querySelectorAll('.zona[data-letra]').forEach((z) => {
-    z.classList.toggle('selecionada', E.selecao === z.dataset.letra);
-    z.classList.toggle('riscada', E.riscadas.has(z.dataset.letra));
+  document.querySelectorAll('.marca-letra[data-letra]').forEach((m) => {
+    m.classList.toggle('selecionada', E.selecao === m.dataset.letra);
+    m.classList.toggle('riscada', E.riscadas.has(m.dataset.letra));
   });
   const b = document.querySelector('[data-acao="confirmar"]');
   if (b) b.disabled = !E.selecao;
@@ -2033,7 +2059,7 @@ document.addEventListener('click', (ev) => {
   ACOES[alvo.dataset.acao]?.(alvo.dataset);
 });
 document.addEventListener('contextmenu', (ev) => {
-  const alvo = ev.target.closest('[data-riscar], .zona[data-letra]');
+  const alvo = ev.target.closest('[data-riscar], .zona[data-letra], .marca-letra[data-letra]');
   if (!alvo || alvo.disabled) return;
   ev.preventDefault();
   const l = alvo.dataset.riscar || alvo.dataset.letra;

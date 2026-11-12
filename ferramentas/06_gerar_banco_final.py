@@ -2,9 +2,11 @@
 """Gera o banco final do jogo a partir de dados/registros_questoes.json.
 
 Passos: aplica as exclusões, remove repetidas, calcula competência e dificuldade,
-gera as imagens em WebP e grava questoes.json.
+gera as imagens em WebP, acha na imagem a tinta da letra de cada alternativa (onde o jogo
+marca a escolha e a correção) e grava questoes.json.
 
-Uso: 06_gerar_banco_final.py [--sem-imagens]
+Uso: 06_gerar_banco_final.py [--sem-imagens | --so-alternativas]
+(--so-alternativas atualiza só as caixas das alternativas no questoes.json já gerado.)
 Saída: <build>/banco/ e dados/relatorio_banco.json
 """
 import json
@@ -16,6 +18,7 @@ from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -130,8 +133,10 @@ def identificador(r):
 
 def caixas_alternativas(r):
     """Retângulo de cada alternativa no seu recorte: [recorte, topo, base, esquerda, direita],
-    em frações da altura e da largura do recorte."""
+    em frações da altura e da largura do recorte, seguido da caixa da letra impressa
+    (esquerda, topo, direita, base), onde o jogo marca a escolha e a correção."""
     saida = {}
+    letras = r.get("_letra", {})
     for letra, (pag, _cel, topo, base, esq, dir_) in r["_alt"].items():
         meio_y, meio_x = (topo + base) / 2, (esq + dir_) / 2
         idx = next((j for j, f in enumerate(r["_frag"])
@@ -143,7 +148,100 @@ def caixas_alternativas(r):
         em_y = lambda v: round(min(max((v - y0) / (y1 - y0), 0), 1), 4)
         em_x = lambda v: round(min(max((v - x0) / (x1 - x0), 0), 1), 4)
         saida[letra] = [idx, em_y(topo), em_y(base), em_x(esq), em_x(dir_)]
+        if letra in letras and letras[letra][0] == pag:
+            _, lx0, ly0, lx1, ly1 = letras[letra]
+            saida[letra] += [em_x(lx0), em_y(ly0), em_x(lx1), em_y(ly1)]
     return saida
+
+
+def _trechos(ativo, folga):
+    """Trechos contínuos de True, juntando os separados por até `folga` posições vazias."""
+    trechos, ini, fim = [], None, None
+    for i, v in enumerate(ativo):
+        if not v:
+            continue
+        if ini is None:
+            ini = i
+        elif i - fim > folga + 1:
+            trechos.append((ini, fim))
+            ini = i
+        fim = i
+    if ini is not None:
+        trechos.append((ini, fim))
+    return trechos
+
+
+def tinta_da_letra(cinza, X0, Y0, X1, Y1):
+    """Caixa (x0, y0, x1, y1), em px, do que está impresso na letra cuja caixa o PDF dá em X0..Y1.
+
+    A fonte das letras em círculo (2011 a 2025) declara a letra mais larga do que o círculo, com um
+    vão à direita; a tinta dá o círculo certo. Devolve None quando não acha uma letra plausível.
+    """
+    H, W = cinza.shape
+    lh = Y1 - Y0
+    if lh <= 0 or X1 <= X0:
+        return None
+    m = 0.4 * lh
+    y0, y1 = max(0, int(Y0 - m)), min(H, int(Y1 + m) + 1)
+    x0, x1 = max(0, int(X0 - 1.6 * lh)), min(W, int(X1) + 1)
+    escuro = cinza[y0:y1, x0:x1] < 140
+    if not escuro.any():
+        return None
+    folga = max(1, int(0.2 * lh))
+    # o rótulo é o trecho de colunas com tinta mais à esquerda que cruza a caixa do PDF. Em parte
+    # das provas de 2010 o círculo desenhado fica logo à esquerda da caixa, sem cruzá-la: sem
+    # trecho que cruze, vale o que termina até 0,6 da altura antes dela. "(A)" vem em três
+    # trechos colados, que se juntam enquanto começarem antes do fim da caixa
+    todos = _trechos(escuro.any(axis=0), folga)
+    trechos = [t for t in todos if x0 + t[1] >= X0 and x0 + t[0] <= X1]
+    if not trechos:
+        trechos = [t for t in todos if X0 - 0.6 * lh <= x0 + t[1] < X0][-1:]
+    if not trechos:
+        return None
+    c0, c1 = trechos[0]
+    for t in todos:
+        if t[0] > c1 and x0 + t[0] <= X1 - 0.15 * lh and t[0] - c1 <= folga + 1:
+            c1 = t[1]
+    meio = (Y0 + Y1) / 2 - y0
+    linhas = _trechos(escuro[:, c0:c1 + 1].any(axis=1), 1)
+    r0, r1 = min(linhas, key=lambda t: 0 if t[0] <= meio <= t[1] else min(abs(t[0] - meio), abs(t[1] - meio)))
+    caixa = (x0 + c0, y0 + r0, x0 + c1 + 1, y0 + r1 + 1)
+    larg, alt = caixa[2] - caixa[0], caixa[3] - caixa[1]
+    if not (0.35 * lh <= alt <= 2.2 * lh and 0.25 * lh <= larg <= 3 * lh):
+        return None
+    return caixa
+
+
+def letras_pela_tinta(q):
+    """Troca, nas alternativas da questão, a caixa da letra que o PDF dá pela tinta da letra no
+    recorte já gerado (roda em processo separado). Devolve (id, alt, letras achadas)."""
+    por_imagem = defaultdict(list)
+    for letra, z in q["alt"].items():
+        if len(z) == 9:
+            por_imagem[z[0]].append(letra)
+    achadas = 0
+    for idx, letras in por_imagem.items():
+        with Image.open(BUILD / "img" / q["img"][idx][0]) as im:
+            cinza = np.asarray(im.convert("L"))
+        H, W = cinza.shape
+        for letra in letras:
+            z = q["alt"][letra]
+            t = tinta_da_letra(cinza, z[5] * W, z[6] * H, z[7] * W, z[8] * H)
+            if t:
+                z[5:9] = [round(t[0] / W, 4), round(t[1] / H, 4), round(t[2] / W, 4), round(t[3] / H, 4)]
+                achadas += 1
+    return q["id"], q["alt"], achadas
+
+
+def ajustar_letras(banco):
+    """Aplica letras_pela_tinta a todas as questões do banco, em paralelo."""
+    with ProcessPoolExecutor(max_workers=6) as ex:
+        feitas = list(ex.map(letras_pela_tinta, banco, chunksize=40))
+    novas = {qid: alt for qid, alt, _ in feitas}
+    for q in banco:
+        q["alt"] = novas[q["id"]]
+    total = sum(len(q["alt"]) for q in banco)
+    print(f"letras pela tinta: {sum(a for _, _, a in feitas)} de {total} (as outras ficam com a caixa do PDF)")
 
 
 def apagar_aneis(imagem, caixas):
@@ -217,6 +315,19 @@ def main():
     print("no banco:", len(banco), "| fora:", len(fora), "| repetidas:", len(repetidas))
     print(Counter(re.sub(r" \(.*", "", m) for _, m in fora))
     print(relatorio["por_ano"], relatorio["por_area"])
+    if "--so-alternativas" in sys.argv:
+        # só as caixas das alternativas mudaram: atualiza o questoes.json já gerado, sem refazer as imagens
+        atual = json.loads((BUILD / "questoes.json").read_text(encoding="utf-8"))
+        novas = {q["id"]: q["alt"] for q in banco}
+        if {q["id"] for q in atual} != set(novas):
+            sys.exit("as questões do banco mudaram: rode o 06 completo")
+        for q in atual:
+            q["alt"] = novas[q["id"]]
+        ajustar_letras(atual)
+        (BUILD / "questoes.json").write_text(json.dumps(atual, ensure_ascii=False, separators=(",", ":")),
+                                             encoding="utf-8")
+        print("caixas das alternativas atualizadas:", len(atual))
+        return
     if "--sem-imagens" in sys.argv:
         return
 
@@ -233,6 +344,7 @@ def main():
             print(".", end="", flush=True)
     for q in banco:
         q["img"] = resultado[q["id"]]
+    ajustar_letras(banco)
     (BUILD / "questoes.json").write_text(json.dumps(banco, ensure_ascii=False, separators=(",", ":")),
                                          encoding="utf-8")
     tamanho = sum(p.stat().st_size for p in (BUILD / "img").iterdir())

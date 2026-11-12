@@ -26,7 +26,11 @@
      passagem secreta ser o evento sorteado), revisaoCompleta (moedas ao completar a Masmorra),
      bauRaro (multiplica a chance de baús de Prata e Ouro), tesouro (Mímicos segurados por sessão;
      também guarda as moedas do guardião não vencido), raridade { epico: %, lendario: % } (itens
-     mais raros nas recompensas), cincoReinos (item dado ao concluir os cinco reinos no mesmo dia)
+     mais raros nas recompensas), cincoReinos (item dado ao concluir os cinco reinos no mesmo dia),
+     xpSimulado (% de XP no Simulado), chama (até N% de XP, +1% por dia seguido de estudo),
+     eco (% de XP ao acertar fora da Masmorra uma questão já errada), lente (mostra o acerto na
+     habilidade depois da resposta), materialReino (% de achar o material do reino do mascote
+     nos acertos da área dele; o mascote tem "area")
    Os bônus em números de armas, armaduras, acessórios e artefatos crescem com o aprimoramento
    (APRIMORAMENTO, no fim do arquivo).
    Poderes (campo "poder", em artefatos e mascotes): um efeito de uso com cargas por sessão.
@@ -151,6 +155,10 @@ const ITENS = [
     desc: 'Os ponteiros giram para onde você quiser, uma vez a cada lua.',
     efeito: 'Uma vez por mês, você escolhe um item lendário do jogo (menos mascotes). Não precisa estar equipado.',
     ativo: { escolher: 'lendario', exceto: ['mascote'] } },
+  { id: 'lente_analista', nome: 'Lente do Analista', cat: 'artefato', rar: 'raro', icone: 'lente', cor: '#8fd0ff', drop: true,
+    desc: 'Não mostra a resposta. Mostra você.',
+    efeito: 'Depois de cada resposta, mostra quanto você já acertou nas questões daquela habilidade.',
+    bonus: { lente: 1 } },
 
   // ---- armas ----
   { id: 'espada_aprendiz', nome: 'Espada do Aprendiz', cat: 'arma', rar: 'comum', icone: 'espada', cor: '#c9d2dc', cor2: '#9a7444', drop: true,
@@ -169,6 +177,23 @@ const ITENS = [
     desc: 'Pesado o bastante para impressionar qualquer guardião.',
     efeito: '+8 moedas a cada guardião ou chefe do Sábio vencido.',
     bonus: { moedasGuardiao: 8 } },
+  // armas dos reinos: fabricadas com o material de cada reino
+  { id: 'pena_escriba', nome: 'Pena do Escriba', cat: 'arma', rar: 'incomum', icone: 'pena', cor: '#eef3ff', cor2: '#4a6fbd', area: 'LC',
+    desc: 'Escreve mais rápido do que se pensa.',
+    efeito: '+10% de XP nas questões de Linguagens.',
+    bonus: { xpArea: ['LC', 10] } },
+  { id: 'cetro_cronista', nome: 'Cetro do Cronista', cat: 'arma', rar: 'incomum', icone: 'cajado', cor: '#c0603f', cor2: '#e8b341', area: 'CH',
+    desc: 'Cada marca no cabo é uma era que ele viu passar.',
+    efeito: '+10% de XP nas questões de Ciências Humanas.',
+    bonus: { xpArea: ['CH', 10] } },
+  { id: 'bastao_alquimista', nome: 'Bastão do Alquimista', cat: 'arma', rar: 'incomum', icone: 'cajado', cor: '#5fa44a', cor2: '#9fe0c0', area: 'CN',
+    desc: 'Na ponta, um frasco que nunca para de borbulhar.',
+    efeito: '+10% de XP nas questões de Ciências da Natureza.',
+    bonus: { xpArea: ['CN', 10] } },
+  { id: 'compasso_batalha', nome: 'Compasso de Batalha', cat: 'arma', rar: 'incomum', icone: 'compasso', cor: '#2f9aa6', area: 'MT',
+    desc: 'Mede o ângulo exato de cada golpe.',
+    efeito: '+10% de XP nas questões de Matemática.',
+    bonus: { xpArea: ['MT', 10] } },
 
   // ---- armaduras ----
   { id: 'tunica_estudante', nome: 'Túnica do Estudante', cat: 'armadura', rar: 'comum', icone: 'tunica', cor: '#7c8fb3', drop: true,
@@ -183,6 +208,10 @@ const ITENS = [
     desc: 'Já viu chuva, sol e muitas provas.',
     efeito: 'Ao concluir uma expedição: +20% de XP no bônus de conclusão e +10 de chance de item no espólio do guardião.',
     bonus: { xpExpedicao: 20, chanceGuardiao: 10 } },
+  { id: 'manto_cacador', nome: 'Manto do Caçador', cat: 'armadura', rar: 'raro', icone: 'manto', cor: '#7a3b2e', drop: true,
+    desc: 'Cheira a trilha e a monstro. Eles vêm até você.',
+    efeito: '+10 de chance de monstro errante em cada onda do Reino do Sábio.',
+    bonus: { errante: 10 } },
 
   // ---- acessórios: até dois equipados ----
   { id: 'anel_curiosidade', nome: 'Anel da Curiosidade', cat: 'acessorio', rar: 'comum', icone: 'anel', cor: '#6fd3ff', drop: true,
@@ -205,6 +234,14 @@ const ITENS = [
     desc: 'Uma pedra de cada reino, todas brilhando juntas.',
     efeito: '+15 moedas a cada missão de reino cumprida (Letras, Humanidades, Natureza, Números e Sábio).',
     bonus: { missaoReino: 15 } },
+  { id: 'anel_chama', nome: 'Anel da Chama Constante', cat: 'acessorio', rar: 'epico', icone: 'anel', cor: '#ff7a3c', drop: true,
+    desc: 'A chama cresce a cada dia em que você volta.',
+    efeito: '+1% de XP por dia seguido de estudo, até +10%.',
+    bonus: { chama: 10 } },
+  { id: 'amuleto_eco', nome: 'Amuleto do Eco', cat: 'acessorio', rar: 'raro', icone: 'colar', cor: '#5fd0d8', drop: true,
+    desc: 'Repete baixinho o que você errou, até virar acerto.',
+    efeito: '+20% de XP ao acertar, fora da Masmorra, uma questão que você já tinha errado.',
+    bonus: { eco: 20 } },
 
   // ---- mascotes: um ativo por vez; os que têm "evolucao" mudam de aparência ----
   { id: 'athena', nome: 'Athena, a Coruja Sábia', cat: 'mascote', rar: 'raro', icone: 'coruja', cor: '#b08a55',
@@ -252,6 +289,27 @@ const ITENS = [
     efeito: 'Quando você conclui sessões nos cinco reinos no mesmo dia (Letras, Humanidades, Natureza, Números e Sábio), Lumina traz um Baú de Ouro, uma vez por dia.',
     bonus: { cincoReinos: 'bau_ouro' },
     evolucao: { por: 'conquistas', limites: [0, 35, 50], formas: ['luz serena', 'com auréola', 'com asas de luz'] } },
+  // mascotes dos reinos: caem do guardião do próprio reino
+  { id: 'rima', nome: 'Rima, o Grilo Poeta', cat: 'mascote', rar: 'incomum', icone: 'grilo', cor: '#7fc46a', cor2: '#4a6fbd', area: 'LC',
+    desc: 'Canta em versos e corrige a sua concordância.',
+    efeito: 'Nos acertos de Linguagens, 10% de chance de achar 1 Tinta de Sépia.',
+    bonus: { materialReino: 10 },
+    evolucao: { por: 'questoes', limites: [0, 150, 500], formas: ['grilo cantor', 'de boina de poeta', 'de boina, entre notas musicais'] } },
+  { id: 'cronos', nome: 'Cronos, a Tartaruga Anciã', cat: 'mascote', rar: 'incomum', icone: 'tartaruga', cor: '#8fae5a', cor2: '#e8b341', area: 'CH',
+    desc: 'Viu impérios nascerem e caírem. Sem pressa nenhuma.',
+    efeito: 'Nos acertos de Ciências Humanas, 10% de chance de achar 1 Moeda Antiga.',
+    bonus: { materialReino: 10 },
+    evolucao: { por: 'questoes', limites: [0, 150, 500], formas: ['casco liso', 'com pergaminho no casco', 'com casco de runas douradas'] } },
+  { id: 'musgo', nome: 'Musgo, o Cogumelo Andante', cat: 'mascote', rar: 'incomum', icone: 'cogumelo', cor: '#d8484a', cor2: '#fff3e6', area: 'CN',
+    desc: 'Brota onde há vida e conversa com as raízes.',
+    efeito: 'Nos acertos de Ciências da Natureza, 10% de chance de achar 1 Semente Viva.',
+    bonus: { materialReino: 10 },
+    evolucao: { por: 'questoes', limites: [0, 150, 500], formas: ['cogumelo jovem', 'com folhinha no chapéu', 'com vaga-lumes em volta'] } },
+  { id: 'pi', nome: 'Pi, o Autômato de Engrenagens', cat: 'mascote', rar: 'incomum', icone: 'automato', cor: '#c9a24a', cor2: '#2f9aa6', area: 'MT',
+    desc: 'Calcula tudo, inclusive quantos passos faltam para a resposta.',
+    efeito: 'Nos acertos de Matemática, 10% de chance de achar 1 Engrenagem de Bronze.',
+    bonus: { materialReino: 10 },
+    evolucao: { por: 'questoes', limites: [0, 150, 500], formas: ['engrenagens à mostra', 'de antena acesa', 'com auréola de engrenagens'] } },
 
   // ---- relíquias: ganhas por conquistas, valem sempre ----
   { id: 'medalha_primeiro_passo', nome: 'Medalha do Primeiro Passo', cat: 'reliquia', rar: 'incomum', icone: 'medalha', cor: '#fff3c4', cor2: '#4a6fbd',
@@ -266,6 +324,22 @@ const ITENS = [
     desc: 'O que resta quando todas as perguntas foram respondidas.',
     efeito: '+10% de XP e de moedas, para sempre.',
     bonus: { xp: 10, moedas: 10 } },
+  { id: 'tocha_chama_eterna', nome: 'Tocha da Chama Eterna', cat: 'reliquia', rar: 'epico', icone: 'tocha', cor: '#ff9a3c',
+    desc: 'Acesa no primeiro dia e nunca mais apagada.',
+    efeito: '+5% de XP, para sempre.',
+    bonus: { xp: 5 } },
+  { id: 'chave_masmorra', nome: 'Chave da Masmorra Vazia', cat: 'reliquia', rar: 'epico', icone: 'chave', cor: '#c9a24a',
+    desc: 'Abre todas as celas: nenhum erro ficou para trás.',
+    efeito: '+10% de XP na Masmorra dos Erros, para sempre.',
+    bonus: { xpRevisao: 10 } },
+  { id: 'louros_arena', nome: 'Louros da Arena', cat: 'reliquia', rar: 'epico', icone: 'louros', cor: '#7fc46a',
+    desc: 'A coroa de quem venceu a prova antes da prova.',
+    efeito: '+10% de XP no Simulado, para sempre.',
+    bonus: { xpSimulado: 10 } },
+  { id: 'trofeu_cacador', nome: 'Troféu do Caçador', cat: 'reliquia', rar: 'epico', icone: 'trofeu', cor: '#e8b341',
+    desc: 'Dez chefes, uma parede inteira de lembranças.',
+    efeito: '+5 moedas a cada guardião ou chefe vencido, para sempre.',
+    bonus: { moedasGuardiao: 5 } },
 
   // ---- materiais: para a fabricação ----
   { id: 'essencia_slime', nome: 'Essência de Slime', cat: 'material', rar: 'comum', icone: 'gota', cor: '#7fe08a', drop: true,
@@ -284,6 +358,15 @@ const ITENS = [
   { id: 'pena_fenix', nome: 'Pena da Fênix', cat: 'material', rar: 'epico', icone: 'pena', cor: '#ff7a3c', cor2: '#ffd36b', drop: true,
     tabelas: ['chefe', 'bau_ouro'],
     desc: 'Morna ao toque, mesmo depois de dias.', efeito: 'Material de fabricação de itens de proteção e de aprimoramento de artefatos e lendários.' },
+  // materiais dos reinos: vêm das missões e dos guardiões de cada reino (ITENS_DO_REINO)
+  { id: 'tinta_sepia', nome: 'Tinta de Sépia', cat: 'material', rar: 'incomum', icone: 'tinteiro', cor: '#5a4a8a', area: 'LC',
+    desc: 'Escura como as entrelinhas.', efeito: 'Material do Reino das Letras, usado na Pena do Escriba.' },
+  { id: 'moeda_antiga', nome: 'Moeda Antiga', cat: 'material', rar: 'incomum', icone: 'moeda_antiga', cor: '#c9a24a', area: 'CH',
+    desc: 'Cunhada num império que já não existe.', efeito: 'Material do Reino das Humanidades, usado no Cetro do Cronista.' },
+  { id: 'semente_viva', nome: 'Semente Viva', cat: 'material', rar: 'incomum', icone: 'semente', cor: '#5fa44a', area: 'CN',
+    desc: 'Pulsa de leve, como se respirasse.', efeito: 'Material do Reino da Natureza, usado no Bastão do Alquimista.' },
+  { id: 'engrenagem_bronze', nome: 'Engrenagem de Bronze', cat: 'material', rar: 'incomum', icone: 'engrenagem', cor: '#c98a4a', area: 'MT',
+    desc: 'Cada dente no lugar exato.', efeito: 'Material do Reino dos Números, usado no Compasso de Batalha.' },
 
   // ---- baús: abertos no inventário ----
   { id: 'bau_madeira', nome: 'Baú de Madeira', cat: 'bau', rar: 'comum', icone: 'bau', cor: '#9a6a3a', cor2: '#c9a24a', drop: true, abre: 'bau_madeira',
@@ -322,7 +405,16 @@ const BAUS = {
 /* Fim de sessão. O guardião só deixa espólio para quem enfrentou a sessão: pelo menos "minimo"
    questões (ou todas, se a sessão tiver menos), com chance maior a partir de "longa" questões.
    O simulado dá um baú por dia, para que responder no chute não vire fonte de itens. */
-const ESPOLIO_GUARDIAO = { minimo: 5, chance: 0.5, longa: 10, chanceLonga: 0.85 };
+const ESPOLIO_GUARDIAO = { minimo: 5, chance: 0.5, longa: 10, chanceLonga: 0.85, materialReino: 0.5, mascoteReino: 0.08 };
+/* Pacote de cada reino. O guardião vencido numa expedição do reino tem chance de deixar o
+   material (materialReino) e o mascote (mascoteReino). O material também vem da missão do
+   reino e do mascote do reino, e é usado na arma do reino (RECEITAS). */
+const ITENS_DO_REINO = {
+  LC: { material: 'tinta_sepia', mascote: 'rima' },
+  CH: { material: 'moeda_antiga', mascote: 'cronos' },
+  CN: { material: 'semente_viva', mascote: 'musgo' },
+  MT: { material: 'engrenagem_bronze', mascote: 'pi' },
+};
 const PREMIO_SIMULADO = { minimo: 20, bau: 'bau_madeira', diaInteiro: 80, bauDiaInteiro: 'bau_prata' };
 
 /* Monstros errantes: aparecem de vez em quando no Reino do Sábio, no lugar de um inimigo comum,
@@ -364,6 +456,10 @@ const PREMIO_CONQUISTA = {
   todas: 'coracao_conhecimento',
   q2500: 'relogio_destinos',
   onda25: 'lumina',
+  dias30: 'tocha_chama_eterna',
+  rev150: 'chave_masmorra',
+  sim80: 'louros_arena',
+  chefe10: 'trofeu_cacador',
 };
 
 /* Fabricação: materiais (e às vezes moedas) viram itens. "req" libera a receita por nível ou
@@ -376,6 +472,10 @@ const RECEITAS = [
   { id: 'r_perg_humanidades', item: 'perg_humanidades', mats: { fragmento_cristal: 3, po_conhecimento: 1 }, req: { nivel: 4 } },
   { id: 'r_perg_natureza', item: 'perg_natureza', mats: { fragmento_cristal: 3, po_conhecimento: 1 }, req: { nivel: 4 } },
   { id: 'r_perg_numeros', item: 'perg_numeros', mats: { fragmento_cristal: 3, po_conhecimento: 1 }, req: { nivel: 4 } },
+  { id: 'r_pena_escriba', item: 'pena_escriba', mats: { tinta_sepia: 5, fragmento_cristal: 2 }, req: { nivel: 3 } },
+  { id: 'r_cetro_cronista', item: 'cetro_cronista', mats: { moeda_antiga: 5, fragmento_cristal: 2 }, req: { nivel: 3 } },
+  { id: 'r_bastao_alquimista', item: 'bastao_alquimista', mats: { semente_viva: 5, fragmento_cristal: 2 }, req: { nivel: 3 } },
+  { id: 'r_compasso_batalha', item: 'compasso_batalha', mats: { engrenagem_bronze: 5, fragmento_cristal: 2 }, req: { nivel: 3 } },
   { id: 'r_fortuna', item: 'pocao_fortuna', mats: { essencia_slime: 2, fragmento_cristal: 2 }, req: { nivel: 5 } },
   { id: 'r_segunda', item: 'elixir_segunda_chance', mats: { po_conhecimento: 2, runa_sabedoria: 1 }, req: { nivel: 6 } },
   { id: 'r_descoberta', item: 'pocao_descoberta', mats: { po_conhecimento: 2, fragmento_cristal: 2, runa_sabedoria: 1 }, req: { nivel: 7 } },
@@ -453,10 +553,10 @@ const EVENTOS = {
    área (nas expedições, na Masmorra e no Sábio) e os inimigos derrotados no Sábio. O Diadema dos
    Reinos dá moedas a mais em cada uma. */
 const MISSOES_REINO = [
-  { id: 'reino_LC', reino: 'LC', nome: 'Missão das Letras', texto: 'Acertar 5 questões de Linguagens hoje', alvo: 5, premio: { moedas: 12, item: 'fragmento_cristal' } },
-  { id: 'reino_CH', reino: 'CH', nome: 'Missão das Humanidades', texto: 'Acertar 5 questões de Ciências Humanas hoje', alvo: 5, premio: { moedas: 12, item: 'fragmento_cristal' } },
-  { id: 'reino_CN', reino: 'CN', nome: 'Missão da Natureza', texto: 'Acertar 5 questões de Ciências da Natureza hoje', alvo: 5, premio: { moedas: 12, item: 'fragmento_cristal' } },
-  { id: 'reino_MT', reino: 'MT', nome: 'Missão dos Números', texto: 'Acertar 5 questões de Matemática hoje', alvo: 5, premio: { moedas: 12, item: 'fragmento_cristal' } },
+  { id: 'reino_LC', reino: 'LC', nome: 'Missão das Letras', texto: 'Acertar 5 questões de Linguagens hoje', alvo: 5, premio: { moedas: 12, item: 'tinta_sepia' } },
+  { id: 'reino_CH', reino: 'CH', nome: 'Missão das Humanidades', texto: 'Acertar 5 questões de Ciências Humanas hoje', alvo: 5, premio: { moedas: 12, item: 'moeda_antiga' } },
+  { id: 'reino_CN', reino: 'CN', nome: 'Missão da Natureza', texto: 'Acertar 5 questões de Ciências da Natureza hoje', alvo: 5, premio: { moedas: 12, item: 'semente_viva' } },
+  { id: 'reino_MT', reino: 'MT', nome: 'Missão dos Números', texto: 'Acertar 5 questões de Matemática hoje', alvo: 5, premio: { moedas: 12, item: 'engrenagem_bronze' } },
   { id: 'reino_sabio', reino: 'sabio', nome: 'Missão do Sábio', texto: 'Derrotar 3 inimigos no Reino do Sábio hoje', alvo: 3, premio: { moedas: 12, item: 'po_conhecimento' } },
 ];
 
@@ -474,5 +574,6 @@ const APRIMORAMENTO = {
   },
   extraRaro: { pena_fenix: 1 },
   escalaveis: ['xp', 'xpRevisao', 'xpErro', 'moedas', 'bau', 'moedasExpedicao', 'errante', 'evento', 'moedasGuardiao',
-    'xpExpedicao', 'chanceGuardiao', 'materialExtra', 'missaoReino', 'materialBasico', 'revisaoCompleta'],
+    'xpExpedicao', 'chanceGuardiao', 'materialExtra', 'missaoReino', 'materialBasico', 'revisaoCompleta', 'chama', 'eco'],
+  // o bônus por área (xpArea, das armas dos reinos) também cresce com o aprimoramento
 };

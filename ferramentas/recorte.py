@@ -54,6 +54,7 @@ class Linha:
     fonte: str = ""
     base: float = 0.0  # linha de base do texto; 0 nas letras desenhadas de 2010
     tam: float = 0.0   # corpo da fonte, em pontos
+    rot: tuple = ()    # (x0, x1, corpo) do rótulo da alternativa no começo da linha: a letra ou "(A)"
 
 
 @dataclass
@@ -93,6 +94,7 @@ class QuestaoPDF:
     ordem: int  # posição na leitura: distingue as duas versões das questões 1 a 5
     fragmentos: list = field(default_factory=list)
     alternativas: dict = field(default_factory=dict)  # letra -> (pag, cel, y0)
+    letras: dict = field(default_factory=dict)  # letra -> (pag, x0, y0, x1, y1) da letra impressa
     alternativas_ok: bool = False
     alt_fim: tuple = ()
     texto: str = ""
@@ -120,6 +122,17 @@ def letra_da_linha(spans):
         if len(uteis) == 1:
             return primeiro
     return None
+
+
+def rotulo(uteis):
+    """Começo, fim e corpo do rótulo da alternativa (a letra ou "(A)") no início da linha. O corpo é
+    o do próprio rótulo: o da linha pode vir de uma fórmula maior."""
+    s = uteis[0]
+    x0, x1 = s["bbox"][0], s["bbox"][2]
+    if re.fullmatch(r"\s*\(?[A-E]\)?\s*", s["text"]):
+        return x0, x1, s["size"]
+    # rótulo e texto no mesmo trecho: a largura do rótulo sai do corpo da fonte
+    return x0, x0 + (1.7 if s["text"].lstrip().startswith("(") else 0.75) * s["size"], s["size"]
 
 
 class Prova:
@@ -157,9 +170,11 @@ class Prova:
                     if texto:
                         uteis = [s for s in l["spans"] if s["text"].strip()]
                         y0, y1 = self._altura_da_linha(l, uteis)
+                        letra = letra_da_linha(l["spans"])
                         linhas.append(Linha(pno, l["bbox"][0], y0, l["bbox"][2], y1, texto,
-                                            letra_da_linha(l["spans"]), fonte=uteis[0]["font"],
-                                            base=uteis[0]["origin"][1], tam=max(s["size"] for s in uteis)))
+                                            letra, fonte=uteis[0]["font"],
+                                            base=uteis[0]["origin"][1], tam=max(s["size"] for s in uteis),
+                                            rot=rotulo(uteis) if letra else ()))
             self.linhas[pno] = linhas
             marc = (self._achar_numeros_soltos(linhas) if self.uma_coluna
                     else self._achar_marcadores(page, pno))
@@ -925,6 +940,23 @@ class Prova:
                 if lado[k]:
                     d = min(d, (dir_ + brutas[k + 1][4]) / 2 - 0.4)
                 q.alternativas[letra] = (*celula, t, b, e, d)
+
+        # a letra impressa de cada alternativa, onde o jogo marca a escolha e a correção: do topo
+        # da maiúscula até a linha de base; nas letras desenhadas (círculos), o próprio círculo
+        for a in alts:
+            l0 = a["letra_linha"]
+            corpo = l0.tam
+            if l0.rot:
+                x0, x1, corpo = l0.rot
+            elif not l0.texto:
+                x0, x1 = l0.x0, l0.x1
+            else:
+                x0, x1 = l0.x0, l0.x0 + 0.75 * (l0.tam or 10)
+            if l0.base and corpo:
+                y0, y1 = l0.base - 0.72 * corpo, l0.base + 0.02 * corpo
+            else:
+                y0, y1 = l0.y0, l0.y1
+            q.letras[a["letra"]] = (l0.pag, round(x0, 2), round(y0, 2), round(x1, 2), round(y1, 2))
 
     def _registrar_apoio(self, resto, apoios, posicao):
         """Texto entre o fim de uma questão e a próxima: pode valer para as seguintes."""

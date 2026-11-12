@@ -27,10 +27,14 @@ O QUE HÁ NO JOGO
   o 2º dia ou uma área só.
 - Torre da Redação: estrutura, competências, nota zero, temas de 2005 a 2025 e
   redações comentadas.
-- Inventário: 52 itens em seis raridades (Comum, Incomum, Raro, Épico, Lendário e
+- Inventário: 72 itens em seis raridades (Comum, Incomum, Raro, Épico, Lendário e
   Mítico).
   - Equipamento: arma, armadura, dois acessórios, artefato e mascote.
-  - Os oito mascotes evoluem de aparência, em três formas, conforme acompanham você.
+  - Os doze mascotes evoluem de aparência, em três formas, conforme acompanham você.
+  - Cada reino tem o seu material, uma arma feita com ele e um mascote.
+  - Conquistas difíceis dão relíquias com bônus para sempre.
+  - A Lente do Analista mostra, depois de cada resposta, quanto você já acertou
+    naquela habilidade.
   - O Relógio dos Destinos deixa escolher um item lendário uma vez por mês.
   - Entre as questões podem surgir eventos especiais: passagem secreta (acerte a
     próxima para abrir o baú escondido), mercador errante, Fonte do Saber e chuva
@@ -57,6 +61,9 @@ O QUE HÁ NO JOGO
 
 Teclas na questão: A a E escolhem, Enter confirma e avança.
 Botão direito risca uma alternativa.
+A escolha e a correção aparecem num anel em volta da letra da alternativa, na
+própria prova: dourado na escolhida; depois de responder, verde com ✓ na certa e
+vermelho com ✗ na sua, se errou. Dá para clicar na letra ou no texto da alternativa.
 
 DE ONDE VÊM OS DADOS
 Provas e gabaritos: https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos
