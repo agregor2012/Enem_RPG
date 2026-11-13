@@ -123,6 +123,9 @@ code { font-family: Consolas, monospace; font-size: .92em; background: rgba(0,0,
 .rotulo-vaga { font: italic 600 19px var(--leitura); fill: #7d7466; letter-spacing: .14em; }
 .rotulo-mar { font: italic 400 19px var(--leitura); fill: #a9c9e4; letter-spacing: .34em; opacity: .55; }
 .rotulo-lago { font: italic 600 14px var(--leitura); fill: #f2f8fb; letter-spacing: .06em; opacity: .92; }
+/* no terreno pintado as regiões ficam sobre árvores e pedras escuras: letra clara com contorno escuro */
+.mapa.pintado .rotulo-regiao, .mapa.pintado .rotulo-lago { fill: #f6eedb; stroke: rgba(24, 18, 10, .7); stroke-width: 3.5px;
+  stroke-linejoin: round; paint-order: stroke; opacity: .95; }
 .cartela-t { font: 700 20px var(--titulo); fill: #4a3820; letter-spacing: .06em; }
 .cartela-s { font: italic 400 12.5px var(--leitura); fill: #6b5638; letter-spacing: .08em; }
 .rosa-n { font: 700 13px var(--titulo); fill: #ecdcb2; }

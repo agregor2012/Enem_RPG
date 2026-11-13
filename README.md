@@ -154,6 +154,28 @@ O script tira o fundo, centraliza o desenho e grava o ícone em `jogo/img/itens/
 a arte sem fundo em 512 x 512. Item sem arte, ou forma de mascote sem arte, continua com o
 símbolo `it-*`.
 
+Os lugares do mapa também podem ter arte pintada: `reino_*.png` e `lugar_*.png` (os nomes estão em
+`LUGARES`, no script), na subpasta `mapa` da pasta das artes. Eles viram `jogo/img/mapa/<nome>.webp`
+(768 x 768), com o pé do desenho embaixo, e o mapa os desenha no ponto de base de cada lugar, acima
+da faixa com o nome (`predio()` em `jogo/app.js`). Lugar sem arte continua com o desenho vetorial.
+
+Para a construção pisar no terreno do mapa, a versão do jogo perde o chão pintado na própria arte.
+`ferramentas/chao_lugares.json` traz, por lugar, a linha onde a construção toca o chão (em frações do
+quadro de 1024), e o script tira o que está abaixo dela e põe uma sombra no pé. Também pode tirar
+partes soltas no ar, puxar uma cor para a do mapa ou apagar um pedaço que caia em cima do que já está
+pintado. Cada linha guarda a impressão da arte em que foi traçada: se a arte for trocada, o script
+avisa e usa só o esmaecimento da borda da base até a linha ser traçada de novo. Lugar sem linha
+também fica com esse esmaecimento. No terreno pintado, `LUGARES_NO_PINTADO` dá o ponto de cada lugar
+e a escala da arte, medida contra o descampado que a pintura deixou para ele.
+
+O terreno do mapa também pode ser pintado: `mapa.png`, na mesma subpasta, em 4:3, gerado com um guia
+de posições anexado (a ilha, as montanhas, a água, as estradas e as clareiras dos lugares, tirados de
+`LUGARES_MAPA` e `ESTRADAS_MAPA`). O script o grava em `jogo/img/mapa/mapa.webp`, com as bordas
+esmaecendo até a cor do mar, e anota em `jogo/artes.js` o tamanho e essa cor (`MAPA_PINTADO`). Com ele,
+o mapa desenha a pintura no lugar da ilha vetorial (`terrenoPintado()`); os lugares, os nomes das
+regiões, a rosa dos ventos e o título continuam por cima. Os nomes das regiões (lago, bosque e ermos)
+têm posições próprias para o terreno pintado em `ROTULOS_MAPA`, a conferir quando a pintura mudar.
+
 Enquanto o sistema está em teste, Ajustes tem um **modo desenvolvedor** temporário que:
 
 - libera todos os itens, receitas e a loja numa cópia de teste do inventário, que não é gravada no
@@ -164,7 +186,7 @@ Enquanto o sistema está em teste, Ajustes tem um **modo desenvolvedor** tempor�
 ## Pastas
 
 - `jogo/`: o jogo (Electron): `index.html`, `app.js`, `conteudo.js`, `itens.js` (catálogo de itens), `inventario.js` (inventário, recompensas e fabricação), `estilo.css`, `main.js` e `preload.js`; as artes dos itens ficam em `img/itens/`, listadas em `artes.js`;
-- `ferramentas/`: scripts que baixam, recortam e conferem as questões, e o que prepara as artes dos itens (`artes_itens.py`);
+- `ferramentas/`: scripts que baixam, recortam e conferem as questões, e o que prepara as artes dos itens e dos lugares do mapa (`artes_itens.py`, com as linhas de chão em `chao_lugares.json`);
 - `dados/`: mapeamentos e relatórios pequenos usados pelas ferramentas.
 
 ## Fontes dos dados

@@ -1228,6 +1228,22 @@ const VAGAS_MAPA = [
   { id: 'noroeste', x: 330, y: 320, montanhas: [[-40, -50, 1.2], [15, -75, 1], [60, -38, .8]] },
   { id: 'nordeste', x: 1070, y: 320, montanhas: [[-60, -38, .8], [-15, -75, 1], [40, -50, 1.2]] },
 ];
+/* Onde ficam os nomes das regiões, no terreno desenhado e no pintado (img/mapa/mapa.webp), que pôs o
+   lago e os Ermos em outro ponto. Se o mapa pintado for trocado, confira estas posições nele. */
+const ROTULOS_MAPA = {
+  vetor: { lago: [905, 478], bosque: [482, 604], ermos: [680, 905] },
+  pintado: { lago: [860, 388], bosque: [480, 458], ermos: [645, 765] },
+};
+/* Ponto de base de cada lugar no terreno pintado e, em terceiro, a escala da arte (o pé dela fica
+   parado; a faixa com o nome não muda). A pintura pôs o descampado de cada reino no meio da oval do
+   guia, acima do ponto de base de LUGARES_MAPA, e os descampados são menores que as artes: cada arte
+   foi medida contra o seu (o pátio dos Números, a clareira das Letras, o chão da Masmorra, o terreiro
+   entre os ciprestes das Humanidades, o prado da Natureza) para pisar nele sem cobrir árvore, coluna
+   ou pirâmide pintada que fique na frente. Se o mapa pintado ou uma arte mudar, confira de novo. */
+const LUGARES_NO_PINTADO = {
+  sabio: [702, 263], numeros: [350, 272, 0.76], natureza: [1061, 285, 0.7], letras: [299, 584, 0.82],
+  torre: [702, 609], humanidades: [1100, 589, 0.62], masmorra: [401, 806, 0.78], arena: [1012, 815],
+};
 /* O rio desce do lago, passa entre a Torre e as Humanidades e deságua na baía do sul. */
 const RIO = 'M925 490C945 570 940 660 920 730C900 790 800 880 740 972';
 /* Estradas até a Torre, no centro. "ponte" marca onde a estrada cruza o rio. Os reinos do norte
@@ -1315,12 +1331,23 @@ function ajustarFaixas() {
 }
 
 /* ---- os lugares ---- */
+/* Arte pintada do lugar (img/mapa, listada em artes.js) no lugar do desenho vetorial, que fica de
+   reserva. A arte foi enquadrada com o pé a 96% da altura do quadro; aqui o pé fica logo acima da
+   faixa com o nome, que está em dy. escalaArteLugar é a escala do lugar sendo desenhado no terreno
+   pintado (LUGARES_NO_PINTADO); ela muda o tamanho da arte em volta do pé. */
+const LADO_ARTE_LUGAR = 236;
+let escalaArteLugar = 1;
+function predio(arte, svg, dy) {
+  if (typeof ARTES_MAPA === 'undefined' || !ARTES_MAPA.has(arte)) return svg;
+  const l = LADO_ARTE_LUGAR * escalaArteLugar;
+  return `<image href="img/mapa/${arte}.webp" x="${f1(-l / 2)}" y="${f1(dy - 18 - l * 0.96)}" width="${f1(l)}" height="${f1(l)}"/>`;
+}
 function castelo(sub) {
   let ameias = '';
   for (let x = -76; x <= 68; x += 13) ameias += `<rect x="${x}" y="-53" width="8" height="7" fill="#e3d8bd" stroke="#6b5a3f" stroke-width="1.3"/>`;
   const janela = ([x, y]) => `<path d="M${x - 4} ${y + 9}V${y}a4 4 0 0 1 8 0V${y + 9}Z" fill="#f3c86b" stroke="#6b5a3f" stroke-width="1.2"/>`;
   const telhado = (x, y, w, h) => `<path d="M${x - w} ${y}L${x} ${y - h}L${x + w} ${y}Z" fill="#3a5a9c" stroke="#1f3768" stroke-width="1.6" stroke-linejoin="round"/><path d="M${x} ${y - h}L${x + w} ${y}H${x}Z" fill="#26407a"/>`;
-  return `<ellipse cy="4" rx="106" ry="15" fill="#2a2010" opacity=".16"/>
+  return predio('reino_letras', `<ellipse cy="4" rx="106" ry="15" fill="#2a2010" opacity=".16"/>
     <rect x="-96" y="-88" width="30" height="90" fill="#d9ccae" stroke="#6b5a3f" stroke-width="1.8"/>
     <rect x="66" y="-88" width="30" height="90" fill="#d9ccae" stroke="#6b5a3f" stroke-width="1.8"/>
     <path d="M-76 2V-46H76V2Z" fill="#e3d8bd" stroke="#6b5a3f" stroke-width="1.8"/>${ameias}
@@ -1334,15 +1361,15 @@ function castelo(sub) {
     <path d="M-14 2V-22a14 14 0 0 1 28 0V2Z" fill="#4a3524" stroke="#6b5a3f" stroke-width="1.8"/>
     <path d="M-7 2V-28M0 2V-31M7 2V-28" stroke="#2c1f14" stroke-width="1.4"/>
     ${bandeira(0, -160, 26, '#2f4f8f', '#1f3768', '<path d="M7 -16c4-5 8-7 12-7c-3 5-7 8-12 9Z" fill="#e3c27a"/>')}
-    ${bandeira(-81, -126, 18, '#2f4f8f', '#1f3768')}${bandeira(81, -126, 18, '#2f4f8f', '#1f3768')}
-    ${faixa('Reino das Letras', sub, 38, 'letras')}`;
+    ${bandeira(-81, -126, 18, '#2f4f8f', '#1f3768')}${bandeira(81, -126, 18, '#2f4f8f', '#1f3768')}`, 38)
+    + faixa('Reino das Letras', sub, 38, 'letras');
 }
 function templo(sub) {
   const colunas = [-60, -36, -12, 12, 36, 60].map(x => `<rect x="${x - 6}" y="-74" width="12" height="56" fill="#f1e7d2" stroke="#7a6748" stroke-width="1.3"/>
     <path d="M${x - 2.5} -72V-20M${x + 2.5} -72V-20" stroke="#d3c6a6" stroke-width="1"/>
     <rect x="${x - 8}" y="-78" width="16" height="5" fill="#e6dcc2" stroke="#7a6748" stroke-width="1.2"/>
     <rect x="${x - 8}" y="-20" width="16" height="4" fill="#e6dcc2" stroke="#7a6748" stroke-width="1.2"/>`).join('');
-  return `<ellipse cy="4" rx="116" ry="15" fill="#2a2010" opacity=".16"/>
+  return predio('reino_humanidades', `<ellipse cy="4" rx="116" ry="15" fill="#2a2010" opacity=".16"/>
     ${estandarte(-104, '#9c3f27', '#6c2918')}${estandarte(104, '#9c3f27', '#6c2918')}
     <rect x="-92" y="-6" width="184" height="9" fill="#e2d6bb" stroke="#7a6748" stroke-width="1.5"/>
     <rect x="-84" y="-14" width="168" height="8" fill="#e9dfc6" stroke="#7a6748" stroke-width="1.5"/>
@@ -1357,8 +1384,8 @@ function templo(sub) {
     <circle cy="-131" r="3.2" fill="#b4532f"/><path d="M-90 -90l-6-6M90 -90l6-6" stroke="#b4532f" stroke-width="2.5" stroke-linecap="round"/>
     <g transform="translate(128 2)"><path d="M-7 0L-5 -62H5L7 0Z" fill="#e3d6b6" stroke="#7a6748" stroke-width="1.3"/>
       <path d="M-5 -62L0 -73L5 -62Z" fill="#d8b25a" stroke="#7a6748" stroke-width="1.2"/>
-      <path d="M-1 -52v4M1 -42v5M-1 -31v4M1 -20v4" stroke="#9a8a6b" stroke-width="1.2"/></g>
-    ${faixa('Reino das Humanidades', sub, 38, 'humanas')}`;
+      <path d="M-1 -52v4M1 -42v5M-1 -31v4M1 -20v4" stroke="#9a8a6b" stroke-width="1.2"/></g>`, 38)
+    + faixa('Reino das Humanidades', sub, 38, 'humanas');
 }
 function corujaMini() {
   return `<circle cx="-2.6" cy="-8" r="2.3" fill="#f4dc8e"/><circle cx="2.6" cy="-8" r="2.3" fill="#f4dc8e"/>
@@ -1369,7 +1396,7 @@ function observatorio(sub) {
   const estrelas = [[-28, -102], [-14, -116], [4, -110], [20, -120], [31, -100], [-6, -98], [14, -96], [-36, -92], [36, -90]]
     .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.4" fill="#f4dc8e"/>`).join('');
   const brilho = ([x, y, r]) => `<path d="M${x} ${y - r}L${f1(x + r * .27)} ${f1(y - r * .27)}L${x + r} ${y}L${f1(x + r * .27)} ${f1(y + r * .27)}L${x} ${y + r}L${f1(x - r * .27)} ${f1(y + r * .27)}L${x - r} ${y}L${f1(x - r * .27)} ${f1(y - r * .27)}Z" fill="#d7f2ff" opacity=".9"/>`;
-  return `<ellipse cy="4" rx="104" ry="15" fill="#20152e" opacity=".2"/>
+  return predio('reino_sabio', `<ellipse cy="4" rx="104" ry="15" fill="#20152e" opacity=".2"/>
     <path d="M-98 4L-82 -18L-58 -30L-20 -35L24 -35L62 -28L86 -16L100 4Z" fill="#938aa8" stroke="#4e4466" stroke-width="1.6" stroke-linejoin="round"/>
     <path d="M24 -35L62 -28L86 -16L100 4H36Z" fill="#7a7191" opacity=".75"/>
     <path d="M-58 -30L-42 4M-20 -35L-14 4M62 -28L72 4" stroke="#6f6688" stroke-width="1.2"/>
@@ -1390,12 +1417,12 @@ function observatorio(sub) {
     <path d="M0 -140V-145" stroke="#c9b27a" stroke-width="2.2"/>
     <circle cy="-153" r="8.5" fill="url(#m-orbe)" stroke="#e6f7ff" stroke-width="1"/>
     <path d="M16 -170a8 8 0 1 0 7 12a6.5 6.5 0 1 1-7-12Z" fill="#f4dc8e"/>
-    ${[[-62, -150, 6], [72, -142, 5], [-40, -174, 4.5], [50, -178, 4], [-82, -122, 3.5], [86, -110, 3.5]].map(brilho).join('')}
-    ${faixa('Reino do Sábio', sub, 34, 'sabio')}`;
+    ${[[-62, -150, 6], [72, -142, 5], [-40, -174, 4.5], [50, -178, 4], [-82, -122, 3.5], [86, -110, 3.5]].map(brilho).join('')}`, 34)
+    + faixa('Reino do Sábio', sub, 34, 'sabio');
 }
 function torreRedacao() {
   const janela = ([x, y]) => `<path d="M${x - 4} ${y + 10}V${y}a4 4 0 0 1 8 0V${y + 10}Z" fill="#f3c86b" stroke="#6b5a3f" stroke-width="1.2"/>`;
-  return `<ellipse cy="4" rx="70" ry="12" fill="#2a2010" opacity=".16"/>
+  return predio('lugar_torre', `<ellipse cy="4" rx="70" ry="12" fill="#2a2010" opacity=".16"/>
     <rect x="-30" y="-14" width="60" height="16" fill="#d4c7aa" stroke="#6b5a3f" stroke-width="1.6"/>
     <path d="M-23 -14L-16 -100H16L23 -14Z" fill="#e3d8bf" stroke="#6b5a3f" stroke-width="1.7" stroke-linejoin="round"/>
     <path d="M-21 -38H21M-19 -62H19M-17 -84H17" stroke="#c9bb9a" stroke-width="1"/>
@@ -1414,15 +1441,15 @@ function torreRedacao() {
       <path d="M1 -16C7 -30 14 -42 21 -52" stroke="#8a6a2c" stroke-width=".8" fill="none"/>
       <path d="M5 -24l6 1M8 -30l6 1M11 -36l6 1M14 -42l5 1" stroke="#b18d3e" stroke-width=".8"/></g>
     <g transform="translate(-48 0)"><rect x="-12" y="-7" width="24" height="7" rx="3.5" fill="#f3e9cf" stroke="#8c7550" stroke-width="1.2"/>
-      <path d="M-6 -4.5h12M-6 -2.5h9" stroke="#8c7550" stroke-width=".8"/></g>
-    ${faixa('Torre da Redação', 'Estrutura, temas e exemplos', 34, 'torre')}`;
+      <path d="M-6 -4.5h12M-6 -2.5h9" stroke="#8c7550" stroke-width=".8"/></g>`, 34)
+    + faixa('Torre da Redação', 'Estrutura, temas e exemplos', 34, 'torre');
 }
 function masmorra(fila) {
   const tocha = x => `<g transform="translate(${x} -30)"><circle cy="-17" r="17" fill="url(#m-fogo)"/>
     <path d="M-2 0V-10H2V0Z" fill="#5b4632"/><path d="M-3.5 -10h7l-1-2h-5Z" fill="#3b2e22"/>
     <path d="M0 -27C4 -21 6 -16 3 -12C2 -10 -2 -10 -3 -12C-6 -16 -3 -21 0 -27Z" fill="#f5a742"/>
     <path d="M0 -21C2 -17 2.5 -14 1 -12.5C0 -12 -1 -12 -1.5 -12.5C-2.5 -14 -1.5 -17 0 -21Z" fill="#ffe08a"/></g>`;
-  return `<ellipse cy="4" rx="106" ry="14" fill="#14101a" opacity=".22"/>
+  return predio('lugar_masmorra', `<ellipse cy="4" rx="106" ry="14" fill="#14101a" opacity=".22"/>
     <path d="M-100 4C-96 -30 -70 -66 -30 -80C6 -92 54 -78 82 -48C96 -32 102 -14 100 4Z" fill="#6f6879" stroke="#3c3644" stroke-width="1.8"/>
     <path d="M10 -86C46 -80 76 -60 90 -36C98 -20 101 -8 100 4H40C44 -20 36 -50 10 -86Z" fill="#5a5364"/>
     <path d="M-70 -50C-60 -60 -46 -66 -30 -70M-84 -20C-76 -34 -64 -42 -50 -46M30 -66C44 -60 56 -52 64 -40" stroke="#8a8394" stroke-width="1.4" fill="none" stroke-linecap="round"/>
@@ -1432,9 +1459,9 @@ function masmorra(fila) {
     <g transform="translate(0 -72)"><path d="M-7 0a7 7 0 1 1 14 0v4h-3v3h-8v-3h-3Z" fill="#ece5d6" stroke="#3c3644" stroke-width="1"/>
       <circle cx="-2.6" r="1.6" fill="#3c3644"/><circle cx="2.6" r="1.6" fill="#3c3644"/></g>
     ${tocha(-54)}${tocha(54)}
-    <ellipse cy="2" rx="46" ry="6" fill="#7fe0a0" opacity=".2"/>
-    ${fila ? `<g transform="translate(76 -76)"><circle r="15" fill="#b5533c" stroke="#f3e9d2" stroke-width="2"/><text y="5" text-anchor="middle" class="contador">${fila > 99 ? '99+' : fila}</text></g>` : ''}
-    ${faixa('Masmorra dos Erros', fila ? `${fila} para rever hoje` : 'Revisão espaçada', 34, 'masmorra')}`;
+    <ellipse cy="2" rx="46" ry="6" fill="#7fe0a0" opacity=".2"/>`, 34)
+    + (fila ? `<g transform="translate(76 -76)"><circle r="15" fill="#b5533c" stroke="#f3e9d2" stroke-width="2"/><text y="5" text-anchor="middle" class="contador">${fila > 99 ? '99+' : fila}</text></g>` : '')
+    + faixa('Masmorra dos Erros', fila ? `${fila} para rever hoje` : 'Revisão espaçada', 34, 'masmorra');
 }
 function coliseu() {
   const meia = x => Math.sqrt(Math.max(0, 1 - (x / 88) ** 2));
@@ -1445,7 +1472,7 @@ function coliseu() {
     arcos += `<path d="M${f1(x - w / 2)} ${f1(base)}V${f1(topo + w / 2)}a${f1(w / 2)} ${f1(w / 2)} 0 0 1 ${f1(w)} 0V${f1(base)}Z" fill="#7a5f3a" opacity=".85"/>`;
   }
   const bandeiras = [-70, -26, 26, 70].map(x => bandeira(x, f1(-30 - 34 * meia(x)), 24, '#a83232', '#6f1f1f')).join('');
-  return `<ellipse cy="36" rx="106" ry="12" fill="#2a2010" opacity=".16"/>
+  return predio('lugar_arena', `<ellipse cy="36" rx="106" ry="12" fill="#2a2010" opacity=".16"/>
     ${bandeiras}
     <ellipse cy="-30" rx="88" ry="34" fill="#dcc394" stroke="#7a6342" stroke-width="1.8"/>
     <ellipse cy="-28" rx="62" ry="22" fill="#c4a873" stroke="#7a6342" stroke-width="1.2"/>
@@ -1453,8 +1480,8 @@ function coliseu() {
     <path d="M-88 -30V-4A88 34 0 0 0 88 -4V-30A88 34 0 0 1 -88 -30Z" fill="#d5b985" stroke="#7a6342" stroke-width="1.8"/>
     <path d="M-88 -17A88 34 0 0 0 88 -17" fill="none" stroke="#a88b5c" stroke-width="1.2"/>${arcos}
     <g transform="translate(0 16)"><path d="M-9 -9h18v8c0 6-5 9-9 11c-4-2-9-5-9-11Z" fill="#a83232" stroke="#e3c27a" stroke-width="1.4"/>
-      <path d="M-5 -5l10 10M5 -5L-5 5" stroke="#f2e6c6" stroke-width="1.6" stroke-linecap="round"/></g>
-    ${faixa('Arena do Simulado', 'Prova real, com cronômetro', 56, 'arena')}`;
+      <path d="M-5 -5l10 10M5 -5L-5 5" stroke="#f2e6c6" stroke-width="1.6" stroke-linecap="round"/></g>`, 56)
+    + faixa('Arena do Simulado', 'Prova real, com cronômetro', 56, 'arena');
 }
 /* Reino da Natureza: estufa de vidro com cúpula e átomo no alto, uma árvore antiga ao lado
    (biologia) e um frasco borbulhando (química). */
@@ -1462,7 +1489,7 @@ function estufa(sub) {
   const vidro = '#d3eadf'; const caixilho = '#5f7f6a';
   const folha = '<path d="M7 -9c2-5 6-7 10-7c-1 5-5 8-10 8Z" fill="#e3c27a"/>';
   const colunas = [-44, -22, 0, 22, 44].map(x => `<path d="M${x} -8V-58" stroke="${caixilho}" stroke-width="1.2"/>`).join('');
-  return `<ellipse cy="4" rx="114" ry="15" fill="#1d2a14" opacity=".16"/>
+  return predio('reino_natureza', `<ellipse cy="4" rx="114" ry="15" fill="#1d2a14" opacity=".16"/>
     <g transform="translate(-94 2)">
       <path d="M-5 0C-4 -16 -7 -30 -3 -46H4C8 -30 6 -16 7 0Z" fill="#6b4c30" stroke="#4a3320" stroke-width="1.2"/>
       <path d="M-3 -34C-10 -40 -16 -40 -20 -46M4 -30C10 -36 16 -36 20 -42" stroke="#5a3f27" stroke-width="2" fill="none" stroke-linecap="round"/>
@@ -1492,8 +1519,8 @@ function estufa(sub) {
       <rect x="-8" y="-48" width="16" height="5" rx="1.5" fill="#8a6a2c"/>
       <circle cx="-3" cy="-56" r="3" fill="#bfe6b0"/><circle cx="4" cy="-64" r="2.2" fill="#bfe6b0" opacity=".85"/><circle cx="-1" cy="-71" r="1.6" fill="#bfe6b0" opacity=".7"/>
     </g>
-    ${bandeira(-66, -58, 20, '#3f7a3e', '#2a5229', folha)}${bandeira(66, -58, 20, '#3f7a3e', '#2a5229', folha)}
-    ${faixa('Reino da Natureza', sub, 38, 'natureza')}`;
+    ${bandeira(-66, -58, 20, '#3f7a3e', '#2a5229', folha)}${bandeira(66, -58, 20, '#3f7a3e', '#2a5229', folha)}`, 38)
+    + faixa('Reino da Natureza', sub, 38, 'natureza');
 }
 /* Reino dos Números: zigurate de três degraus com frisos geométricos, compasso dourado no
    templo do alto, um obelisco marcado como régua e sólidos geométricos flutuando. */
@@ -1507,7 +1534,7 @@ function cidadela(sub) {
   };
   let marcas = '';
   for (let i = 0; i < 8; i++) marcas += `<path d="M-5 ${-10 - 7 * i}h${i % 2 ? 4 : 7}" stroke="#7a6748" stroke-width="1"/>`;
-  return `<ellipse cy="4" rx="112" ry="15" fill="#10282a" opacity=".16"/>
+  return predio('reino_numeros', `<ellipse cy="4" rx="112" ry="15" fill="#10282a" opacity=".16"/>
     ${degrau(2, 184, 22, '#dccfae')}${degrau(-20, 142, 22, '#e3d8bd')}${degrau(-42, 100, 22, '#ebe1c8')}
     ${friso(-10, -90, 90)}${friso(-32, -69, 69)}${friso(-54, -48, 48)}
     <path d="M-13 2V-62H13V2Z" fill="#d4c6a6" stroke="#6b5a3f" stroke-width="1.2"/>
@@ -1528,8 +1555,8 @@ function cidadela(sub) {
       <path d="M0 -11L11 8H3Z" fill="#c9a24a" stroke="#8a6a2c" stroke-width="1"/></g>
     <g transform="translate(-44 -126)"><circle r="6.5" fill="#f3e7c8" stroke="#8a6a2c" stroke-width="1.1"/>
       <ellipse rx="6.5" ry="2.4" fill="none" stroke="#8a6a2c" stroke-width=".9"/></g>
-    ${bandeira(-80, -20, 22, '#1f6f78', '#134a50', pi)}${bandeira(80, -20, 22, '#1f6f78', '#134a50', pi)}
-    ${faixa('Reino dos Números', sub, 38, 'numeros')}`;
+    ${bandeira(-80, -20, 22, '#1f6f78', '#134a50', pi)}${bandeira(80, -20, 22, '#1f6f78', '#134a50', pi)}`, 38)
+    + faixa('Reino dos Números', sub, 38, 'numeros');
 }
 
 /* ---- enfeites do atlas ---- */
@@ -1584,24 +1611,31 @@ function nevoaVaga(v) {
 function mapaSVG(fila) {
   const progresso = { lc: resumoArea('LC'), ch: resumoArea('CH'), cn: resumoArea('CN'), mt: resumoArea('MT'),
                       fila, sabio: E.save.sabio };
+  const pintadoNo = typeof MAPA_PINTADO !== 'undefined' && MAPA_PINTADO;
   const no = (l) => {
     const nome = typeof l.nome === 'function' ? l.nome(progresso) : l.nome;
     const dados = Object.entries(l.dados || {}).map(([k, v]) => `data-${k}="${esc(v)}"`).join(' ');
-    return `<g transform="translate(${l.x} ${l.y}) scale(${ESCALA_LUGAR})">
-      <g class="no" role="button" tabindex="0" aria-label="${esc(nome)}" data-acao="${l.acao}" ${dados}>${l.desenho(progresso)}</g></g>`;
+    const [x, y, escala = 1] = (pintadoNo && LUGARES_NO_PINTADO[l.id]) || [l.x, l.y];
+    escalaArteLugar = escala;
+    const desenho = l.desenho(progresso);
+    escalaArteLugar = 1;
+    return `<g transform="translate(${x} ${y}) scale(${ESCALA_LUGAR})">
+      <g class="no" role="button" tabindex="0" aria-label="${esc(nome)}" data-acao="${l.acao}" ${dados}>${desenho}</g></g>`;
   };
   const estrada = d => `<path d="${d}" fill="none" stroke="#efe1b9" stroke-width="6.5" stroke-linecap="round" opacity=".75"/>
     <path d="${d}" fill="none" stroke="#8f7350" stroke-width="2.4" stroke-dasharray="6 8" stroke-linecap="round"/>`;
   const ponte = ([x, y, a]) => `<g transform="translate(${x} ${y}) rotate(${a})"><rect x="-15" y="-8" width="30" height="16" rx="2" fill="#a07a4e" stroke="#5f4529" stroke-width="1.2"/>
     <path d="M-9 -8v16M-3 -8v16M3 -8v16M9 -8v16" stroke="#7a5a37" stroke-width="1"/><path d="M-16 -9H16M-16 9H16" stroke="#5f4529" stroke-width="1.8"/></g>`;
   const ocupadas = new Set(LUGARES_MAPA.map(l => l.vaga).filter(Boolean));
+  const pintado = typeof MAPA_PINTADO !== 'undefined' && MAPA_PINTADO;
+  const rotulos = ROTULOS_MAPA[pintado ? 'pintado' : 'vetor'];
   const arvores = [
     [430, 470], [466, 454, .95, 1], [505, 478], [446, 512, .9], [488, 526, .9, 1], [530, 506, .85], [560, 546, .85, 1],
     [180, 790], [214, 806, .9, 1], [240, 776, .85], [168, 836, .85],
     [510, 330, .9], [535, 352, .85, 1], [893, 352, .85, 1], [812, 548, .85, 1], [826, 590, .8],
     [1232, 456, .85], [1254, 482, .8, 1], [1196, 820], [1222, 846, .9, 1], [1250, 812, .85], [1238, 876, .8],
     [800, 950, .75], [835, 968, .7, 1]];
-  return `<svg class="mapa" viewBox="0 0 ${MAPA.w} ${MAPA.h}" role="group" aria-label="Mapa dos reinos">
+  return `<svg class="mapa${pintado ? ' pintado' : ''}" viewBox="0 0 ${MAPA.w} ${MAPA.h}" role="group" aria-label="Mapa dos reinos">
     <defs>
       <radialGradient id="m-mar" gradientUnits="userSpaceOnUse" cx="${MAPA.w / 2}" cy="${MAPA.h * 0.46}" r="${MAPA.w * 0.82}"><stop offset="0" stop-color="#23425f"/><stop offset=".55" stop-color="#19304a"/><stop offset="1" stop-color="#0c1829"/></radialGradient>
       <pattern id="m-ondas" width="64" height="36" patternUnits="userSpaceOnUse">
@@ -1619,11 +1653,28 @@ function mapaSVG(fila) {
       <radialGradient id="m-nevoa-vaga"><stop offset="0" stop-color="#f3f0e8" stop-opacity=".9"/><stop offset=".7" stop-color="#f3f0e8" stop-opacity=".55"/><stop offset="1" stop-color="#f3f0e8" stop-opacity="0"/></radialGradient>
       <clipPath id="m-ilha"><path d="${ILHA}"/></clipPath>
     </defs>
-    <rect x="-3000" y="-3000" width="${MAPA.w + 6000}" height="${MAPA.h + 6000}" fill="url(#m-mar)"/>
+    <rect x="-3000" y="-3000" width="${MAPA.w + 6000}" height="${MAPA.h + 6000}" fill="${pintado ? pintado.mar : 'url(#m-mar)'}"/>
     <rect x="-3000" y="-3000" width="${MAPA.w + 6000}" height="${MAPA.h + 6000}" fill="url(#m-ondas)"/>
-    ${navio(1320, 110)}${serpente(60, 470)}
-    <g transform="translate(1290 116)"><path d="M46 584c8-12 26-14 34-4c6 9-2 20-16 20c-12 0-22-6-18-16Z" fill="#dcc690" stroke="#8b7048" stroke-width="1.4"/>${arvore(60, 588, .7)}</g>
+    ${pintado ? terrenoPintado(pintado) : terrenoVetorial(arvores, estrada, ponte)}
     <text x="${MAPA.w / 2}" y="1024" text-anchor="middle" class="rotulo-mar">Mar das Questões</text>
+    <text x="${rotulos.lago[0]}" y="${rotulos.lago[1]}" text-anchor="middle" class="rotulo-lago">Lago da Inspiração</text>
+    <text x="${rotulos.bosque[0]}" y="${rotulos.bosque[1]}" text-anchor="middle" class="rotulo-regiao">Bosque dos Poetas</text>
+    <text x="${rotulos.ermos[0]}" y="${rotulos.ermos[1]}" text-anchor="middle" class="rotulo-regiao">Ermos Sombrios</text>
+    ${VAGAS_MAPA.filter(v => !ocupadas.has(v.id)).map(nevoaVaga).join('')}
+    ${LUGARES_MAPA.map(no).join('')}
+    ${pintado ? '' : '<ellipse cx="1370" cy="460" rx="90" ry="24" fill="url(#m-nevoa)"/><ellipse cx="330" cy="1020" rx="140" ry="20" fill="url(#m-nevoa)"/>'}
+    ${rosaDosVentos(88, 950, 40)}${cartela()}
+  </svg>`;
+}
+/* Terreno pintado (img/mapa/mapa.webp, gerado com o guia de posições do mapa): as clareiras e as
+   estradas da pintura batem com LUGARES_MAPA e ESTRADAS_MAPA, e as bordas esmaecem até a cor do mar. */
+function terrenoPintado(p) {
+  return `<image href="img/mapa/mapa.webp" x="0" y="0" width="${MAPA.w}" height="${f1(MAPA.w * p.altura / p.largura)}" preserveAspectRatio="none"/>`;
+}
+/* Terreno desenhado: a ilha, as montanhas, a água, as estradas e os enfeites, quando não há o pintado. */
+function terrenoVetorial(arvores, estrada, ponte) {
+  return `${navio(1320, 110)}${serpente(60, 470)}
+    <g transform="translate(1290 116)"><path d="M46 584c8-12 26-14 34-4c6 9-2 20-16 20c-12 0-22-6-18-16Z" fill="#dcc690" stroke="#8b7048" stroke-width="1.4"/>${arvore(60, 588, .7)}</g>
     <path d="${ILHA}" fill="none" stroke="#7fb4d6" stroke-width="22" opacity=".17"/>
     <path d="${ILHA}" fill="none" stroke="#9cc7e2" stroke-width="8" opacity=".25"/>
     <path d="${ILHA}" fill="#bfa877" transform="translate(5 7)" opacity=".5"/>
@@ -1638,19 +1689,11 @@ function mapaSVG(fila) {
     <path d="${RIO}" stroke="#c4e0f0" stroke-width="2" fill="none" stroke-linecap="round" opacity=".7"/>
     <ellipse cx="905" cy="470" rx="66" ry="22" fill="#8cbbd8" stroke="#5f8eaf" stroke-width="1.5"/>
     <ellipse cx="891" cy="462" rx="34" ry="6" fill="#c4e0f0" opacity=".5"/>
-    <text x="905" y="478" text-anchor="middle" class="rotulo-lago">Lago da Inspiração</text>
     ${ESTRADAS_MAPA.map(e => estrada(e.d)).join('')}${ESTRADAS_MAPA.filter(e => e.ponte).map(e => ponte(e.ponte)).join('')}
     <g transform="translate(500 684)"><path d="M0 0V-20" stroke="#5f4529" stroke-width="2"/><path d="M0 -19h13l3 3-3 3H0Z" fill="#c9a97a" stroke="#5f4529" stroke-width="1"/><path d="M0 -11h-12l-3 3 3 3H0Z" fill="#c9a97a" stroke="#5f4529" stroke-width="1"/></g>
     ${arvores.map(([x, y, e = 1, r = 0]) => arvore(x, y, e, !!r)).join('')}
     ${[[292, 878], [304, 912, .85], [552, 878, .9], [566, 904, .8], [604, 848, .9], [748, 842, .8], [618, 940, .75], [700, 830, .7]].map(([x, y, e = 1]) => pedra(x, y, e)).join('')}
-    ${[[470, 700], [380, 780], [610, 790], [760, 790], [990, 590], [1220, 760], [560, 420], [1180, 450], [700, 420], [850, 610], [175, 740]].map(([x, y]) => tufo(x, y)).join('')}
-    <text x="482" y="604" text-anchor="middle" class="rotulo-regiao">Bosque dos Poetas</text>
-    <text x="680" y="905" text-anchor="middle" class="rotulo-regiao">Ermos Sombrios</text>
-    ${VAGAS_MAPA.filter(v => !ocupadas.has(v.id)).map(nevoaVaga).join('')}
-    ${LUGARES_MAPA.map(no).join('')}
-    <ellipse cx="1370" cy="460" rx="90" ry="24" fill="url(#m-nevoa)"/><ellipse cx="330" cy="1020" rx="140" ry="20" fill="url(#m-nevoa)"/>
-    ${rosaDosVentos(88, 950, 40)}${cartela()}
-  </svg>`;
+    ${[[470, 700], [380, 780], [610, 790], [760, 790], [990, 590], [1220, 760], [560, 420], [1180, 450], [700, 420], [850, 610], [175, 740]].map(([x, y]) => tufo(x, y)).join('')}`;
 }
 function controlesMapa() {
   const dica = !E.dicaMapa; // a dica aparece na primeira vez que o mapa abre e some sozinha
