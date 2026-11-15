@@ -111,7 +111,9 @@ code { font-family: Consolas, monospace; font-size: .92em; background: rgba(0,0,
 .mapa-moldura::after { content: ''; position: absolute; inset: 6px; z-index: 1; pointer-events: none; border: 1px solid rgba(201,168,101,.7); border-radius: 9px; }
 .canto { position: absolute; z-index: 2; width: 12px; height: 12px; background: #c9a865; border: 1px solid #8c7346; transform: rotate(45deg); pointer-events: none; }
 .canto.c1 { left: 0; top: 0; } .canto.c2 { right: 0; top: 0; } .canto.c3 { left: 0; bottom: 0; } .canto.c4 { right: 0; bottom: 0; }
-.mapa { flex: 1; min-height: 0; width: 100%; height: 100%; display: block; user-select: none; touch-action: none; }
+.mapa { flex: 1; min-height: 0; width: 100%; height: 100%; display: block; user-select: none; touch-action: none; transition: opacity .25s ease-out; }
+/* até o terreno, as artes dos reinos e as fontes ficarem prontos (mostrarMapaJunto em app.js) */
+.mapa.carregando { opacity: 0; transition: none; }
 .mapa.ampliado { cursor: grab; }
 .mapa.arrastando, .mapa.arrastando .no { cursor: grabbing; }
 .mapa .no { cursor: pointer; outline: none; transition: filter .15s; }

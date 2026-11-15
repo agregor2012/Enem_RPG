@@ -1869,8 +1869,7 @@ function render() {
   if (E.tela === 'mapa') {
     aplicarVista();
     observadorMapa?.observe(document.querySelector('svg.mapa'));
-    ajustarFaixas();
-    document.fonts?.ready.then(() => { if (E.tela === 'mapa') ajustarFaixas(); });
+    mostrarMapaJunto();
   }
   if (E.tela === 'questao' && E.save.atual) {
     if (E.save.atual.limite) {
@@ -1879,6 +1878,48 @@ function render() {
     }
     precarregar();
   }
+}
+/* O mapa pintado (4K) e as artes dos lugares chegam em tempos diferentes: sem cuidado, os nomes dos
+   reinos apareciam primeiro, depois os reinos e por último o terreno. As imagens do mapa começam a
+   carregar e a ser decodificadas quando o jogo abre (as Image ficam guardadas, para não saírem da
+   memória). Até elas, as imagens deste desenho e as fontes ficarem prontas, o mapa fica invisível;
+   então as faixas são medidas e tudo aparece de uma vez. Depois da primeira vez, já está na memória.
+   A decodificação tem até 1 s: com a janela escondida, o navegador a adia até ela voltar. */
+let imagensDoMapa = null;
+let mapaPronto = false;
+function carregarImagensDoMapa() {
+  if (!imagensDoMapa) {
+    const urls = [
+      ...(typeof MAPA_PINTADO !== 'undefined' && MAPA_PINTADO ? ['img/mapa/mapa.webp'] : []),
+      ...(typeof ARTES_MAPA !== 'undefined' ? [...ARTES_MAPA].map(n => `img/mapa/${n}.webp`) : []),
+    ];
+    const pronta = url => new Promise((fim) => {
+      const i = new Image();
+      i.onload = () => Promise.race([i.decode().catch(() => {}), new Promise(f => setTimeout(f, 1000))]).then(() => fim(i));
+      i.onerror = () => fim(i);
+      i.src = url;
+    });
+    imagensDoMapa = Promise.all([...urls.map(pronta), document.fonts?.ready]);
+  }
+  return imagensDoMapa;
+}
+function mostrarMapaJunto() {
+  const svg = document.querySelector('svg.mapa');
+  if (!svg) return;
+  if (mapaPronto) { ajustarFaixas(); return; }
+  svg.classList.add('carregando');
+  // o evento de carga das imagens do SVG sai depois, numa tarefa à parte: dá tempo de ouvir aqui
+  const desteDesenho = [...svg.querySelectorAll('image')].map(img => new Promise((fim) => {
+    img.addEventListener('load', fim, { once: true });
+    img.addEventListener('error', fim, { once: true });
+  }));
+  const limite = new Promise(fim => setTimeout(fim, 5000));   // se algo travar, mostra assim mesmo
+  Promise.race([Promise.all([carregarImagensDoMapa(), ...desteDesenho]), limite]).then(() => {
+    mapaPronto = true;
+    if (!svg.isConnected) return;            // a tela foi desenhada de novo enquanto carregava
+    ajustarFaixas();
+    svg.classList.remove('carregando');
+  });
 }
 function precarregar() {
   const s = E.save.atual;
@@ -2188,6 +2229,7 @@ async function buscarJSON(nome) {
 }
 async function iniciar() {
   render();
+  carregarImagensDoMapa();   // junto com o banco, para o mapa já estar pronto quando abrir
   try {
     const [banco, redacao, matriz, fora] = await Promise.all([
       buscarJSON('questoes.json'), buscarJSON('redacao.json'), buscarJSON('matriz.json'), buscarJSON('fora.json'),
