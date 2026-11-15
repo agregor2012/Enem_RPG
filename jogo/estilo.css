@@ -202,11 +202,6 @@ code { font-family: Consolas, monospace; font-size: .92em; background: rgba(0,0,
 .marca-letra.errada { border-color: #b5463a; background: var(--zona-erro); box-shadow: 0 0 0 3px rgba(210, 80, 65, .28); }
 .marca-letra.riscada { border-color: rgba(90, 80, 70, .5);
   background: linear-gradient(to top right, transparent calc(50% - 1.3px), rgba(90, 80, 70, .75) calc(50% - 1.3px) calc(50% + 1.3px), transparent calc(50% + 1.3px)); }
-/* selo de certo ou errado, na margem à esquerda da letra */
-.selo-letra { position: absolute; top: 50%; right: 100%; height: 78%; aspect-ratio: 1; margin-right: 3px; transform: translateY(-50%); border-radius: 50%; display: grid; place-items: center; color: #fff; }
-.marca-letra.certa .selo-letra { background: #2f8a55; }
-.marca-letra.errada .selo-letra { background: #b5463a; }
-.selo-letra .ico { width: 70%; height: 70%; }
 .painel-resposta { width: 290px; flex: none; background: var(--noite-2); border-left: 1px solid var(--linha); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; overflow: auto; }
 .progresso-q { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; font-size: 13.5px; }
 .progresso-q strong { white-space: nowrap; }

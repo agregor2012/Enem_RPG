@@ -296,8 +296,10 @@ class Prova:
                 continue
             cor = d.get("color") or ()
             preenchimento = d.get("fill") or ()
-            if len(cor) == 3 and cor[1] > cor[0] + 0.2 and cor[1] >= cor[2] and 10 < r.width < 24:
-                aneis.append(pymupdf.Rect(r))  # resposta circulada em verde ou turquesa
+            # resposta circulada em verde ou turquesa: quase sempre um círculo de uns 17 pt, às vezes uma
+            # elipse mais larga em volta da letra e do começo da resposta (24 pt em 2010, PPL, questão 84)
+            if len(cor) == 3 and cor[1] > cor[0] + 0.2 and cor[1] >= cor[2] and 10 < r.width < 30 and r.height < 24:
+                aneis.append(pymupdf.Rect(r))
                 continue
             if not cor and len(preenchimento) == 3 and min(preenchimento) > 0.97:
                 continue  # fundo branco, invisível

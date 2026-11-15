@@ -1,6 +1,6 @@
 {
  "total_registros": 7176,
- "no_banco": 6867,
+ "no_banco": 6866,
  "repetidas": 96,
  "fora": [
   {
@@ -570,6 +570,14 @@
    "numero": 163,
    "lingua": null,
    "motivo": "anulada pelo INEP (Não permitiu a convergência do algoritmo de estimação da TRI)"
+  },
+  {
+   "ano": 2011,
+   "aplicacao": "reaplicacao_ppl",
+   "area": "MT",
+   "numero": 167,
+   "lingua": null,
+   "motivo": "recorte reprovado na conferência visual"
   },
   {
    "ano": 2011,
@@ -1753,7 +1761,7 @@
   ],
   [
    2011,
-   347
+   346
   ],
   [
    2012,
@@ -1816,6 +1824,6 @@
   "LC": 1849,
   "CH": 1699,
   "CN": 1689,
-  "MT": 1630
+  "MT": 1629
  }
 }

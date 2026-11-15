@@ -2,8 +2,8 @@
 """Gera o banco final do jogo a partir de dados/registros_questoes.json.
 
 Passos: aplica as exclusões, remove repetidas, calcula competência e dificuldade,
-gera as imagens em WebP, acha na imagem a tinta da letra de cada alternativa (onde o jogo
-marca a escolha e a correção) e grava questoes.json.
+gera as imagens em WebP, acha na imagem a letra impressa de cada alternativa (onde o jogo
+marca a escolha e a correção), com o mesmo tamanho em toda a prova, e grava questoes.json.
 
 Uso: 06_gerar_banco_final.py [--sem-imagens | --so-alternativas]
 (--so-alternativas atualiza só as caixas das alternativas no questoes.json já gerado.)
@@ -154,94 +154,194 @@ def caixas_alternativas(r):
     return saida
 
 
-def _trechos(ativo, folga):
-    """Trechos contínuos de True, juntando os separados por até `folga` posições vazias."""
-    trechos, ini, fim = [], None, None
-    for i, v in enumerate(ativo):
-        if not v:
-            continue
-        if ini is None:
-            ini = i
-        elif i - fim > folga + 1:
-            trechos.append((ini, fim))
-            ini = i
-        fim = i
-    if ini is not None:
-        trechos.append((ini, fim))
-    return trechos
+LIMIAR_TINTA = 175          # abaixo disto (de 0 a 255) é tinta: pega também a borda suavizada do círculo
+TOLERANCIA_LETRA = 0.15     # letra achada com tamanho até 15% longe do padrão da prova vale como achada
 
 
-def tinta_da_letra(cinza, X0, Y0, X1, Y1):
-    """Caixa (x0, y0, x1, y1), em px, do que está impresso na letra cuja caixa o PDF dá em X0..Y1.
+def _pedacos_de_tinta(m):
+    """Caixas [x0, y0, x1, y1] dos pedaços de tinta ligados (vizinhos de lado) de uma máscara pequena,
+    juntando os trechos de cada linha que encostam nos da linha de cima."""
+    pai, trechos, acima = [], [], []
 
-    A fonte das letras em círculo (2011 a 2025) declara a letra mais larga do que o círculo, com um
-    vão à direita; a tinta dá o círculo certo. Devolve None quando não acha uma letra plausível.
-    """
+    def raiz(a):
+        while pai[a] != a:
+            pai[a] = pai[pai[a]]
+            a = pai[a]
+        return a
+
+    for y in range(m.shape[0]):
+        borda = np.diff(np.concatenate(([0], m[y].astype(np.int8), [0])))
+        linha = []
+        for a, b in zip(np.nonzero(borda == 1)[0], np.nonzero(borda == -1)[0]):
+            i = len(pai)
+            pai.append(i)
+            for pa, pb, j in acima:
+                if pa < b and a < pb:
+                    ri, rj = raiz(i), raiz(j)
+                    if ri != rj:
+                        pai[ri] = rj
+            linha.append((a, b, i))
+            trechos.append((y, a, b, i))
+        acima = linha
+    caixas = {}
+    for y, a, b, i in trechos:
+        c = caixas.setdefault(raiz(i), [a, y, b, y + 1])
+        c[0], c[1], c[2], c[3] = min(c[0], a), min(c[1], y), max(c[2], b), max(c[3], y + 1)
+    return list(caixas.values())
+
+
+def letra_impressa(cinza, X0, Y0, X1, Y1, parenteses=False):
+    """Caixa (x0, y0, x1, y1), em px, da letra impressa da alternativa cuja caixa o PDF dá em X0..Y1:
+    o círculo inteiro (cheio ou só contornado) ou, nas provas com "(A)", o rótulo com os parênteses.
+
+    O ponto de partida é o meio da parte esquerda da caixa do PDF: a fonte das letras em círculo
+    declara a letra mais larga do que o círculo, e a prova digital de 2020 dá só a letra de dentro
+    dele. Vale o maior pedaço de tinta que cobre esse ponto (o círculo, e não a letra dentro dele).
+    Em parte de 2010 o círculo fica logo à esquerda da caixa, sem cobri-la: aí vale o pedaço de tinta
+    que termina ali. Devolve None quando não acha nada plausível."""
     H, W = cinza.shape
     lh = Y1 - Y0
     if lh <= 0 or X1 <= X0:
         return None
-    m = 0.4 * lh
-    y0, y1 = max(0, int(Y0 - m)), min(H, int(Y1 + m) + 1)
-    x0, x1 = max(0, int(X0 - 1.6 * lh)), min(W, int(X1) + 1)
-    escuro = cinza[y0:y1, x0:x1] < 140
-    if not escuro.any():
-        return None
-    folga = max(1, int(0.2 * lh))
-    # o rótulo é o trecho de colunas com tinta mais à esquerda que cruza a caixa do PDF. Em parte
-    # das provas de 2010 o círculo desenhado fica logo à esquerda da caixa, sem cruzá-la: sem
-    # trecho que cruze, vale o que termina até 0,6 da altura antes dela. "(A)" vem em três
-    # trechos colados, que se juntam enquanto começarem antes do fim da caixa
-    todos = _trechos(escuro.any(axis=0), folga)
-    trechos = [t for t in todos if x0 + t[1] >= X0 and x0 + t[0] <= X1]
-    if not trechos:
-        trechos = [t for t in todos if X0 - 0.6 * lh <= x0 + t[1] < X0][-1:]
-    if not trechos:
-        return None
-    c0, c1 = trechos[0]
-    for t in todos:
-        if t[0] > c1 and x0 + t[0] <= X1 - 0.15 * lh and t[0] - c1 <= folga + 1:
-            c1 = t[1]
-    meio = (Y0 + Y1) / 2 - y0
-    linhas = _trechos(escuro[:, c0:c1 + 1].any(axis=1), 1)
-    r0, r1 = min(linhas, key=lambda t: 0 if t[0] <= meio <= t[1] else min(abs(t[0] - meio), abs(t[1] - meio)))
-    caixa = (x0 + c0, y0 + r0, x0 + c1 + 1, y0 + r1 + 1)
-    larg, alt = caixa[2] - caixa[0], caixa[3] - caixa[1]
-    if not (0.35 * lh <= alt <= 2.2 * lh and 0.25 * lh <= larg <= 3 * lh):
-        return None
-    return caixa
+    x0, x1 = max(0, int(X0 - 1.6 * lh)), min(W, int(X1 + 1.2 * lh) + 1)
+    y0, y1 = max(0, int(Y0 - 1.0 * lh)), min(H, int(Y1 + 1.0 * lh) + 1)
+    pedacos = [c for c in _pedacos_de_tinta(cinza[y0:y1, x0:x1] < LIMIAR_TINTA)
+               if c[2] - c[0] <= 2.6 * lh and c[3] - c[1] <= 2.6 * lh]
+    if parenteses:
+        # "(A)": a caixa do PDF é o rótulo e o espaço depois dele; valem os pedaços dentro dela
+        fim = X1 - 0.12 * (X1 - X0) - x0
+        rotulo = [c for c in pedacos if c[0] < fim and c[2] > X0 - x0 and c[1] < Y1 - y0 and c[3] > Y0 - y0]
+        if not rotulo:
+            return None
+        return (x0 + min(c[0] for c in rotulo), y0 + min(c[1] for c in rotulo),
+                x0 + max(c[2] for c in rotulo), y0 + max(c[3] for c in rotulo))
+    px, py = X0 + 0.5 * min(X1 - X0, lh) - x0, (Y0 + Y1) / 2 - y0
+    cobrem = [c for c in pedacos if c[0] <= px < c[2] and c[1] <= py < c[3]]
+    if cobrem:
+        nucleo = max(cobrem, key=lambda c: (c[2] - c[0]) * (c[3] - c[1]))
+    else:
+        antes = [c for c in pedacos if X0 - 0.9 * lh - x0 <= c[2] <= X0 + 0.3 * lh - x0
+                 and c[1] < py < c[3] and 0.6 * lh <= c[3] - c[1] <= 1.8 * lh]
+        if not antes:
+            return None
+        nucleo = max(antes, key=lambda c: c[2])
+    return (x0 + nucleo[0], y0 + nucleo[1], x0 + nucleo[2], y0 + nucleo[3])
 
 
-def letras_pela_tinta(q):
-    """Troca, nas alternativas da questão, a caixa da letra que o PDF dá pela tinta da letra no
-    recorte já gerado (roda em processo separado). Devolve (id, alt, letras achadas)."""
+def letras_da_questao(q, parenteses):
+    """Letra impressa de cada alternativa da questão no recorte já gerado (roda em processo separado).
+    Devolve (id, {letra: caixa em px, ou None})."""
+    achadas = {}
     por_imagem = defaultdict(list)
     for letra, z in q["alt"].items():
         if len(z) == 9:
             por_imagem[z[0]].append(letra)
-    achadas = 0
     for idx, letras in por_imagem.items():
         with Image.open(BUILD / "img" / q["img"][idx][0]) as im:
             cinza = np.asarray(im.convert("L"))
         H, W = cinza.shape
         for letra in letras:
             z = q["alt"][letra]
-            t = tinta_da_letra(cinza, z[5] * W, z[6] * H, z[7] * W, z[8] * H)
-            if t:
-                z[5:9] = [round(t[0] / W, 4), round(t[1] / H, 4), round(t[2] / W, 4), round(t[3] / H, 4)]
-                achadas += 1
-    return q["id"], q["alt"], achadas
+            achadas[letra] = letra_impressa(cinza, z[5] * W, z[6] * H, z[7] * W, z[8] * H, parenteses)
+    return q["id"], achadas
+
+
+def prova_da_questao(q):
+    return q["ano"], q["apl"], q["area"]
 
 
 def ajustar_letras(banco):
-    """Aplica letras_pela_tinta a todas as questões do banco, em paralelo."""
-    with ProcessPoolExecutor(max_workers=6) as ex:
-        feitas = list(ex.map(letras_pela_tinta, banco, chunksize=40))
-    novas = {qid: alt for qid, alt, _ in feitas}
+    """Põe em cada alternativa a caixa da letra impressa, com o mesmo tamanho em toda a prova.
+
+    1. Acha a letra de cada alternativa no recorte (letra_impressa), em paralelo.
+    2. Em cada prova, o tamanho padrão é a mediana das letras achadas, e o deslocamento padrão é a
+       mediana da distância entre o centro achado e a caixa do PDF. Questão cujas letras concordam
+       entre si num tamanho diferente (letras maiores numa questão de figuras, por exemplo) fica com
+       o tamanho dela.
+    3. Cada letra fica com o tamanho padrão, centrada no que foi achado. Letras da mesma coluna ficam
+       todas no x do meio delas. A que não foi achada, ou saiu com tamanho fora do padrão (pegou um
+       pedaço do texto ao lado, por exemplo), fica na coluna das outras ou, sem coluna, na caixa do
+       PDF mais o deslocamento padrão, e vai para a lista de conferência (letras_conferir.json)."""
+    por_prova = defaultdict(list)
     for q in banco:
-        q["alt"] = novas[q["id"]]
-    total = sum(len(q["alt"]) for q in banco)
-    print(f"letras pela tinta: {sum(a for _, _, a in feitas)} de {total} (as outras ficam com a caixa do PDF)")
+        por_prova[prova_da_questao(q)].append(q)
+    # "(A)" no lugar da letra em círculo (2005): a caixa do PDF é mais de duas vezes mais larga que alta
+    parenteses = {}
+    for k, qs in por_prova.items():
+        formato = [(z[7] - z[5]) * q["img"][z[0]][1] / max((z[8] - z[6]) * q["img"][z[0]][2], 1e-6)
+                   for q in qs for z in q["alt"].values() if len(z) == 9]
+        parenteses[k] = bool(formato) and float(np.median(formato)) > 2.0
+    with ProcessPoolExecutor(max_workers=6) as ex:
+        achadas = dict(ex.map(letras_da_questao, banco, [parenteses[prova_da_questao(q)] for q in banco], chunksize=40))
+    contagem = Counter()
+    conferir = []         # letras que não foram achadas na imagem, para a conferência visual
+    for k, qs in por_prova.items():
+        medidas = []      # (letra achada, questão, letra), tamanho e centro em pontos
+        for q in qs:
+            for l, c in achadas[q["id"]].items():
+                if c:
+                    z = q["alt"][l]
+                    _, W, H, _, dpi = q["img"][z[0]]
+                    e = 72 / dpi
+                    medidas.append(((c[2] - c[0]) * e, (c[3] - c[1]) * e,
+                                    ((c[0] + c[2]) / 2 - z[5] * W) * e, ((c[1] + c[3]) / 2 - (z[6] + z[8]) / 2 * H) * e))
+        if not medidas:
+            contagem["prova sem letra achada"] += 1
+            continue
+        lw = float(np.median([m[0] for m in medidas]))
+        lh = float(np.median([m[1] for m in medidas]))
+        boas = [m for m in medidas if abs(m[0] - lw) <= TOLERANCIA_LETRA * lw and abs(m[1] - lh) <= TOLERANCIA_LETRA * lh]
+        dx = float(np.median([m[2] for m in boas]))
+        dy = float(np.median([m[3] for m in boas]))
+        for q in qs:
+            por_imagem = defaultdict(list)
+            for l, z in q["alt"].items():
+                if len(z) == 9:
+                    por_imagem[z[0]].append(l)
+            for idx, letras in por_imagem.items():
+                _, W, H, _, dpi = q["img"][idx]
+                p = dpi / 72                     # px por ponto
+                tamanho = {}                     # tamanho achado (pt) das letras plausíveis desta imagem
+                for l in letras:
+                    c = achadas[q["id"]].get(l)
+                    if c and 0.6 * lw <= (c[2] - c[0]) / p <= 1.6 * lw and 0.6 * lh <= (c[3] - c[1]) / p <= 1.6 * lh:
+                        tamanho[l] = ((c[2] - c[0]) / p, (c[3] - c[1]) / p)
+                qw, qh = lw, lh
+                if len(tamanho) >= 2:
+                    mw = float(np.median([t[0] for t in tamanho.values()]))
+                    mh = float(np.median([t[1] for t in tamanho.values()]))
+                    juntas = [t for t in tamanho.values() if abs(t[0] - mw) <= 0.1 * mw and abs(t[1] - mh) <= 0.1 * mh]
+                    # só letras de outro tamanho de verdade; diferença pequena é a borda suavizada da imagem
+                    outro = abs(mw - lw) > 0.1 * lw or abs(mh - lh) > 0.1 * lh
+                    if outro and len(juntas) >= max(2, 0.6 * len(letras)):
+                        qw, qh = mw, mh
+                centros = {l: [(achadas[q["id"]][l][0] + achadas[q["id"]][l][2]) / 2, (achadas[q["id"]][l][1] + achadas[q["id"]][l][3]) / 2]
+                           for l, t in tamanho.items()
+                           if abs(t[0] - qw) <= TOLERANCIA_LETRA * qw and abs(t[1] - qh) <= TOLERANCIA_LETRA * qh}
+                # coluna: letras achadas com o x quase igual (alternativas uma embaixo da outra)
+                xs = sorted(v[0] for v in centros.values())
+                coluna = xs[len(xs) // 2] if len(xs) >= 2 and xs[-1] - xs[0] <= 0.3 * qw * p else None
+                for l in letras:
+                    z = q["alt"][l]
+                    pdf_x, pdf_y = z[5] * W + dx * p, (z[6] + z[8]) / 2 * H + dy * p
+                    if l in centros:
+                        cx, cy = centros[l]
+                        contagem["achada"] += 1
+                    elif coluna is not None and abs(pdf_x - coluna) <= 0.6 * qw * p:
+                        cx, cy = coluna, pdf_y
+                        contagem["na coluna das outras"] += 1
+                        conferir.append([q["id"], l, "na coluna das outras"])
+                    else:
+                        cx, cy = pdf_x, pdf_y
+                        contagem["pela caixa do PDF"] += 1
+                        conferir.append([q["id"], l, "pela caixa do PDF"])
+                    if coluna is not None and abs(cx - coluna) <= 0.3 * qw * p:
+                        cx = coluna
+                    a, b = qw * p / 2, qh * p / 2
+                    z[5:9] = [round((cx - a) / W, 4), round((cy - b) / H, 4), round((cx + a) / W, 4), round((cy + b) / H, 4)]
+    print("letras das alternativas:", dict(contagem))
+    BUILD.mkdir(parents=True, exist_ok=True)
+    (BUILD / "letras_conferir.json").write_text(json.dumps(conferir, ensure_ascii=False), encoding="utf-8")
 
 
 def apagar_aneis(imagem, caixas):

@@ -84,9 +84,12 @@ Rode os scripts de `ferramentas/` na ordem dos números:
 4. `05_montar_banco.py`: recorta as questões dos PDFs e confere os gabaritos (`gerar_matriz.py`
    lê as competências e habilidades das Matrizes de Referência para `dados/matriz.json`);
 5. `06_gerar_banco_final.py` e `07_gerar_redacao.py`: geram as imagens e os arquivos do jogo. O 06
-   também acha, na imagem, a letra impressa de cada alternativa, onde o jogo marca a escolha e a
-   correção; com `--so-alternativas`, ele só refaz as caixas das alternativas e das letras, sem
-   gerar as imagens de novo;
+   também acha, na imagem, a letra impressa de cada alternativa (o círculo inteiro, ou o "(A)" de
+   2005), onde o jogo marca a escolha e a correção. Dentro de cada prova a caixa da letra tem um
+   tamanho só, para o anel sair igual em todas as questões dela. A letra que não é achada na imagem
+   fica na coluna das outras e vai para `letras_conferir.json`, na pasta do banco, para conferir.
+   Com `--so-alternativas`, ele só refaz as caixas das alternativas e das letras, sem gerar as
+   imagens de novo;
 6. `08_empacotar.sh`: monta o aplicativo em `app/` e o atalho `Jogar ENEM RPG.exe`.
 
 Para testar a interface no navegador, sem empacotar: `node ferramentas/servidor_dev.js` e abra

@@ -886,27 +886,51 @@ function larguraRecorte(px, dpi) {
 }
 /* Marca da escolha e da correção: um anel em volta da letra impressa da alternativa, em vez de
    pintar a alternativa inteira (a caixa dela dependia do espaçamento de cada prova e às vezes
-   ficava deslocada). z[5] a z[8] são a esquerda, o topo, a direita e a base da letra, em frações
-   da imagem; w e h, o tamanho original da imagem, para o anel sair redondo. O anel também é um
-   botão: clicar na letra sempre escolhe a letra certa. */
-function marcaDaLetra(z, w, h, l, estado, riscada, dentro) {
+   ficava deslocada). z[5] a z[8] são a esquerda, o topo, a direita e a base da letra (o círculo
+   inteiro, ou o "(A)" de 2005), em frações da imagem, com o mesmo tamanho em toda a prova
+   (06_gerar_banco_final.py); w e h são o tamanho original da imagem.
+   O anel deixa a mesma folga em volta da letra em toda prova: 16% da letra mais FOLGA_ANEL px de
+   tela, que cobrem a borda. Onde as letras ficam muito juntas, ele encolhe até a menor distância
+   entre elas (passo, em px da imagem) menos 2 px, para não encostar no da vizinha. Certo e errado
+   aparecem só pela cor do anel. O anel também é um botão: clicar na letra sempre escolhe a letra. */
+const FOLGA_ANEL = 6;
+function marcaDaLetra(z, w, h, l, estado, riscada, dentro, passo) {
   if (z.length < 9) return '';
   const [lx0, ly0, lx1, ly1] = z.slice(5, 9);
   const lw = (lx1 - lx0) * w, lh = (ly1 - ly0) * h;
   if (lw <= 0 || lh <= 0) return '';
-  // letra sozinha: anel redondo e justo; rótulo largo, como "(A)": pílula
-  const lado = Math.max(lw, lh) + lh * 0.44;
-  const [pw, ph] = lw <= lh * 1.4 ? [lado, lado] : [lw + lh * 0.5, lh * 1.5];
-  const selo = estado === 'certa' ? ico('check') : (estado === 'errada' ? ico('xis') : '');
-  const pos = `left:${(lx0 + lx1) / 2 * 100}%;top:${(ly0 + ly1) / 2 * 100}%;width:${pw / w * 100}%;height:${ph / h * 100}%`;
-  return `<button class="marca-letra ${estado} ${riscada}" style="${pos}" data-l="${l}" ${dentro} aria-label="Alternativa ${l}">`
-    + `${selo ? `<span class="selo-letra">${selo}</span>` : ''}</button>`;
+  const pc = (v, total) => (v / total * 100).toFixed(3);
+  // medida em % da moldura mais a folga fixa; com limite, no máximo o passo menos 2 px
+  const medida = (v, total, limite) => {
+    const anel = `calc(${pc(v, total)}% + ${FOLGA_ANEL}px)`;
+    return limite ? `min(${anel}, calc(${pc(limite, total)}% - 2px))` : anel;
+  };
+  // letra em círculo: anel redondo; rótulo largo, como "(A)": pílula que passa por fora dos parênteses
+  const tamanho = lw <= lh * 1.25
+    ? `width:${medida(Math.max(lw, lh) * 1.16, w, passo)};aspect-ratio:1`
+    : `width:${medida(lw + lh * 0.6, w)};height:${medida(lh * 1.16, h, passo)}`;
+  const pos = `left:${pc((lx0 + lx1) / 2, 1)}%;top:${pc((ly0 + ly1) / 2, 1)}%;${tamanho}`;
+  const resultado = estado === 'certa' ? ', a certa' : (estado === 'errada' ? ', a sua, errada' : '');
+  return `<button class="marca-letra ${estado} ${riscada}" style="${pos}" data-l="${l}" ${dentro} aria-label="Alternativa ${l}${resultado}"></button>`;
+}
+/* Menor distância entre os centros das letras de uma imagem, em px dela (null com uma letra só). */
+function passoDasLetras(zs, w, h) {
+  const c = zs.filter(z => z.length >= 9).map(z => [(z[5] + z[7]) / 2 * w, (z[6] + z[8]) / 2 * h]);
+  let menor = null;
+  for (let i = 0; i < c.length; i++) {
+    for (let j = i + 1; j < c.length; j++) {
+      const d = Math.hypot(c[i][0] - c[j][0], c[i][1] - c[j][1]);
+      if (menor === null || d < menor) menor = d;
+    }
+  }
+  return menor;
 }
 function folha(q, marca = null) {
   const fora = marca ? [] : eliminadasDa(E.save?.atual, q.id); // alternativas tiradas por item
   // a zona é a área clicável da alternativa, sem pintura; os anéis vêm depois, por cima dela
   const zonas = (idx, w, h) => {
     const areas = [], aneis = [];
+    const passo = passoDasLetras(LETRAS.map(l => q.alt?.[l]).filter(z => z && z[0] === idx), w, h);
     for (const l of LETRAS) {
       const z = q.alt?.[l];
       if (!z || z[0] !== idx) continue;
@@ -923,7 +947,7 @@ function folha(q, marca = null) {
         const caixa = `top:${z[1] * 100}%;height:${(z[2] - z[1]) * 100}%;left:${esq * 100}%;width:${(dir - esq) * 100}%`;
         areas.push(`<button class="zona" style="${caixa}" data-l="${l}" ${dentro} tabindex="-1" aria-hidden="true"></button>`);
       }
-      aneis.push(marcaDaLetra(z, w, h, l, estado, riscada, dentro));
+      aneis.push(marcaDaLetra(z, w, h, l, estado, riscada, dentro, passo));
     }
     return areas.join('') + aneis.join('');
   };

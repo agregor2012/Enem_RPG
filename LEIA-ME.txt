@@ -62,8 +62,8 @@ O QUE HÁ NO JOGO
 Teclas na questão: A a E escolhem, Enter confirma e avança.
 Botão direito risca uma alternativa.
 A escolha e a correção aparecem num anel em volta da letra da alternativa, na
-própria prova: dourado na escolhida; depois de responder, verde com ✓ na certa e
-vermelho com ✗ na sua, se errou. Dá para clicar na letra ou no texto da alternativa.
+própria prova: dourado na escolhida; depois de responder, verde na certa e
+vermelho na sua, se errou. Dá para clicar na letra ou no texto da alternativa.
 
 DE ONDE VÊM OS DADOS
 Provas e gabaritos: https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos
