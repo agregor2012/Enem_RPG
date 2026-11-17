@@ -56,8 +56,12 @@ O QUE HÁ NO JOGO
 - Modo desenvolvedor (temporário, em Ajustes): libera tudo numa cópia de teste do
   inventário, para experimentar os itens sem mexer no seu progresso.
 - Grimório: histórico, gráfico de acerto, competências e conquistas.
-- Contagem para o 1º dia do Enem: começa na data oficial de 2026 (08/11) e pode ser
-  trocada em "alterar", no painel do herói.
+- Contagem para os dois dias do Enem: você escolhe as datas do 1º e do 2º dia em
+  "alterar", no painel do herói.
+- Seis classes, cada uma com 10% a mais de XP num reino ou num tipo de sessão:
+  Escriba (Linguagens), Cronista (Humanas), Naturalista (Natureza), Geômetra
+  (Matemática), Alquimista (Revisão) e Polímata (Reino do Sábio). Dá para trocar de
+  classe uma vez por dia, em Ajustes.
 
 Teclas na questão: A a E escolhem, Enter confirma e avança.
 Botão direito risca uma alternativa.

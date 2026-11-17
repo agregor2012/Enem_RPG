@@ -20,6 +20,9 @@ os microdados do INEP.
   segundo a Cartilha do Participante do INEP, mais o tema e a proposta completa de cada prova.
 - **Progressão:** XP, níveis, pontos, porcentagem de acerto por sessão e 59 conquistas em cinco
   graus (Bronze, Prata, Ouro, Platina e Lendária). Cada conquista libera um título para o herói.
+- **Classes:** seis, cada uma com 10% a mais de XP num reino ou num tipo de sessão (Escriba, Cronista,
+  Naturalista, Geômetra, Alquimista e Polímata). A classe pode ser trocada uma vez por dia, em Ajustes.
+- **Contagem regressiva:** para os dois dias de prova, com as datas escolhidas pelo jogador.
 - **Mapa:** atlas com os oito lugares do jogo, zoom pela roda do mouse (até 200%) e arraste para mover.
   A bússola, clicada, aponta o reino em que você mais erra, e o mapa esconde alguns baús.
 - **Itens e raridades:**

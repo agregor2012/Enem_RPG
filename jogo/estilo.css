@@ -118,14 +118,16 @@ code { font-family: Consolas, monospace; font-size: .92em; background: rgba(0,0,
 .mapa.arrastando, .mapa.arrastando .no, .mapa.arrastando .rosa { cursor: grabbing; }
 /* Realce do lugar ao passar o mouse, sem filtro: o filtro desenhava o grupo inteiro numa imagem de
    baixa resolução, e o texto da faixa saía borrado com o mapa aproximado. Acendem um halo atrás da
-   arte (halo-lugar, posto por predio() em app.js), o contorno da faixa e o brilho dela; o texto
-   continua vetorial. "apontado" é o reino que a bússola acabou de indicar. */
+   arte (halo-lugar, posto por predio() em app.js), o contorno do título inteiro (contorno-faixa: a
+   banda e as caudas num traço só) e o brilho da banda; o texto continua vetorial. "apontado" é o
+   reino que a bússola acabou de indicar. */
 .mapa .no { cursor: pointer; outline: none; }
 .mapa .halo-lugar { opacity: 0; pointer-events: none; transition: opacity .18s ease-out; }
-.mapa .no .banda, .mapa .no .etq { transition: stroke .15s, stroke-width .15s; }
+.mapa .no .etq { transition: stroke .15s, stroke-width .15s; }
+.mapa .contorno-faixa { stroke: #f6dc93; stroke-width: 2.2px; stroke-linejoin: round; opacity: 0; pointer-events: none; transition: opacity .15s; }
 .mapa .no .banda-luz { transition: opacity .15s; }
 .mapa .no:hover .halo-lugar, .mapa .no:focus-visible .halo-lugar, .mapa .no.apontado .halo-lugar { opacity: 1; }
-.mapa .no:hover .banda, .mapa .no:focus-visible .banda, .mapa .no.apontado .banda { stroke: #f6dc93; stroke-width: 2.2px; }
+.mapa .no:hover .contorno-faixa, .mapa .no:focus-visible .contorno-faixa, .mapa .no.apontado .contorno-faixa { opacity: 1; }
 .mapa .no:hover .banda-luz, .mapa .no:focus-visible .banda-luz, .mapa .no.apontado .banda-luz { opacity: .34; }
 .mapa .no:hover .etq, .mapa .no:focus-visible .etq, .mapa .no.apontado .etq { stroke: #d9b45f; stroke-width: 1.6px; }
 .mapa .no.apontado .halo-lugar { animation: pulso-lugar 1.1s ease-in-out infinite; }
@@ -466,6 +468,9 @@ button.opcao-titulo:hover { border-color: var(--ouro-escuro); }
 #avisos { position: fixed; right: 16px; bottom: 16px; z-index: 30; display: grid; gap: 7px; }
 .aviso { padding: 9px 14px; border-radius: 8px; background: #0b101d; border: 1px solid var(--ouro-escuro); font-size: 14px; max-width: 340px; }
 .aviso.erro { border-color: var(--erro); }
+/* aviso repetido: o que já estava na tela dá um pulso e o tempo dele recomeça (avisar() em app.js) */
+.aviso.de-novo { animation: aviso-de-novo .28s ease-out; }
+@keyframes aviso-de-novo { 0% { transform: scale(1.05); border-color: var(--ouro-forte); } 100% { transform: none; } }
 
 /* ---- itens e raridades ---------------------------------------------------- */
 :root {

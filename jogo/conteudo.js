@@ -2,16 +2,21 @@
 /* Conteúdo fixo do jogo: mundo, progressão e guia de redação.
    O guia resume, com outras palavras, a Cartilha do Participante 2026 do INEP. */
 
-// 1º dia do Enem 2026 pelo cronograma do INEP; o jogador pode trocar a data no painel
-const DATA_PROVA_PADRAO = '2026-11-08';
-
+/* Classes do herói: cada uma dá +10% de XP nas questões de uma área ("area") ou de um tipo de sessão
+   ("sessao"); a conta fica em premio(), em app.js. Uma para cada reino e uma para a Masmorra. */
 const CLASSES = {
-  escriba: { nome: 'Escriba', simbolo: 'pena', bonus: '+10% de XP em Linguagens',
+  escriba: { nome: 'Escriba', simbolo: 'pena', area: 'LC', bonus: '+10% de XP em Linguagens',
              texto: 'Domina as palavras e lê o que está nas entrelinhas.' },
-  cronista: { nome: 'Cronista', simbolo: 'ampulheta', bonus: '+10% de XP em Humanas',
+  cronista: { nome: 'Cronista', simbolo: 'ampulheta', area: 'CH', bonus: '+10% de XP em Humanas',
               texto: 'Conhece o passado e entende como o mundo chegou até aqui.' },
-  alquimista: { nome: 'Alquimista', simbolo: 'frasco', bonus: '+10% de XP na Revisão',
+  naturalista: { nome: 'Naturalista', simbolo: 'folha', area: 'CN', bonus: '+10% de XP em Natureza',
+                 texto: 'Observa a natureza e descobre as leis por trás de cada fenômeno.' },
+  geometra: { nome: 'Geômetra', simbolo: 'compasso', area: 'MT', bonus: '+10% de XP em Matemática',
+              texto: 'Mede o mundo em números e enxerga o padrão em cada problema.' },
+  alquimista: { nome: 'Alquimista', simbolo: 'frasco', sessao: 'revisao', bonus: '+10% de XP na Revisão',
                 texto: 'Transforma cada erro em aprendizado que fica.' },
+  polimata: { nome: 'Polímata', simbolo: 'coruja', sessao: 'sabio', bonus: '+10% de XP no Reino do Sábio',
+              texto: 'Sabe um pouco de tudo e não teme nenhuma área.' },
 };
 
 const TITULOS = [

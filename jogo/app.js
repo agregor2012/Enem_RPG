@@ -54,19 +54,33 @@ function duracao(ms) {
   const seg = String(s % 60).padStart(2, '0');
   return h ? `${h}h${String(m).padStart(2, '0')}` : `${m}:${seg}`;
 }
+/* Aviso curto no canto da tela. Um aviso igual a outro que ainda está na tela não se acumula: o
+   primeiro fica, dá um pulso e o tempo dele recomeça (clicar várias vezes no mesmo lugar não empilha). */
+const avisosNaTela = new Map();   // "tipo|texto" -> { el, relogio }
 function avisar(texto, tipo = 'info') {
-  const el = document.createElement('div');
-  el.className = `aviso ${tipo}`;
-  el.textContent = texto;
-  $avisos.appendChild(el);
-  setTimeout(() => el.remove(), 4200);
+  const chave = `${tipo}|${texto}`;
+  let a = avisosNaTela.get(chave);
+  if (a && a.el.isConnected) {
+    clearTimeout(a.relogio);
+    a.el.classList.remove('de-novo');
+    void a.el.offsetWidth;          // reinicia a animação do pulso
+    a.el.classList.add('de-novo');
+  } else {
+    const el = document.createElement('div');
+    el.className = `aviso ${tipo}`;
+    el.textContent = texto;
+    $avisos.appendChild(el);
+    a = { el };
+    avisosNaTela.set(chave, a);
+  }
+  a.relogio = setTimeout(() => { a.el.remove(); avisosNaTela.delete(chave); }, 4200);
 }
 
 /* ---- gravação --------------------------------------------------------- */
 function saveNovo() {
   return {
     versao: 1, heroi: null, xp: 0, pontos: 0,
-    cfg: { lingua: 'ing', meta: 20, zoom: 100, papel: 'pergaminho', dataProva: null,
+    cfg: { lingua: 'ing', meta: 20, zoom: 100, papel: 'pergaminho', dataProva: null, dataProva2: null, // datas do 1º e do 2º dia
            dev: false, devBau: false, devMimico: false, devErrante: false, devEvento: false, devEvolucao: false }, // dev*: modo desenvolvedor temporário
     q: {}, sessoes: [], dias: {}, seqDias: { atual: 0, melhor: 0, ultimo: null },
     conquistas: {}, lidas: {}, melhorSeq: 0, recuperadas: 0, filaZerada: false, atual: null,
@@ -346,9 +360,8 @@ function avancarSabio(s) {
 
 /* ---- responder -------------------------------------------------------- */
 function premio(q, acertou, st, sessao) {
-  const classe = E.save.heroi.classe;
-  const afinidade = (classe === 'escriba' && q.area === 'LC') || (classe === 'cronista' && q.area === 'CH')
-    || (classe === 'alquimista' && sessao.tipo === 'revisao');
+  const classe = CLASSES[E.save.heroi.classe];
+  const afinidade = Boolean(classe) && (classe.area === q.area || classe.sessao === sessao.tipo);
   // classe (+10%) e itens equipados (até LIMITES.xp, em inventario.js)
   const fator = 1 + (afinidade ? 0.1 : 0) + bonusXpItens(q, sessao, acertou) / 100;
   const comBonus = xp => Math.round(xp * fator);
@@ -573,16 +586,20 @@ function verificarConquistas() {
 }
 
 /* ---- pedaços de tela -------------------------------------------------- */
-function dataProva() { return E.save.cfg.dataProva || DATA_PROVA_PADRAO; }
+/* Datas da prova escolhidas pelo jogador: a do 1º dia e a do 2º dia (null enquanto não escolhe). */
+function dataProva(dia = 1) { return E.save.cfg[dia === 2 ? 'dataProva2' : 'dataProva'] || null; }
 function formatarData(iso) { return iso.split('-').reverse().join('/'); }
-/* Dias de calendário até a prova: no próprio dia dá 0, a qualquer hora. */
-function diasParaProva() {
-  const [a, m, d] = dataProva().split('-').map(Number);
+/* Dias de calendário até a prova: no próprio dia dá 0, a qualquer hora; null sem data escolhida. */
+function diasParaProva(dia = 1) {
+  const iso = dataProva(dia);
+  if (!iso) return null;
+  const [a, m, d] = iso.split('-').map(Number);
   const agora = new Date();
   const inicioHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
   return Math.round((new Date(a, m - 1, d) - inicioHoje) / 86400000);
 }
 function textoContagem(dias) {
+  if (dias === null) return 'sem data';
   if (dias > 1) return `em ${dias} dias`;
   if (dias === 1) return 'amanhã';
   if (dias === 0) return 'é hoje';
@@ -610,7 +627,8 @@ function painelHeroi() {
   const nv = nivelDe(E.save.xp);
   const dia = E.save.dias[hoje()] || { q: 0, a: 0 };
   const meta = E.save.cfg.meta;
-  const faltam = diasParaProva();
+  const datas = [dataProva(1), dataProva(2)];
+  const textoDatas = datas.some(Boolean) ? `${datas.map(d => (d ? formatarData(d) : 'sem data')).join(' e ')} · alterar` : 'definir as datas';
   return `<aside class="heroi">
     <div class="emblema">${ico(c.simbolo)}</div>
     <h2>${esc(h.nome)}</h2>
@@ -626,8 +644,9 @@ function painelHeroi() {
       <div><dt>${ico('chama')} Dias seguidos</dt><dd>${E.save.seqDias.atual}</dd></div>
       <div><dt>${ico('estrela')} Pontos</dt><dd>${milhar(E.save.pontos)}</dd></div>
       <div><dt>${ico('moeda')} Moedas</dt><dd>${inventario().dev ? '∞' : milhar(inventario().moedas || 0)}</dd></div>
-      <div class="contagem"><dt>${ico('ampulheta')} 1º dia do Enem</dt><dd>${textoContagem(faltam)}</dd>
-        <button class="mudar-data" data-acao="pedir-data" title="Definir a data da sua prova">${formatarData(dataProva())} · alterar</button></div>
+      <div class="contagem"><dt>${ico('ampulheta')} 1º dia do Enem</dt><dd>${textoContagem(diasParaProva(1))}</dd>
+        <dt>${ico('ampulheta')} 2º dia do Enem</dt><dd>${textoContagem(diasParaProva(2))}</dd>
+        <button class="mudar-data" data-acao="pedir-data" title="Definir as datas dos dois dias da sua prova">${esc(textoDatas)}</button></div>
     </dl>
   </aside>`;
 }
@@ -859,6 +878,14 @@ const TELAS = {
         <div class="grupo"><span>Meta diária</span>${[10, 20, 30, 45].map(v => `<button class="pilula ${c.meta === v ? 'ativa' : ''}" data-acao="cfg" data-chave="meta" data-v="${v}">${v} questões</button>`).join('')}</div>
         <div class="grupo"><span>Papel da prova</span>${[['pergaminho', 'Pergaminho'], ['branco', 'Branco']].map(([v, t]) => `<button class="pilula ${c.papel === v ? 'ativa' : ''}" data-acao="cfg" data-chave="papel" data-v="${v}">${t}</button>`).join('')}</div>
         <div class="grupo"><span>Tamanho da questão</span>${[85, 100, 115, 130].map(v => `<button class="pilula ${c.zoom === v ? 'ativa' : ''}" data-acao="cfg" data-chave="zoom" data-v="${v}">${v}%</button>`).join('')}</div>
+      </section>
+      <section class="ajustes">
+        <h2>Classe</h2>
+        <p>Cada classe dá 10% a mais de XP num reino ou num tipo de sessão. Dá para trocar uma vez por dia.</p>
+        <div class="classes" role="radiogroup" aria-label="Classe">
+          ${Object.entries(CLASSES).map(([id, k]) => `<button class="carta-classe ${E.save.heroi.classe === id ? 'ativa' : ''}" role="radio" aria-checked="${E.save.heroi.classe === id}" data-acao="trocar-classe" data-id="${id}">
+            ${ico(k.simbolo)}<h3>${k.nome}</h3><p>${k.texto}</p><small>${k.bonus}</small></button>`).join('')}
+        </div>
       </section>
       <section class="ajustes">
         <h2>Sobre as questões</h2>
@@ -1330,6 +1357,7 @@ function faixa(titulo, sub, dy, cor) {
     <path class="dobra-e" fill="#000" opacity=".35"/><path class="dobra-d" fill="#000" opacity=".35"/>
     <rect class="banda" y="-14" height="28" fill="${c1}" stroke="${c2}" stroke-width="1"/>
     <rect class="banda-luz" y="-12" height="2.5" fill="#fff" opacity=".14"/>
+    <path class="contorno-faixa" fill="none"/>
     <text class="f1" y="5.5" text-anchor="middle">${titulo}</text>
     <g class="etiqueta" transform="translate(0 26)"><rect class="etq" y="-10" height="20" rx="4"/>
       <text class="f2" y="4" text-anchor="middle">${sub}</text></g></g>`;
@@ -1346,6 +1374,8 @@ function ajustarFaixas() {
     }
     g.querySelector('.cauda-e').setAttribute('d', `M${f1(x0 + 10)} -6H${f1(x0 - 22)}L${f1(x0 - 13)} 7L${f1(x0 - 22)} 20H${f1(x0 + 10)}Z`);
     g.querySelector('.cauda-d').setAttribute('d', `M${f1(x1 - 10)} -6H${f1(x1 + 22)}L${f1(x1 + 13)} 7L${f1(x1 + 22)} 20H${f1(x1 - 10)}Z`);
+    // contorno do título inteiro, banda e caudas num traço só: é o que acende no realce
+    g.querySelector('.contorno-faixa').setAttribute('d', `M${f1(x0)} -14H${f1(x1)}V-6H${f1(x1 + 22)}L${f1(x1 + 13)} 7L${f1(x1 + 22)} 20H${f1(x1 - 10)}V14H${f1(x0 + 10)}V20H${f1(x0 - 22)}L${f1(x0 - 13)} 7L${f1(x0 - 22)} -6H${f1(x0)}Z`);
     g.querySelector('.dobra-e').setAttribute('d', `M${f1(x0)} 14L${f1(x0 + 10)} 20V14Z`);
     g.querySelector('.dobra-d').setAttribute('d', `M${f1(x1)} 14L${f1(x1 - 10)} 20V14Z`);
     const s = g.querySelector('.f2').getBBox();
@@ -2028,11 +2058,11 @@ function renderModal() {
       <div class="acoes"><button class="botao" data-acao="fechar-modal">Voltar</button>${m.extra ? `<button class="botao" data-acao="${m.extra[1]}">${esc(m.extra[0])}</button>` : ''}<button class="botao ${m.perigo ? 'perigoso' : 'primario'}" data-acao="${m.acao}">${esc(m.botao)}</button></div></div>`;
   } else if (m.tipo === 'data') {
     $modal.innerHTML = `<div class="janela caixa" role="dialog" aria-modal="true" aria-labelledby="titulo-data">
-      <h2 id="titulo-data">Data do 1º dia do Enem</h2>
-      <p>A contagem regressiva usa a data que você escolher. A data oficial do Enem 2026 é ${formatarData(DATA_PROVA_PADRAO)}.</p>
-      <label class="campo">Dia da prova<input type="date" id="campo-data" value="${dataProva()}" min="2020-01-01" max="2099-12-31"></label>
+      <h2 id="titulo-data">Datas do Enem</h2>
+      <p>As contagens regressivas usam as datas que você escolher. O Enem costuma ser em dois domingos seguidos.</p>
+      <label class="campo">1º dia de prova<input type="date" id="campo-data" value="${esc(dataProva(1) || '')}" min="2020-01-01" max="2099-12-31"></label>
+      <label class="campo">2º dia de prova<input type="date" id="campo-data-2" value="${esc(dataProva(2) || (dataProva(1) ? somarDias(dataProva(1), 7) : ''))}" min="2020-01-01" max="2099-12-31"></label>
       <div class="acoes"><button class="botao" data-acao="fechar-modal">Cancelar</button>
-        <button class="botao" data-acao="data-padrao">Usar a data oficial</button>
         <button class="botao primario" data-acao="salvar-data">Salvar</button></div></div>`;
     document.getElementById('campo-data').focus();
   } else if (m.tipo === 'titulos') {
@@ -2165,18 +2195,26 @@ const ACOES = {
   'fechar-modal': () => { E.modal = null; renderModal(); },
   'pedir-data': () => { E.modal = { tipo: 'data' }; renderModal(); },
   'salvar-data': () => {
-    const valor = document.getElementById('campo-data')?.value || '';
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) { avisar('Escolha uma data válida.'); return; }
-    E.save.cfg.dataProva = valor;
+    const [d1, d2] = ['campo-data', 'campo-data-2'].map(id => document.getElementById(id)?.value || '');
+    const valida = v => v === '' || /^\d{4}-\d{2}-\d{2}$/.test(v);
+    if (!valida(d1) || !valida(d2)) { avisar('Escolha datas válidas.'); return; }
+    if (d1 && d2 && d2 < d1) { avisar('O 2º dia não pode ser antes do 1º.'); return; }
+    E.save.cfg.dataProva = d1 || null;
+    E.save.cfg.dataProva2 = d2 || null;
     salvar();
     E.modal = null; renderModal();
     render();
   },
-  'data-padrao': () => {
-    E.save.cfg.dataProva = null;
+  // a classe pode mudar uma vez por dia: sem o limite, daria para trocar antes de cada sessão
+  'trocar-classe': (d) => {
+    const h = E.save.heroi;
+    if (!CLASSES[d.id] || d.id === h.classe) return;
+    if (h.trocaClasse === hoje()) { avisar('Você já trocou de classe hoje. Dá para trocar de novo amanhã.'); return; }
+    h.classe = d.id;
+    h.trocaClasse = hoje();
     salvar();
-    E.modal = null; renderModal();
     render();
+    avisar(`Agora você é ${CLASSES[d.id].nome}: ${CLASSES[d.id].bonus}.`);
   },
   cfg: (d) => {
     const numericos = ['meta', 'zoom'];
