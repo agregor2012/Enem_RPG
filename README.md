@@ -24,8 +24,8 @@ os microdados do INEP.
   Naturalista, Geômetra, Alquimista e Polímata). A classe pode ser trocada uma vez por dia, em Ajustes.
 - **Contagem regressiva:** para os dois dias de prova, com as datas escolhidas pelo jogador. Um
   clique na contagem, no painel do herói, abre a janela das datas.
-- **Itens em uso:** o painel do herói lista o que está equipado em cada espaço e as relíquias; um
-  clique num deles abre a ficha do item.
+- **Itens em uso:** o painel do herói lista o que está equipado em cada espaço; um clique num deles
+  abre a ficha do item.
 - **Mapa:** atlas com os oito lugares do jogo, zoom pela roda do mouse (até 200%) e arraste para mover.
   A bússola, clicada, aponta o reino em que você mais erra, e o mapa esconde alguns baús.
 - **Itens e raridades:**
@@ -57,6 +57,8 @@ os microdados do INEP.
     missões do dia.
     - **Conjuntos de equipamento:** seis lugares para guardar o que está equipado e voltar a essa
       combinação com um clique. O item que saiu do inventário fica de fora, com aviso.
+    - **Mostrar e esconder:** os bônus ativos e os conjuntos ficam recolhidos, cada um com um botão
+      que mostra e esconde. O jogo lembra a escolha.
     - **Imagem ampliada:** na ficha de qualquer item, o botão no canto da imagem (ou um clique
       nela) mostra a arte em tamanho grande.
   - **De onde vêm:**

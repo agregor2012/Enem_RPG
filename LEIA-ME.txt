@@ -32,6 +32,8 @@ O QUE HÁ NO JOGO
   - Equipamento: arma, armadura, dois acessórios, artefato e mascote.
   - Conjuntos de equipamento: no topo do Inventário, guarde até seis combinações do
     que está equipado e troque de uma para outra com um clique.
+  - Os conjuntos e a lista de bônus ativos ficam recolhidos: o botão "Mostrar" abre
+    cada um, e o jogo lembra a escolha.
   - Na ficha de qualquer item, o botão no canto da imagem (ou um clique nela) mostra
     a arte ampliada.
   - Os doze mascotes evoluem de aparência, em três formas, conforme acompanham você.
@@ -64,8 +66,8 @@ O QUE HÁ NO JOGO
 - Grimório: histórico, gráfico de acerto, competências e conquistas.
 - Contagem para os dois dias do Enem: clique na contagem, no painel do herói, para
   escolher as datas do 1º e do 2º dia.
-- Itens em uso: o painel do herói mostra o que está equipado e as suas relíquias.
-  Clique num item para abrir a ficha dele.
+- Itens em uso: o painel do herói mostra o que está equipado. Clique num item para
+  abrir a ficha dele.
 - Seis classes, cada uma com 10% a mais de XP num reino ou num tipo de sessão:
   Escriba (Linguagens), Cronista (Humanas), Naturalista (Natureza), Geômetra
   (Matemática), Alquimista (Revisão) e Polímata (Reino do Sábio). Dá para trocar de

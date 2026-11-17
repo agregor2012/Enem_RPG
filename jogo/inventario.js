@@ -313,7 +313,7 @@ function depoisDeUsar(def, s, q, feitos) {
   const ef = efeitosDaQuestao(s, q.id);
   if (E.selecao && ef.eliminadas.includes(E.selecao)) E.selecao = null;
   for (const l of ef.eliminadas) E.riscadas.delete(l);
-  avisarItem(def, feitos.length ? `: ${feitos.join(' e ')}.` : ': nada mudou.');
+  avisarItem(def, feitos.length ? `: ${feitos.join(' e ')}.` : ': nada mudou.', '', 'bolsa');
   salvar();
   renderMantendoRolagem();
 }
@@ -322,9 +322,9 @@ function usarItemNaQuestao(id) {
   if (!aberta) return;
   const { s, q } = aberta;
   const def = itemDef(id);
-  if (!def || !itensDaBolsa(s, q).some(d => d.id === id)) { avisar('Este item não pode ser usado aqui.'); return; }
+  if (!def || !itensDaBolsa(s, q).some(d => d.id === id)) { avisar('Este item não pode ser usado aqui.', 'info', 'bolsa'); return; }
   const ef = efeitosDaQuestao(s, q.id);
-  if (!def.uso.some(u => efeitoUtil(u, q, ef, s))) { avisar('Esse item não teria efeito agora.'); return; }
+  if (!def.uso.some(u => efeitoUtil(u, q, ef, s))) { avisar('Esse item não teria efeito agora.', 'info', 'bolsa'); return; }
   const feitos = aplicarUsos(def.uso, s, q, `item:${id}`);
   if (!def.uso.every(u => ARMADOS.has(u.efeito))) gastarItem(id);
   depoisDeUsar(def, s, q, feitos);
@@ -334,9 +334,9 @@ function usarPoderNaQuestao(id) {
   if (!aberta) return;
   const { s, q } = aberta;
   const p = poderesDaBolsa(s).find(x => x.def.id === id);
-  if (!p || !p.restantes) { avisar('Esse poder já foi usado nesta sessão.'); return; }
+  if (!p || !p.restantes) { avisar('Esse poder já foi usado nesta sessão.', 'info', 'bolsa'); return; }
   const ef = efeitosDaQuestao(s, q.id);
-  if (!efeitoUtil(p.def.poder, q, ef)) { avisar('Esse poder não teria efeito nesta questão.'); return; }
+  if (!efeitoUtil(p.def.poder, q, ef)) { avisar('Esse poder não teria efeito nesta questão.', 'info', 'bolsa'); return; }
   const feitos = aplicarUsos([p.def.poder], s, q, `poder:${id}`);
   if (!ARMADOS.has(p.def.poder.efeito)) { s.cargas ||= {}; s.cargas[id] = (s.cargas[id] || 0) + 1; }
   depoisDeUsar(p.def, s, q, feitos);
@@ -888,11 +888,15 @@ function avisarEspolio(titulo, entradas) {
   setTimeout(() => el.remove(), 5200);
 }
 /* Aviso curto com o ícone do item: "antes" vem antes do nome e "depois" logo após ele. O texto
-   fica fora do nome para não depender do gênero do item (a Poção, o Elixir...). */
-function avisarItem(def, depois = '', antes = '') {
+   fica fora do nome para não depender do gênero do item (a Poção, o Elixir...). Com "canal", o aviso
+   toma o lugar do anterior do mesmo canal (avisoNoCanal, em app.js). */
+function avisarItem(def, depois = '', antes = '', canal = null) {
+  const classe = `aviso aviso-item rar-${def.rar}`;
+  const html = `${iconeItem(def)}<span>${antes ? `${esc(antes)} ` : ''}<strong>${esc(def.nome)}</strong>${esc(depois)}</span>`;
+  if (canal) { avisoNoCanal(canal, classe, (el) => { el.innerHTML = html; }); return; }
   const el = document.createElement('div');
-  el.className = `aviso aviso-item rar-${def.rar}`;
-  el.innerHTML = `${iconeItem(def)}<span>${antes ? `${esc(antes)} ` : ''}<strong>${esc(def.nome)}</strong>${esc(depois)}</span>`;
+  el.className = classe;
+  el.innerHTML = html;
   $avisos.appendChild(el);
   setTimeout(() => el.remove(), 4200);
 }
@@ -1026,6 +1030,20 @@ function dropsDoErrante(nome) {
   return `<span class="drops-errante">Deixa cair: ${m.drops.map(([id]) => `<b class="texto-rar rar-${itemDef(id).rar}">${esc(itemDef(id).nome)}</b>`).join(', ')}</span>`;
 }
 
+/* ---- seções que o jogador mostra ou esconde no Inventário ----------------- */
+/* Os bônus ativos e os conjuntos de equipamento ficam atrás de um botão, para a tela ficar mais limpa.
+   A escolha fica no save (cfg.verBonus e cfg.verConjuntos), e as duas começam escondidas. */
+const SECOES_RECOLHIVEIS = { bonus: 'verBonus', conjuntos: 'verConjuntos' };
+function secaoAberta(secao) { return Boolean(E.save?.cfg?.[SECOES_RECOLHIVEIS[secao]]); }
+/* Cabeçalho da seção, inteiro clicável: o título, um resumo do que está escondido e "Mostrar" ou
+   "Esconder". */
+function botaoSecao(secao, titulo, resumo) {
+  const aberta = secaoAberta(secao);
+  return `<button class="alternar-secao" data-acao="alternar-secao" data-secao="${secao}" aria-expanded="${aberta}" aria-controls="corpo-${secao}">
+    <span class="nome-secao">${titulo}</span>${resumo ? `<small>${resumo}</small>` : ''}
+    <span class="acao-secao">${aberta ? 'Esconder' : 'Mostrar'}${ico('seta')}</span></button>`;
+}
+
 /* ---- conjuntos de equipamento ---------------------------------------------- */
 /* Seis lugares para guardar o equipamento do momento ({ equip: { espaço: item } }) e voltar a ele com
    um clique. Usar um conjunto deixa o equipamento como estava guardado; o item que não está mais no
@@ -1084,13 +1102,20 @@ function faixaConjuntos(inv) {
         ${c ? `<button class="botao pequeno esvaziar" data-acao="conjunto-esvaziar" data-i="${i}" title="Esvaziar este conjunto" aria-label="Esvaziar o conjunto ${i + 1}">${ico('xis')}</button>` : ''}
       </div></div>`;
   };
+  const conjuntos = conjuntosDe(inv).slice(0, N_CONJUNTOS);
+  const aberta = secaoAberta('conjuntos');
+  // escondida, a seção resume o que tem: quantos conjuntos estão guardados e qual está em uso
+  const guardados = conjuntos.filter(Boolean).length;
+  const emUso = conjuntos.findIndex(c => c && mesmoEquipamento(equipDoConjunto(c, inv), inv.equip));
+  const resumo = aberta ? '' : `${guardados ? `${guardados} de ${N_CONJUNTOS} guardados` : 'nenhum guardado'}${emUso >= 0 ? ` · Conjunto ${emUso + 1} em uso` : ''}`;
   return `<section class="conjuntos" aria-label="Conjuntos de equipamento">
-    <h2>Conjuntos de equipamento</h2>
-    <p>Guarde até ${N_CONJUNTOS} combinações do que está equipado e troque de uma para outra com um clique.</p>
-    <div class="grade-conjuntos">${conjuntosDe(inv).slice(0, N_CONJUNTOS).map(cartao).join('')}</div></section>`;
+    <h2 class="cabeca-secao">${botaoSecao('conjuntos', 'Conjuntos de equipamento', resumo)}</h2>
+    <div class="corpo-conjuntos" id="corpo-conjuntos" ${aberta ? '' : 'hidden'}>
+      <p>Guarde até ${N_CONJUNTOS} combinações do que está equipado e troque de uma para outra com um clique.</p>
+      <div class="grade-conjuntos">${conjuntos.map(cartao).join('')}</div></div></section>`;
 }
-/* Itens em uso, para o painel do herói: o que está equipado em cada espaço e, numa linha, as relíquias
-   (que valem sempre). Clicar num item abre a janela dele. */
+/* Itens em uso, para o painel do herói: o que está equipado em cada espaço. Clicar num item abre a
+   janela dele. As relíquias, que valem sempre, aparecem só no Inventário. */
 function painelEmUso() {
   const inv = inventario();
   const linhas = ESPACOS.map((e) => {
@@ -1099,10 +1124,8 @@ function painelEmUso() {
     return def ? `<button class="item-em-uso rar-${def.rar}" data-acao="ver-item" data-id="${def.id}" title="${e.nome}: ${esc(def.efeito)}">
       <span class="mini-item">${iconeItem(def)}</span><strong class="texto-rar">${esc(def.nome)}</strong></button>` : '';
   }).filter(Boolean);
-  const reliquias = ITENS.filter(d => d.cat === 'reliquia' && qtdItem(d.id, inv) > 0);
   return `<h3>Em uso</h3>
-    ${linhas.length ? `<div class="itens-em-uso">${linhas.join('')}</div>` : '<p class="nada-em-uso">Nada equipado. Equipe itens no Inventário.</p>'}
-    ${reliquias.length ? `<div class="reliquias-em-uso" aria-label="Relíquias, que valem sempre">${reliquias.map(d => `<button class="mini-item rar-${d.rar}" data-acao="ver-item" data-id="${d.id}" title="${esc(d.nome)} (relíquia)">${iconeItem(d)}</button>`).join('')}</div>` : ''}`;
+    ${linhas.length ? `<div class="itens-em-uso">${linhas.join('')}</div>` : '<p class="nada-em-uso">Nada equipado. Equipe itens no Inventário.</p>'}`;
 }
 
 /* ---- tela do Inventário -------------------------------------------------- */
@@ -1171,7 +1194,8 @@ function textoAprimoramento(def) {
   }
   return partes.join('; ');
 }
-function linhasBonus(inv) {
+/* Textos dos bônus do equipamento, um por linha. */
+function textosBonus(inv) {
   const b = bonusItens(inv, null); // só o equipamento: efeitos de sessão aparecem na bolsa
   const linhas = [];
   if (b.xp) linhas.push(TEXTOS_BONUS.xp(Math.min(b.xp, LIMITES.xp)));
@@ -1191,6 +1215,9 @@ function linhasBonus(inv) {
   if (b.tesouro) linhas.push('Mímico e passagem secreta seguros 1× por sessão; moedas do guardião garantidas');
   if (b.cincoReinos) linhas.push(`${itemDef(b.cincoReinos).nome} ao concluir os cinco reinos no dia`);
   for (const d of equipados(inv).filter(x => x.poder)) linhas.push(`Poder: ${d.nome}, ${d.poder.cargas}× por sessão`);
+  return linhas;
+}
+function linhasBonus(inv, linhas = textosBonus(inv)) {
   return linhas.length ? linhas.map(l => `<li>${l}</li>`).join('') : '<li class="vazio">Nenhum bônus ativo. Equipe itens para ganhar bônus.</li>';
 }
 function telaInventario() {
@@ -1209,6 +1236,7 @@ function telaInventario() {
 }
 function invAbaItens(inv) {
   const f = E.inv;
+  const bonus = textosBonus(inv);
   const ordemCat = Object.keys(CATEGORIAS);
   const temCat = cat => ITENS.filter(d => d.cat === cat && qtdItem(d.id, inv) > 0).length;
   const lista = ITENS
@@ -1232,9 +1260,11 @@ function invAbaItens(inv) {
         return def ? `<button class="espaco cheio rar-${def.rar}" data-acao="ver-item" data-id="${def.id}" title="${esc(def.nome)}">${iconeItem(def)}<small>${e.nome}</small></button>`
           : `<div class="espaco vazio"><small>${e.nome}</small></div>`;
       }).join('')}</div>
-      <h3>Bônus ativos</h3>
-      <ul class="bonus-ativos">${linhasBonus(inv)}</ul>
-      <p class="nota-bonus">XP extra dos itens vai até +${LIMITES.xp}%, e moedas até +${LIMITES.moedas}%. Relíquias valem sempre, sem ocupar espaço.</p>
+      <h3 class="cabeca-secao">${botaoSecao('bonus', 'Bônus ativos', secaoAberta('bonus') ? '' : String(bonus.length))}</h3>
+      <div class="corpo-bonus" id="corpo-bonus" ${secaoAberta('bonus') ? '' : 'hidden'}>
+        <ul class="bonus-ativos">${linhasBonus(inv, bonus)}</ul>
+        <p class="nota-bonus">XP extra dos itens vai até +${LIMITES.xp}%, e moedas até +${LIMITES.moedas}%. Relíquias valem sempre, sem ocupar espaço.</p>
+      </div>
     </aside>
     <div class="inv-principal">
       ${faixaConjuntos(inv)}
@@ -1495,6 +1525,16 @@ const ACOES_ITENS = {
     salvar();
     E.modal = { tipo: 'item', id: d.id, ampliado: true, forma }; renderModal();
     atualizarTelaDeFundo();
+  },
+  // mostra ou esconde uma seção do Inventário; a escolha fica no save
+  'alternar-secao': (d) => {
+    if (!Object.hasOwn(SECOES_RECOLHIVEIS, d.secao)) return;
+    const chave = SECOES_RECOLHIVEIS[d.secao];
+    E.save.cfg[chave] = !E.save.cfg[chave];
+    salvar();
+    E.manterRolagem = true; render();
+    // o botão foi desenhado de novo: devolve o foco a ele, para quem usa o teclado
+    document.querySelector(`.alternar-secao[data-secao="${d.secao}"]`)?.focus();
   },
   'conjunto-usar': (d) => {
     const i = Number(d.i);

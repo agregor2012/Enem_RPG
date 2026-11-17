@@ -55,9 +55,32 @@ function duracao(ms) {
   return h ? `${h}h${String(m).padStart(2, '0')}` : `${m}:${seg}`;
 }
 /* Aviso curto no canto da tela. Um aviso igual a outro que ainda está na tela não se acumula: o
-   primeiro fica, dá um pulso e o tempo dele recomeça (clicar várias vezes no mesmo lugar não empilha). */
+   primeiro fica, dá um pulso e o tempo dele recomeça (clicar várias vezes no mesmo lugar não empilha).
+   Com "canal", o aviso toma o lugar do último aviso do mesmo canal que ainda está na tela. É o caso
+   da bolsa, durante as questões: usar vários itens seguidos deixa só o aviso do último. */
 const avisosNaTela = new Map();   // "tipo|texto" -> { el, relogio }
-function avisar(texto, tipo = 'info') {
+const canaisDeAviso = new Map();  // canal -> { el, relogio }
+function avisoNoCanal(canal, classe, preencher) {
+  let a = canaisDeAviso.get(canal);
+  if (a && a.el.isConnected) {
+    clearTimeout(a.relogio);
+    a.el.className = classe;
+    preencher(a.el);
+    $avisos.appendChild(a.el);      // vai para o fim da pilha, que é onde aparece o aviso mais novo
+    void a.el.offsetWidth;          // reinicia a animação do pulso
+    a.el.classList.add('de-novo');
+  } else {
+    const el = document.createElement('div');
+    el.className = classe;
+    preencher(el);
+    $avisos.appendChild(el);
+    a = { el };
+    canaisDeAviso.set(canal, a);
+  }
+  a.relogio = setTimeout(() => { a.el.remove(); canaisDeAviso.delete(canal); }, 4200);
+}
+function avisar(texto, tipo = 'info', canal = null) {
+  if (canal) { avisoNoCanal(canal, `aviso ${tipo}`, (el) => { el.textContent = texto; }); return; }
   const chave = `${tipo}|${texto}`;
   let a = avisosNaTela.get(chave);
   if (a && a.el.isConnected) {
@@ -81,6 +104,7 @@ function saveNovo() {
   return {
     versao: 1, heroi: null, xp: 0, pontos: 0,
     cfg: { lingua: 'ing', meta: 20, zoom: 100, papel: 'pergaminho', dataProva: null, dataProva2: null, // datas do 1º e do 2º dia
+           verBonus: false, verConjuntos: false, // seções do Inventário abertas (bônus ativos e conjuntos); começam escondidas
            dev: false, devBau: false, devMimico: false, devErrante: false, devEvento: false, devEvolucao: false }, // dev*: modo desenvolvedor temporário
     q: {}, sessoes: [], dias: {}, seqDias: { atual: 0, melhor: 0, ultimo: null },
     conquistas: {}, lidas: {}, melhorSeq: 0, recuperadas: 0, filaZerada: false, atual: null,
