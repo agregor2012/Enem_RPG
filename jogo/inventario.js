@@ -784,6 +784,14 @@ function lojaDoDia(inv = inventario()) {
   if (inv.loja.dia !== hoje()) inv.loja = { dia: hoje(), compras: {} };
   return inv.loja;
 }
+/* Materiais que uma oferta da loja pede além das moedas, e o que falta para comprá-la. */
+function materiaisDaOferta(o) { return Object.entries(o.mats || {}); }
+function faltasDaOferta(o, inv = inventario()) {
+  return {
+    mats: materiaisDaOferta(o).filter(([id, n]) => qtdItem(id, inv) < n),
+    moedas: !inv.dev && (inv.moedas || 0) < o.preco,
+  };
+}
 function comprarItem(i) {
   const oferta = LOJA[i];
   if (!oferta) return null;
@@ -793,7 +801,11 @@ function comprarItem(i) {
   const feitas = loja.compras[oferta.item] || 0;
   if (!inv.dev && feitas >= oferta.limite) { avisar('Esse item esgotou na loja hoje. Volte amanhã.'); return null; }
   if (ehUnico(def) && qtdItem(def.id, inv)) { avisar('Você já tem este item.'); return null; }
-  if (!gastarMoedas(oferta.preco, inv)) { avisar('Moedas insuficientes.'); return null; }
+  const f = faltasDaOferta(oferta, inv);
+  if (f.moedas) { avisar('Moedas insuficientes.'); return null; }
+  if (f.mats.length) { avisar('Faltam materiais para esta compra.'); return null; }
+  gastarMoedas(oferta.preco, inv);
+  for (const [id, n] of materiaisDaOferta(oferta)) gastarItem(id, n, inv);
   loja.compras[oferta.item] = feitas + 1;
   return ganharItem(oferta.item, 1, inv);
 }
@@ -1135,7 +1147,7 @@ function comoConseguir(def) {
   const receita = RECEITAS.find(r => r.item === def.id);
   if (receita) fontes.push(`Fabricação${receita.req ? ` (a partir de ${textoRequisito(receita)})` : ''}`);
   const oferta = LOJA.find(o => o.item === def.id);
-  if (oferta) fontes.push(`Loja, por ${oferta.preco} moedas`);
+  if (oferta) fontes.push(`Loja, por ${[`${oferta.preco} moedas`, ...materiaisDaOferta(oferta).map(([id, n]) => `${itemDef(id).nome} ×${n}`)].join(' e ')}`);
   const conquista = Object.entries(PREMIO_CONQUISTA).find(([, id]) => id === def.id);
   if (conquista) fontes.push(`Conquista "${CONQUISTAS.find(c => c.id === conquista[0])?.nome}"`);
   const graus = Object.entries(PREMIO_GRAU).filter(([, p]) => p.item === def.id).map(([g]) => GRAUS[g]);
@@ -1297,9 +1309,16 @@ function invAbaLoja(inv) {
     const feitas = loja.compras[o.item] || 0;
     const esgotou = !inv.dev && feitas >= o.limite;
     const ja = ehUnico(def) && qtdItem(def.id, inv);
-    const caro = !inv.dev && (inv.moedas || 0) < o.preco;
+    const f = faltasDaOferta(o, inv);
+    const caro = f.moedas || f.mats.length > 0;
+    const mats = materiaisDaOferta(o).map(([id, n]) => {
+      const m = itemDef(id);
+      const tem = qtdItem(id, inv);
+      return `<li class="${tem >= n ? 'ok' : 'falta'}">${iconeItem(m)}<span>${esc(m.nome)}</span><b>${inv.dev ? '∞' : tem}/${n}</b></li>`;
+    }).join('');
     return `<article class="oferta rar-${def.rar}">
       <button class="receita-topo" data-acao="ver-item" data-id="${def.id}">${iconeItem(def)}<span><strong class="texto-rar">${esc(def.nome)}</strong><small>${esc(def.efeito)}</small></span></button>
+      ${mats ? `<ul class="materiais">${mats}</ul>` : ''}
       <div class="oferta-pe"><span class="preco">${ico('moeda')}${o.preco}</span><small>${inv.dev ? 'sem limite no modo de teste' : `hoje: ${feitas} de ${o.limite}`}</small>
         <button class="botao ${esgotou || ja || caro ? '' : 'primario'}" data-acao="comprar" data-i="${i}" ${esgotou || ja || caro ? 'disabled' : ''}>${ja ? 'Você já tem' : (esgotou ? 'Esgotado hoje' : 'Comprar')}</button></div>
     </article>`;

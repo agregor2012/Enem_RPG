@@ -488,7 +488,8 @@ const RECEITAS = [
   { id: 'r_diadema', item: 'diadema_reinos', mats: { runa_sabedoria: 2, escama_dragao: 2, pena_fenix: 1 }, req: { nivel: 14 } },
 ];
 
-/* Loja: só itens simples, com limite por dia, para que acumular moedas não vire vantagem. */
+/* Loja: só itens simples, com limite por dia, para que acumular moedas não vire vantagem. Uma oferta
+   pode pedir também materiais (mats), como as receitas: o Pingo, por ser um mascote, custa mais. */
 const LOJA = [
   { item: 'pocao_memoria', preco: 20, limite: 3 },
   { item: 'pocao_clareza', preco: 30, limite: 3 },
@@ -499,7 +500,7 @@ const LOJA = [
   { item: 'espada_aprendiz', preco: 60, limite: 1 },
   { item: 'tunica_estudante', preco: 60, limite: 1 },
   { item: 'anel_curiosidade', preco: 80, limite: 1 },
-  { item: 'pingo', preco: 80, limite: 1 },
+  { item: 'pingo', preco: 100, mats: { essencia_slime: 10 }, limite: 1 },
 ];
 /* Moedas recebidas ao vender um item (mítico não se vende). Equipamento repetido vira o dobro. */
 const VALOR_VENDA = { comum: 3, incomum: 8, raro: 20, epico: 50, lendario: 120 };
