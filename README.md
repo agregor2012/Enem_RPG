@@ -22,7 +22,10 @@ os microdados do INEP.
   graus (Bronze, Prata, Ouro, Platina e Lendária). Cada conquista libera um título para o herói.
 - **Classes:** seis, cada uma com 10% a mais de XP num reino ou num tipo de sessão (Escriba, Cronista,
   Naturalista, Geômetra, Alquimista e Polímata). A classe pode ser trocada uma vez por dia, em Ajustes.
-- **Contagem regressiva:** para os dois dias de prova, com as datas escolhidas pelo jogador.
+- **Contagem regressiva:** para os dois dias de prova, com as datas escolhidas pelo jogador. Um
+  clique na contagem, no painel do herói, abre a janela das datas.
+- **Itens em uso:** o painel do herói lista o que está equipado em cada espaço e as relíquias; um
+  clique num deles abre a ficha do item.
 - **Mapa:** atlas com os oito lugares do jogo, zoom pela roda do mouse (até 200%) e arraste para mover.
   A bússola, clicada, aponta o reino em que você mais erra, e o mapa esconde alguns baús.
 - **Itens e raridades:**
@@ -31,6 +34,8 @@ os microdados do INEP.
   - **Mascotes:** doze, e todos evoluem de aparência em três formas.
     - Onze evoluem com as questões respondidas enquanto estão equipados.
     - A Lumina evolui com as conquistas.
+    - Na ficha do mascote dá para ver as três formas e escolher em qual das já alcançadas ele
+      aparece. É só a aparência: o efeito é o mesmo e a evolução continua contando.
   - **Pacote de cada reino:** um material, uma arma fabricada com ele (+10% de XP na área) e um
     mascote. O material vem da missão e do guardião do reino.
   - **Relíquias de conquista:** conquistas difíceis dão bônus permanentes, e quem já tinha a
@@ -50,6 +55,10 @@ os microdados do INEP.
   - **Inventário:** filtros, seis espaços de equipamento (arma, armadura, dois acessórios,
     artefato e mascote), fabricação com receitas que se liberam, loja com limite diário e
     missões do dia.
+    - **Conjuntos de equipamento:** seis lugares para guardar o que está equipado e voltar a essa
+      combinação com um clique. O item que saiu do inventário fica de fora, com aviso.
+    - **Imagem ampliada:** na ficha de qualquer item, o botão no canto da imagem (ou um clique
+      nela) mostra a arte em tamanho grande.
   - **De onde vêm:**
     - inimigos e guardiões;
     - monstros errantes do Reino do Sábio;
@@ -157,9 +166,10 @@ nas três formas de um mascote. Depois, rode:
     python -I ferramentas/artes_itens.py <pasta das artes> [<pasta dos originais>]
 
 O script tira o fundo, centraliza o desenho e grava o ícone em `jogo/img/itens/<nome>.webp`
-(256 x 256). Ele também atualiza a lista `jogo/artes.js` e, se for dada a segunda pasta, guarda ali
-a arte sem fundo em 512 x 512. Item sem arte, ou forma de mascote sem arte, continua com o
-símbolo `it-*`.
+(256 x 256) e a arte ampliada em `jogo/img/itens/grande/<nome>.webp` (512 x 512), que o jogo mostra
+quando o jogador amplia a imagem do item. Ele também atualiza a lista `jogo/artes.js` e, se for dada
+a segunda pasta, guarda ali a arte sem fundo em 512 x 512. Item sem arte, ou forma de mascote sem
+arte, continua com o símbolo `it-*`.
 
 Os lugares do mapa também podem ter arte pintada: `reino_*.png` e `lugar_*.png` (os nomes estão em
 `LUGARES`, no script), na subpasta `mapa` da pasta das artes. Eles viram `jogo/img/mapa/<nome>.webp`
@@ -186,13 +196,14 @@ segredos do mapa (`SEGREDOS_MAPA`) seguem o dragão, o barco e a ilhota da pintu
 Enquanto o sistema está em teste, Ajustes tem um **modo desenvolvedor** temporário que:
 
 - libera todos os itens, receitas e a loja numa cópia de teste do inventário, que não é gravada no
-  save;
+  save (os conjuntos de equipamento e a aparência escolhida dos mascotes são preferências e ficam
+  no save de verdade);
 - tem opções para forçar baús, Mímicos, monstros errantes e eventos especiais, e para mostrar os
   mascotes na última forma.
 
 ## Pastas
 
-- `jogo/`: o jogo (Electron): `index.html`, `app.js`, `conteudo.js`, `itens.js` (catálogo de itens), `inventario.js` (inventário, recompensas e fabricação), `estilo.css`, `main.js` e `preload.js`; as artes dos itens ficam em `img/itens/`, listadas em `artes.js`;
+- `jogo/`: o jogo (Electron): `index.html`, `app.js`, `conteudo.js`, `itens.js` (catálogo de itens), `inventario.js` (inventário, recompensas e fabricação), `estilo.css`, `main.js` e `preload.js`; as artes dos itens ficam em `img/itens/` (as ampliadas, em `img/itens/grande/`), listadas em `artes.js`;
 - `ferramentas/`: scripts que baixam, recortam e conferem as questões, e o que prepara as artes dos itens e dos lugares do mapa (`artes_itens.py`, com as linhas de chão em `chao_lugares.json`);
 - `dados/`: mapeamentos e relatórios pequenos usados pelas ferramentas.
 

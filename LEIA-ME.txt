@@ -30,7 +30,13 @@ O QUE HÁ NO JOGO
 - Inventário: 72 itens em seis raridades (Comum, Incomum, Raro, Épico, Lendário e
   Mítico).
   - Equipamento: arma, armadura, dois acessórios, artefato e mascote.
+  - Conjuntos de equipamento: no topo do Inventário, guarde até seis combinações do
+    que está equipado e troque de uma para outra com um clique.
+  - Na ficha de qualquer item, o botão no canto da imagem (ou um clique nela) mostra
+    a arte ampliada.
   - Os doze mascotes evoluem de aparência, em três formas, conforme acompanham você.
+    Na ficha do mascote dá para ver cada forma e escolher em qual das já alcançadas
+    ele aparece. O efeito é sempre o mesmo e a evolução continua contando.
   - Cada reino tem o seu material, uma arma feita com ele e um mascote.
   - Conquistas difíceis dão relíquias com bônus para sempre.
   - A Lente do Analista mostra, depois de cada resposta, quanto você já acertou
@@ -56,8 +62,10 @@ O QUE HÁ NO JOGO
 - Modo desenvolvedor (temporário, em Ajustes): libera tudo numa cópia de teste do
   inventário, para experimentar os itens sem mexer no seu progresso.
 - Grimório: histórico, gráfico de acerto, competências e conquistas.
-- Contagem para os dois dias do Enem: você escolhe as datas do 1º e do 2º dia em
-  "alterar", no painel do herói.
+- Contagem para os dois dias do Enem: clique na contagem, no painel do herói, para
+  escolher as datas do 1º e do 2º dia.
+- Itens em uso: o painel do herói mostra o que está equipado e as suas relíquias.
+  Clique num item para abrir a ficha dele.
 - Seis classes, cada uma com 10% a mais de XP num reino ou num tipo de sessão:
   Escriba (Linguagens), Cronista (Humanas), Naturalista (Natureza), Geômetra
   (Matemática), Alquimista (Revisão) e Polímata (Reino do Sábio). Dá para trocar de

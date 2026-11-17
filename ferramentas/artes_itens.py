@@ -4,6 +4,8 @@ As artes são geradas no Nano Banana com fundo de cor chapada (verde #00FF00 ou 
 porque ele não gera transparência. Este script tira o fundo, centraliza o desenho e grava:
 
 - jogo/img/itens/<nome>.webp: o ícone usado no jogo, 256 x 256 com fundo transparente;
+- jogo/img/itens/grande/<nome>.webp: a mesma arte em 512 x 512, que o jogo mostra quando o jogador
+  amplia a imagem do item;
 - jogo/artes.js: a lista das artes que existem (item sem arte continua com o símbolo it-* de index.html);
 - opcionalmente, <pasta dos originais>/<nome>.png: a arte sem fundo em 512 x 512, de reserva.
 
@@ -40,6 +42,7 @@ from PIL import Image, ImageDraw
 
 RAIZ = Path(__file__).resolve().parent.parent
 SAIDA = RAIZ / 'jogo' / 'img' / 'itens'
+SAIDA_GRANDE = SAIDA / 'grande'   # arte ampliada de cada item, no tamanho do original sem fundo
 SAIDA_MAPA = RAIZ / 'jogo' / 'img' / 'mapa'
 LISTA = RAIZ / 'jogo' / 'artes.js'
 LADO_ICONE, LADO_ORIGINAL = 256, 512
@@ -276,11 +279,14 @@ def recortar(arq, nome):
     return rgba
 
 
-def gravar(grande, original, destino, lado, ajuste=None):
+def gravar(grande, original, destino, lado, ajuste=None, ampliada=None):
     """Guarda o original sem fundo (se pedido) e a versão do jogo em WebP, lado x lado; o ajuste, se
-    houver, vale só para a versão do jogo."""
+    houver, vale só para a versão do jogo. "ampliada" é onde gravar a arte inteira em WebP, para o
+    jogo mostrar em tamanho grande."""
     if original:
         grande.save(original, optimize=True)
+    if ampliada:
+        grande.save(ampliada, 'WEBP', quality=88, method=6, alpha_quality=100)
     if ajuste:
         grande = ajuste(grande)
     pequeno = grande.convert('RGBa').resize((lado, lado), Image.LANCZOS).convert('RGBA')
@@ -464,6 +470,7 @@ def main():
     tudo = '--tudo' in sys.argv
     _, validos = itens_do_jogo()
     SAIDA.mkdir(parents=True, exist_ok=True)
+    SAIDA_GRANDE.mkdir(parents=True, exist_ok=True)
     if originais:
         originais.mkdir(parents=True, exist_ok=True)
 
@@ -476,13 +483,14 @@ def main():
             ignoradas.append(arq.name)
             continue
         icone = SAIDA / f'{nome}.webp'
+        ampliada = SAIDA_GRANDE / f'{nome}.webp'
         original = originais / f'{nome}.png' if originais else None
-        if not tudo and em_dia(arq, icone, *([original] if original else [])):
+        if not tudo and em_dia(arq, icone, ampliada, *([original] if original else [])):
             puladas += 1
             continue
         rgba = recortar(arq, nome)
         if rgba is not None:
-            gravar(enquadrar(rgba, LADO_ORIGINAL), original, icone, LADO_ICONE)
+            gravar(enquadrar(rgba, LADO_ORIGINAL), original, icone, LADO_ICONE, ampliada=ampliada)
             feitas += 1
 
     # lugares do mapa, na subpasta mapa/

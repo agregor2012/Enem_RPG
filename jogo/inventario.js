@@ -39,13 +39,17 @@ function itensNovos() {
     melhorias: {}, // itens aprimorados (+1)
     especiais: {}, // conquistas cujo item especial (PREMIO_CONQUISTA) já foi entregue
     segredos: {}, // dia do último baú achado em cada segredo do mapa (SEGREDOS_MAPA, em app.js)
+    aparencia: {}, // forma em que o jogador quer ver cada mascote (só a aparência; nunca acima da alcançada)
+    conjuntos: [null, null, null, null, null, null], // equipamentos guardados: { equip: { espaço: item } } ou null
   };
 }
 function mesclarItens(salvo) {
   const novo = itensNovos();
   if (!salvo) return novo;
+  // a aparência dos mascotes tem de ser um objeto simples: é nele que as escolhas são gravadas
+  const aparencia = salvo.aparencia && typeof salvo.aparencia === 'object' && !Array.isArray(salvo.aparencia) ? salvo.aparencia : {};
   return { ...novo, ...salvo, equip: { ...novo.equip, ...salvo.equip }, missoes: { ...novo.missoes, ...salvo.missoes },
-           loja: { ...novo.loja, ...salvo.loja } };
+           loja: { ...novo.loja, ...salvo.loja }, aparencia };
 }
 /* Inventário em uso: o de verdade ou, no modo desenvolvedor, uma cópia de teste que não é gravada. */
 function inventario() {
@@ -174,6 +178,13 @@ function formaDoMascote(def, inv = inventario()) {
   if (inv.dev && E.save.cfg.devEvolucao) return def.evolucao.limites.length;
   const valor = valorDaEvolucao(def, inv);
   return def.evolucao.limites.filter(l => valor >= l).length;
+}
+/* Forma em que o mascote aparece: a escolhida pelo jogador (inv.aparencia), se ele já a alcançou, ou
+   a mais alta. É só a aparência: a evolução continua contando e o efeito não depende da forma. */
+function formaVisivel(def, inv = inventario()) {
+  const alcancada = formaDoMascote(def, inv);
+  const escolhida = Number(inv.aparencia?.[def.id]);
+  return Number.isInteger(escolhida) && escolhida >= 1 && escolhida <= alcancada ? escolhida : alcancada;
 }
 /* Cada resposta com um mascote equipado conta para a evolução dele. Devolve a forma nova, se mudou. */
 function contarMascote(inv = inventario()) {
@@ -803,8 +814,11 @@ function comprarItem(i) {
    desligar, volta o inventário de verdade, intacto. */
 function criarDev() {
   const inv = Object.fromEntries(ITENS.map(d => [d.id, ehUnico(d) ? 1 : 99]));
+  // os conjuntos e a aparência dos mascotes são os do save de verdade: são só preferências, e assim
+  // o que o jogador arruma no modo de teste não se perde ao sair dele
   E.dev = { ...itensNovos(), dev: true, moedas: 999999, inv, equip: { ...E.save.itens.equip },
-            vistos: Object.fromEntries(ITENS.map(d => [d.id, true])) };
+            vistos: Object.fromEntries(ITENS.map(d => [d.id, true])),
+            conjuntos: conjuntosDe(E.save.itens), aparencia: (E.save.itens.aparencia ||= {}) };
   return E.dev;
 }
 function secaoDev() {
@@ -822,9 +836,10 @@ function secaoDev() {
 /* ---- pedaços de tela ---------------------------------------------------- */
 /* Ícone do item: a arte pintada (img/itens, listada em artes.js) quando ela existe; senão, o símbolo
    vetorial de index.html. Os mascotes têm uma arte por forma. No símbolo, os mascotes que evoluem
-   trocam de cores e mostram as camadas da forma atual (--f2 e --f3). */
-function iconeItem(def, cls = '') {
-  const forma = def.evolucao && E.save ? formaDoMascote(def) : 0;
+   trocam de cores e mostram as camadas da forma (--f2 e --f3). "formaFixa" pede uma forma certa do
+   mascote (as miniaturas da evolução); sem ela vale a forma em que o jogador quer vê-lo. */
+function iconeItem(def, cls = '', formaFixa = 0) {
+  const forma = def.evolucao ? (formaFixa || (E.save ? formaVisivel(def) : 0)) : 0;
   const arte = def.evolucao ? `${def.id}_${forma || 1}` : def.id;
   if (typeof ARTES_ITENS !== 'undefined' && ARTES_ITENS.has(arte)) {
     return `<img class="icone-item arte ${cls}" src="img/itens/${arte}.webp" alt="" draggable="false">`;
@@ -956,7 +971,9 @@ function eventosRetorno(r, q) {
   html += linhasExtras(ev.extras);
   if (ev.evoluiu) {
     const def = itemDef(ev.evoluiu.id);
-    html += `<p class="evento-item evolucao">${iconeItem(def)}<span><b>${esc(def.nome)}</b> evoluiu: ${esc(def.evolucao.formas[ev.evoluiu.forma - 1])}!</span></p>`;
+    // o aviso mostra a forma nova, mesmo que o jogador tenha escolhido ver o mascote em outra
+    const escolheuOutra = formaVisivel(def) !== ev.evoluiu.forma;
+    html += `<p class="evento-item evolucao">${iconeItem(def, '', ev.evoluiu.forma)}<span><b>${esc(def.nome)}</b> evoluiu: ${esc(def.evolucao.formas[ev.evoluiu.forma - 1])}!${escolheuOutra ? ' Ele segue com a aparência que você escolheu.' : ''}</span></p>`;
   }
   if (ev.bau) {
     const def = itemDef(ev.bau);
@@ -1007,6 +1024,85 @@ function dropsDoErrante(nome) {
   const m = MONSTROS_ERRANTES.find(x => x.nome === nome);
   if (!m) return '';
   return `<span class="drops-errante">Deixa cair: ${m.drops.map(([id]) => `<b class="texto-rar rar-${itemDef(id).rar}">${esc(itemDef(id).nome)}</b>`).join(', ')}</span>`;
+}
+
+/* ---- conjuntos de equipamento ---------------------------------------------- */
+/* Seis lugares para guardar o equipamento do momento ({ equip: { espaço: item } }) e voltar a ele com
+   um clique. Usar um conjunto deixa o equipamento como estava guardado; o item que não está mais no
+   inventário fica de fora. */
+const N_CONJUNTOS = 6;
+/* Os conjuntos do save, sempre com seis lugares; o que não tem o formato esperado vira lugar vazio. */
+function conjuntosDe(inv = inventario()) {
+  if (!Array.isArray(inv.conjuntos)) inv.conjuntos = [];
+  const c = inv.conjuntos;
+  for (let i = 0; i < N_CONJUNTOS; i += 1) if (!c[i] || typeof c[i].equip !== 'object' || !c[i].equip) c[i] = null;
+  return c;
+}
+/* O que o conjunto equipa de fato: fica de fora o item que não está mais no inventário, o que não
+   cabe no espaço e o repetido. */
+function equipDoConjunto(c, inv = inventario()) {
+  const usados = new Set();
+  return Object.fromEntries(ESPACOS.map((e) => {
+    const id = c.equip[e.id];
+    const vale = typeof id === 'string' && !usados.has(id) && qtdItem(id, inv) > 0 && itemDef(id)?.cat === e.categoria;
+    if (vale) usados.add(id);
+    return [e.id, vale ? id : null];
+  }));
+}
+function mesmoEquipamento(a, b) { return ESPACOS.every(e => (a[e.id] || null) === (b[e.id] || null)); }
+function salvarConjunto(i, inv = inventario()) {
+  conjuntosDe(inv)[i] = { equip: Object.fromEntries(ESPACOS.map(e => [e.id, inv.equip[e.id] || null])) };
+}
+/* Devolve quantos itens do conjunto faltaram (null se o lugar está vazio). */
+function usarConjunto(i, inv = inventario()) {
+  const c = conjuntosDe(inv)[i];
+  if (!c) return null;
+  const equip = equipDoConjunto(c, inv);
+  Object.assign(inv.equip, equip);
+  return ESPACOS.filter(e => c.equip[e.id] && !equip[e.id]).length;
+}
+function faixaConjuntos(inv) {
+  const cartao = (c, i) => {
+    // "em uso" é o conjunto que, usado agora, não mudaria nada no equipamento
+    const equip = c ? equipDoConjunto(c, inv) : {};
+    const emUso = Boolean(c) && mesmoEquipamento(equip, inv.equip);
+    // as casas seguem a ordem dos espaços do equipamento, ao lado
+    const casas = ESPACOS.map((e) => {
+      const id = c?.equip[e.id];
+      const d = typeof id === 'string' ? itemDef(id) : null;
+      if (!d) return `<span class="mini-item vago" title="${e.nome}: nada"></span>`;
+      const falta = equip[e.id] !== id;
+      return `<span class="mini-item rar-${d.rar} ${falta ? 'falta' : ''}" title="${e.nome}: ${esc(d.nome)}${falta ? ' (não está mais no inventário)' : ''}">${iconeItem(d)}</span>`;
+    }).join('');
+    const dicaUsar = !c ? 'Conjunto vazio: guarde um equipamento nele primeiro' : (emUso ? 'Este conjunto já está em uso' : 'Equipar os itens deste conjunto');
+    return `<div class="conjunto ${c ? '' : 'vazio'} ${emUso ? 'em-uso' : ''}">
+      <header><strong>Conjunto ${i + 1}</strong><small>${emUso ? 'em uso' : (c ? '' : 'vazio')}</small></header>
+      <div class="itens-conjunto">${casas}</div>
+      <div class="acoes-conjunto">
+        <button class="botao pequeno primario" data-acao="conjunto-usar" data-i="${i}" title="${dicaUsar}" ${c && !emUso ? '' : 'disabled'}>Usar</button>
+        <button class="botao pequeno" data-acao="conjunto-salvar" data-i="${i}" title="Guardar aqui o equipamento de agora">Salvar</button>
+        ${c ? `<button class="botao pequeno esvaziar" data-acao="conjunto-esvaziar" data-i="${i}" title="Esvaziar este conjunto" aria-label="Esvaziar o conjunto ${i + 1}">${ico('xis')}</button>` : ''}
+      </div></div>`;
+  };
+  return `<section class="conjuntos" aria-label="Conjuntos de equipamento">
+    <h2>Conjuntos de equipamento</h2>
+    <p>Guarde até ${N_CONJUNTOS} combinações do que está equipado e troque de uma para outra com um clique.</p>
+    <div class="grade-conjuntos">${conjuntosDe(inv).slice(0, N_CONJUNTOS).map(cartao).join('')}</div></section>`;
+}
+/* Itens em uso, para o painel do herói: o que está equipado em cada espaço e, numa linha, as relíquias
+   (que valem sempre). Clicar num item abre a janela dele. */
+function painelEmUso() {
+  const inv = inventario();
+  const linhas = ESPACOS.map((e) => {
+    const id = inv.equip[e.id];
+    const def = id && qtdItem(id, inv) > 0 ? itemDef(id) : null;
+    return def ? `<button class="item-em-uso rar-${def.rar}" data-acao="ver-item" data-id="${def.id}" title="${e.nome}: ${esc(def.efeito)}">
+      <span class="mini-item">${iconeItem(def)}</span><strong class="texto-rar">${esc(def.nome)}</strong></button>` : '';
+  }).filter(Boolean);
+  const reliquias = ITENS.filter(d => d.cat === 'reliquia' && qtdItem(d.id, inv) > 0);
+  return `<h3>Em uso</h3>
+    ${linhas.length ? `<div class="itens-em-uso">${linhas.join('')}</div>` : '<p class="nada-em-uso">Nada equipado. Equipe itens no Inventário.</p>'}
+    ${reliquias.length ? `<div class="reliquias-em-uso" aria-label="Relíquias, que valem sempre">${reliquias.map(d => `<button class="mini-item rar-${d.rar}" data-acao="ver-item" data-id="${d.id}" title="${esc(d.nome)} (relíquia)">${iconeItem(d)}</button>`).join('')}</div>` : ''}`;
 }
 
 /* ---- tela do Inventário -------------------------------------------------- */
@@ -1141,6 +1237,7 @@ function invAbaItens(inv) {
       <p class="nota-bonus">XP extra dos itens vai até +${LIMITES.xp}%, e moedas até +${LIMITES.moedas}%. Relíquias valem sempre, sem ocupar espaço.</p>
     </aside>
     <div class="inv-principal">
+      ${faixaConjuntos(inv)}
       <div class="filtros-inv">
         <div class="grupo">${[['todos', 'Todos']].concat(ordemCat.map(c => [c, CATEGORIAS[c].nome])).map(([c, nome]) =>
           `<button class="pilula ${f.cat === c ? 'ativa' : ''}" data-acao="inv-cat" data-v="${c}">${nome}${c !== 'todos' && temCat(c) ? ` <small>${temCat(c)}</small>` : ''}</button>`).join('')}</div>
@@ -1230,9 +1327,57 @@ function invAbaMissoes() {
       <p class="sub">Toda conquista dá moedas e um item conforme o grau: ${Object.entries(PREMIO_GRAU).map(([g, p]) => `${GRAUS[g]}, ${p.moedas} moedas e ${itemDef(p.item).nome}`).join('; ')}. Algumas dão itens especiais:</p>
       <ul class="lista-especiais">${especiais}</ul></section>`;
 }
+/* Arte ampliada do item (512 px, em img/itens/grande) ou, se ele não tem arte, o símbolo vetorial. */
+function arteGrande(def, forma = 0) {
+  const f = def.evolucao ? (forma || formaVisivel(def) || 1) : 0;
+  const arte = def.evolucao ? `${def.id}_${f}` : def.id;
+  if (typeof ARTES_ITENS !== 'undefined' && ARTES_ITENS.has(arte)) {
+    return `<img class="arte-grande" src="img/itens/grande/${arte}.webp" alt="${esc(def.nome)}" draggable="false">`;
+  }
+  return iconeItem(def, 'arte-grande', f);
+}
+/* Miniaturas das formas de um mascote: clicar numa abre a imagem ampliada dela. "marcada" é a forma
+   em destaque e "alcancada", a forma mais alta que o jogador já tem (as outras levam o cadeado). */
+function formasDoMascote(def, marcada, alcancada) {
+  return def.evolucao.formas.map((f, i) => {
+    const k = i + 1;
+    return `<button class="forma-mascote ${marcada === k ? 'atual' : ''} ${k <= alcancada ? '' : 'trancada'}" data-acao="ver-forma" data-id="${def.id}" data-forma="${k}" aria-pressed="${marcada === k}" title="${k}ª forma, ${esc(f)}">
+      ${iconeItem(def, '', k)}${k <= alcancada ? '' : ico('cadeado', 'cadeado-forma')}<small>${k}ª forma</small></button>`;
+  }).join('');
+}
+/* Imagem ampliada do item (E.modal.ampliado). Nos mascotes dá para ver cada forma e escolher em qual
+   delas ele aparece, entre as já alcançadas. */
+function visorDoItem(def) {
+  const inv = inventario();
+  const n = qtdItem(def.id, inv);
+  let legenda = `${RARIDADES[def.rar].nome} · ${CATEGORIAS[def.cat].um}`;
+  let formas = ''; let acao = ''; let nota = ''; let forma = 0;
+  if (def.evolucao) {
+    const ev = def.evolucao;
+    const alcancada = n ? formaDoMascote(def, inv) : 0;
+    const visivel = n ? formaVisivel(def, inv) : 1;
+    forma = Math.min(Math.max(Number(E.modal.forma) || visivel || 1, 1), ev.formas.length);
+    const unidade = ev.por === 'conquistas' ? 'conquistas' : 'questões com ele equipado';
+    legenda = `${forma}ª forma, ${ev.formas[forma - 1]}`;
+    formas = `<div class="formas-visor" role="group" aria-label="Formas do mascote">${formasDoMascote(def, forma, alcancada)}</div>`;
+    if (!n) nota = 'Você ainda não tem este mascote. As formas mudam só a aparência: o efeito é sempre o mesmo.';
+    else if (forma > alcancada) nota = `Forma ainda não alcançada: pede ${ev.limites[forma - 1]} ${unidade} (você tem ${valorDaEvolucao(def, inv)}).`;
+    else if (forma === visivel) nota = `É assim que ele aparece agora.${alcancada > 1 ? ' Para trocar, escolha outra forma já alcançada.' : ''}`;
+    else {
+      acao = `<button class="botao primario" data-acao="usar-aparencia" data-id="${def.id}" data-forma="${forma}">Usar esta aparência</button>`;
+      nota = 'A escolha muda só a aparência: o efeito é o mesmo e a evolução continua contando.';
+    }
+  }
+  return `<div class="janela caixa janela-item visor-item ${formas ? 'com-formas' : ''} rar-${def.rar}" role="dialog" aria-modal="true" aria-labelledby="titulo-item">
+    <div><h2 id="titulo-item" class="texto-rar">${esc(def.nome)}</h2><p class="item-tipo">${esc(legenda)}</p></div>
+    <div class="corpo-visor"><div class="palco-visor">${arteGrande(def, forma)}</div>${formas}</div>
+    ${nota ? `<p class="nota-visor">${esc(nota)}</p>` : ''}
+    <div class="acoes">${acao}<button class="botao" data-acao="voltar-item" data-id="${def.id}">Voltar</button></div></div>`;
+}
 function modalItem(id) {
   const def = itemDef(id);
   if (!def) return '';
+  if (E.modal?.ampliado) return visorDoItem(def);
   const inv = inventario();
   const n = qtdItem(id, inv);
   const espaco = espacoDoItem(id, inv);
@@ -1260,11 +1405,14 @@ function modalItem(id) {
   if (def.evolucao) {
     const ev = def.evolucao;
     const forma = n ? formaDoMascote(def, inv) : 0;
+    const visivel = n ? formaVisivel(def, inv) : 0;
     const valor = valorDaEvolucao(def, inv);
     const unidade = ev.por === 'conquistas' ? 'conquistas' : 'questões com ele equipado';
     const prox = forma && ev.limites[forma];
     const itens = ev.formas.map((f, i) => `<li class="${forma === i + 1 ? 'atual' : ''}">${i + 1}ª forma, ${esc(f)}${ev.limites[i] ? ` (${ev.limites[i]} ${unidade})` : ''}</li>`).join('');
-    evolucao = `<div class="item-origem evolucao-mascote"><b>Evolução</b><ul>${itens}</ul>
+    evolucao = `<div class="item-origem evolucao-mascote"><b>Evolução</b>
+      <div class="formas-mascote" role="group" aria-label="Formas do mascote">${formasDoMascote(def, visivel, forma)}</div>
+      <p>Clique numa forma para vê-la de perto${forma > 1 ? ' e escolher em qual delas o mascote aparece' : ''}.${visivel && visivel !== forma ? ` Ele aparece na ${visivel}ª forma por escolha sua; a evolução segue na ${forma}ª.` : ''}</p><ul>${itens}</ul>
       <p>${forma ? (prox ? `Agora: ${valor} de ${prox} ${unidade} para a próxima forma.` : 'Já está na forma final.') : 'Só a aparência muda; o efeito é sempre o mesmo.'}</p></div>`;
   }
   let aprimoramento = '';
@@ -1281,7 +1429,7 @@ function modalItem(id) {
   }
   const nomeEspaco = espaco && ESPACOS.find(e => e.id === espaco).nome;
   return `<div class="janela caixa janela-item rar-${def.rar}" role="dialog" aria-modal="true" aria-labelledby="titulo-item">
-    <div class="item-topo"><span class="moldura-item grande">${iconeItem(def)}</span>
+    <div class="item-topo"><span class="moldura-item grande" data-acao="ampliar-item" data-id="${id}" title="Ampliar a imagem">${iconeItem(def)}<button class="ampliar-item" data-acao="ampliar-item" data-id="${id}" aria-label="Ampliar a imagem">${ico('enquadrar')}</button></span>
       <div><h2 id="titulo-item" class="texto-rar">${esc(def.nome)}${aprimorado(id, inv) ? ' <span class="selo-titulo">+1</span>' : ''}</h2>
         <p class="item-tipo">${RARIDADES[def.rar].nome} · ${CATEGORIAS[def.cat].um}${def.area ? ` · ${REINOS[def.area].curto}` : ''}</p></div></div>
     <p class="item-desc">${esc(def.desc)}</p>
@@ -1331,6 +1479,68 @@ const ACOES_ITENS = {
   'inv-rar': (d) => { E.inv.rar = E.inv.rar === d.v ? 'todas' : d.v; E.manterRolagem = true; render(); },
   'inv-bloq': () => { E.inv.bloqueados = !E.inv.bloqueados; E.manterRolagem = true; render(); },
   'ver-item': (d) => { E.modal = { tipo: 'item', id: d.id }; renderModal(); },
+  'ampliar-item': (d) => { E.modal = { tipo: 'item', id: d.id, ampliado: true }; renderModal(); },
+  'ver-forma': (d) => { E.modal = { tipo: 'item', id: d.id, ampliado: true, forma: Number(d.forma) }; renderModal(); },
+  'voltar-item': (d) => { E.modal = { tipo: 'item', id: d.id }; renderModal(); },
+  // escolher a forma mais alta já alcançada desfaz a escolha: o mascote volta a acompanhar a evolução
+  'usar-aparencia': (d) => {
+    const def = itemDef(d.id);
+    const inv = inventario();
+    const forma = Number(d.forma);
+    if (!def?.evolucao || !qtdItem(d.id, inv)) return;
+    const alcancada = formaDoMascote(def, inv);
+    if (!(forma >= 1 && forma <= alcancada)) return;
+    inv.aparencia ||= {};
+    if (forma === alcancada) delete inv.aparencia[d.id]; else inv.aparencia[d.id] = forma;
+    salvar();
+    E.modal = { tipo: 'item', id: d.id, ampliado: true, forma }; renderModal();
+    atualizarTelaDeFundo();
+  },
+  'conjunto-usar': (d) => {
+    const i = Number(d.i);
+    const faltam = usarConjunto(i);
+    if (faltam === null) return;
+    salvar();
+    avisar(`Conjunto ${i + 1} em uso.${faltam ? ` ${faltam === 1 ? '1 item dele não está' : `${faltam} itens dele não estão`} mais no inventário.` : ''}`);
+    E.manterRolagem = true; render();
+  },
+  'conjunto-salvar': (d) => {
+    const i = Number(d.i);
+    if (!(i >= 0 && i < N_CONJUNTOS)) return;
+    if (!ESPACOS.some(e => inventario().equip[e.id])) { avisar('Equipe ao menos um item antes de guardar um conjunto.'); return; }
+    if (conjuntosDe()[i]) {
+      E.modal = { tipo: 'confirmar', titulo: `Trocar o Conjunto ${i + 1}?`, texto: 'O equipamento guardado nele dá lugar ao que você está usando agora.', botao: 'Trocar', acao: 'conjunto-salvar-sim', i };
+      renderModal();
+      return;
+    }
+    salvarConjunto(i);
+    salvar();
+    avisar(`Equipamento guardado no Conjunto ${i + 1}.`);
+    E.manterRolagem = true; render();
+  },
+  'conjunto-salvar-sim': () => {
+    const i = E.modal?.i;
+    E.modal = null; renderModal();
+    if (!(Number.isInteger(i) && i >= 0 && i < N_CONJUNTOS)) return;
+    salvarConjunto(i);
+    salvar();
+    avisar(`Equipamento guardado no Conjunto ${i + 1}.`);
+    E.manterRolagem = true; render();
+  },
+  'conjunto-esvaziar': (d) => {
+    const i = Number(d.i);
+    if (!conjuntosDe()[i]) return;
+    E.modal = { tipo: 'confirmar', titulo: `Esvaziar o Conjunto ${i + 1}?`, texto: 'O equipamento guardado nele é esquecido. Os itens continuam no inventário.', botao: 'Esvaziar', acao: 'conjunto-esvaziar-sim', i };
+    renderModal();
+  },
+  'conjunto-esvaziar-sim': () => {
+    const i = E.modal?.i;
+    E.modal = null; renderModal();
+    if (!(Number.isInteger(i) && i >= 0 && i < N_CONJUNTOS)) return;
+    conjuntosDe()[i] = null;
+    salvar();
+    E.manterRolagem = true; render();
+  },
   equipar: (d) => {
     if (!equiparItem(d.id)) return;
     salvar();

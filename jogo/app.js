@@ -628,7 +628,9 @@ function painelHeroi() {
   const dia = E.save.dias[hoje()] || { q: 0, a: 0 };
   const meta = E.save.cfg.meta;
   const datas = [dataProva(1), dataProva(2)];
-  const textoDatas = datas.some(Boolean) ? `${datas.map(d => (d ? formatarData(d) : 'sem data')).join(' e ')} · alterar` : 'definir as datas';
+  const dicaDatas = datas.some(Boolean)
+    ? `${datas.map((d, i) => `${i + 1}º dia: ${d ? formatarData(d) : 'sem data'}`).join(' · ')}. Clique para alterar.`
+    : 'Clique para definir as datas da sua prova.';
   return `<aside class="heroi">
     <div class="emblema">${ico(c.simbolo)}</div>
     <h2>${esc(h.nome)}</h2>
@@ -644,10 +646,12 @@ function painelHeroi() {
       <div><dt>${ico('chama')} Dias seguidos</dt><dd>${E.save.seqDias.atual}</dd></div>
       <div><dt>${ico('estrela')} Pontos</dt><dd>${milhar(E.save.pontos)}</dd></div>
       <div><dt>${ico('moeda')} Moedas</dt><dd>${inventario().dev ? '∞' : milhar(inventario().moedas || 0)}</dd></div>
-      <div class="contagem"><dt>${ico('ampulheta')} 1º dia do Enem</dt><dd>${textoContagem(diasParaProva(1))}</dd>
-        <dt>${ico('ampulheta')} 2º dia do Enem</dt><dd>${textoContagem(diasParaProva(2))}</dd>
-        <button class="mudar-data" data-acao="pedir-data" title="Definir as datas dos dois dias da sua prova">${esc(textoDatas)}</button></div>
     </dl>
+    <button class="contagem" data-acao="pedir-data" title="${esc(dicaDatas)}" aria-label="Datas do Enem. ${esc(dicaDatas)}">
+      <span>${ico('ampulheta')} 1º dia do Enem</span><strong>${textoContagem(diasParaProva(1))}</strong>
+      <span>${ico('ampulheta')} 2º dia do Enem</span><strong>${textoContagem(diasParaProva(2))}</strong>
+    </button>
+    ${painelEmUso()}
   </aside>`;
 }
 
