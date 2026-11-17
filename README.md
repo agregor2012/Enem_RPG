@@ -38,8 +38,8 @@ os microdados do INEP.
       aparece. É só a aparência: o efeito é o mesmo e a evolução continua contando.
   - **Pacote de cada reino:** um material, uma arma fabricada com ele (+10% de XP na área) e um
     mascote. O material vem da missão e do guardião do reino.
-  - **Relíquias de conquista:** conquistas difíceis dão bônus permanentes, e quem já tinha a
-    conquista recebe a relíquia ao abrir o jogo.
+  - **Relíquias de conquista:** conquistas difíceis dão bônus permanentes. A relíquia chega junto
+    com a conquista.
   - **Itens de estudo:** Amuleto do Eco (XP a mais ao acertar o que já errou), Anel da Chama
     Constante (XP pelos dias seguidos) e Lente do Analista (mostra o seu acerto em cada
     habilidade depois da resposta).

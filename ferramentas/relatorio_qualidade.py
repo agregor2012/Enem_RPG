@@ -19,9 +19,6 @@ def main():
     print("com algum problema", len(ruins))
     print(sorted(collections.Counter((r["ano"], r["aplicacao"][:4]) for r in ruins).items()))
     print("exclusões", collections.Counter(r["excluida"][:48] for r in R if r.get("excluida")))
-    print("2010 fontes", collections.Counter((r["aplicacao"][:4], r["fontes_gabarito"]) for r in R if r["ano"] == 2010))
-    print("2010 excluídas", [(r["aplicacao"][:4], r["area"], r["n"], r["excluida"][:44]) for r in R
-                             if r["ano"] == 2010 and r.get("excluida")])
     print("fragmentos", sorted(collections.Counter(len(r["_frag"]) for r in R).items()))
 
 

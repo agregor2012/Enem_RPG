@@ -14,7 +14,7 @@ const E = {
   banco: [], porId: new Map(), redacao: [], matriz: null, save: null,
   tela: 'carregando', area: 'LC', filtro: { comp: 'todas', tamanho: 10, nivel: 'todos', ano: 'todos' },
   selecao: null, riscadas: new Set(), resultado: null, respostaAtual: null,
-  torreAba: 'estrutura', torreAno: null, leitor: null, modal: null, relogio: null,
+  torreAba: 'estrutura', torreAno: null, modal: null, relogio: null,
   simFiltro: 'todos', criacao: { nome: '', classe: 'escriba' }, checklist: new Set(), relatorio: null,
   camera: { z: 1, cx: 700, cy: 520 }, cameraAlvo: null, fimArrasto: 0,
   inv: { aba: 'itens', cat: 'todos', rar: 'todas', bloqueados: true }, dev: null, premiosConquista: {},
@@ -1354,10 +1354,6 @@ function montanha(x, y, e = 1, neve = true) {
     <g stroke="#7a6a4e" stroke-width=".9" opacity=".5"><path d="M3 -36l9 13M7 -25l10 13M11 -14l9 12"/></g>
     ${neve ? '<path d="M-4 -52L-15 -33L-9 -36L-4 -31L1 -36L7 -34Z" fill="#f6f1e6"/>' : ''}</g>`;
 }
-function colina(x, y, w) {
-  return `<path d="M${x - w} ${y}Q${x} ${y - w * 0.62} ${x + w} ${y}Z" fill="#d6c291" stroke="#a48a5c" stroke-width="1.2" stroke-linejoin="round"/>
-    <path d="M${x + w * 0.2} ${y - w * 0.22}l${w * 0.25} ${w * 0.16}M${x + w * 0.35} ${y - w * 0.1}l${w * 0.25} ${w * 0.1}" stroke="#a48a5c" stroke-width=".9" opacity=".6"/>`;
-}
 function pedra(x, y, e = 1) {
   return `<g transform="translate(${x} ${y}) scale(${e})"><path d="M-12 0L-9 -9L-2 -13L7 -10L12 -3L11 0Z" fill="#8c8594" stroke="#5a5364" stroke-width="1"/>
     <path d="M-2 -13L7 -10L12 -3L3 -5Z" fill="#a39cab"/></g>`;
@@ -2369,12 +2365,7 @@ async function iniciar() {
     E.matriz = matriz;
     E.relatorio = fora;
     E.save = await carregarSave();
-    // itens: completa o save e dá, uma vez, o prêmio das conquistas que já existiam
-    const retroativos = prepararItens();
-    if (retroativos) {
-      salvar();
-      setTimeout(() => avisarEspolio(`Recompensas das ${retroativos.conquistas} conquistas que você já tinha`, retroativos.entradas), 900);
-    }
+    prepararItens(); // itens: completa o save com os campos novos do inventário
     if (E.save.atual) {
       const s = E.save.atual;
       if (s.ids.some(id => !E.porId.has(id))) E.save.atual = null;

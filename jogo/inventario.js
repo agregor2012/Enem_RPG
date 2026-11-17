@@ -742,22 +742,11 @@ function verificarMissoes() {
   }
   return novas;
 }
-/* Ao abrir o jogo: completa o save e dá, uma vez, o prêmio das conquistas que já existiam. */
+/* Ao abrir o jogo: completa o save com os campos novos do inventário (mesclarItens). */
 function prepararItens() {
   E.save.itens = mesclarItens(E.save.itens);
   E.dev = null;
   E.premiosConquista = {};
-  const real = E.save.itens;
-  real.especiais ||= {};
-  // saves de antes do controle de itens especiais: se o item já está no inventário, foi entregue
-  for (const [id, item] of Object.entries(PREMIO_CONQUISTA)) {
-    if (real.premiadas[id] && !real.especiais[id] && qtdItem(item, real)) real.especiais[id] = real.premiadas[id];
-  }
-  const antigas = CONQUISTAS.filter(c => E.save.conquistas[c.id]
-    && (!real.premiadas[c.id] || (PREMIO_CONQUISTA[c.id] && !real.especiais[c.id])));
-  const entradas = antigas.flatMap(c => premiarConquista(c));
-  E.premiosConquista = {};
-  return antigas.length ? { conquistas: antigas.length, entradas } : null;
 }
 
 /* ---- fabricação e loja -------------------------------------------------- */

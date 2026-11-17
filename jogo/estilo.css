@@ -90,7 +90,7 @@ code { font-family: Consolas, monospace; font-size: .92em; background: rgba(0,0,
 .emblema { width: 70px; height: 70px; border-radius: 50%; margin: 0 auto 10px; display: grid; place-items: center; background: var(--noite); border: 2px solid var(--ouro); color: var(--ouro); }
 .emblema .ico { width: 36px; height: 36px; }
 .heroi h2 { text-align: center; font-size: 20px; overflow-wrap: anywhere; }
-.heroi > .sub { text-align: center; font-size: 13.5px; margin-bottom: 16px; }
+.heroi > .sub { text-align: center; font-size: 13.5px; margin-bottom: 8px; }
 .heroi h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--texto-3); margin: 18px 0 6px; }
 .linha-nivel { display: flex; justify-content: space-between; align-items: baseline; font-size: 13.5px; margin-bottom: 5px; gap: 8px; }
 .linha-nivel span { color: var(--texto-2); font-size: 12.5px; }
@@ -405,7 +405,6 @@ code { font-family: Consolas, monospace; font-size: .92em; background: rgba(0,0,
   --reino-letras: #4a6fbd; --reino-humanas: #c0603f; --reino-torre: #4a64a0; --reino-masmorra: #5fae84;
   --reino-arena: #c24b4b; --reino-sabio: #9a74e0; --reino-natureza: #7cbf5e; --reino-numeros: #4fb7c4;
 }
-.heroi > .sub { margin-bottom: 8px; }
 .titulo-heroi { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0 auto 14px; max-width: 100%; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--ouro-escuro); background: rgba(220,181,101,.08); color: var(--ouro-forte); font: 600 13.5px var(--titulo); }
 .titulo-heroi span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .titulo-heroi small { font: 500 11.5px var(--corpo); color: var(--texto-3); border-left: 1px solid var(--linha); padding-left: 6px; }
@@ -745,7 +744,6 @@ img.icone-item { aspect-ratio: 1; object-fit: contain; -webkit-user-drag: none; 
 .evento-item.evolucao .icone-item { width: 34px; height: 34px; flex: none; }
 .evolucao-mascote li.atual { color: var(--texto); font-weight: 600; }
 .evolucao-mascote li.atual::marker { color: var(--rar); }
-.evolucao-mascote p { margin: 4px 0 0; }
 .extras-fim { display: grid; gap: 6px; margin: 4px 0 8px; }
 .extras-fim .sub { margin: 0; font-size: 12.5px; color: var(--texto-3); }
 .janela-escolha { width: min(620px, 100%); border-top: 3px solid var(--rar); }
