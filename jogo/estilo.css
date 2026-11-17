@@ -115,19 +115,32 @@ code { font-family: Consolas, monospace; font-size: .92em; background: rgba(0,0,
 /* até o terreno, as artes dos reinos e as fontes ficarem prontos (mostrarMapaJunto em app.js) */
 .mapa.carregando { opacity: 0; transition: none; }
 .mapa.ampliado { cursor: grab; }
-.mapa.arrastando, .mapa.arrastando .no { cursor: grabbing; }
-.mapa .no { cursor: pointer; outline: none; transition: filter .15s; }
-.mapa .no:hover, .mapa .no:focus-visible { filter: brightness(1.07) drop-shadow(0 0 7px rgba(255, 220, 140, .9)); }
+.mapa.arrastando, .mapa.arrastando .no, .mapa.arrastando .rosa { cursor: grabbing; }
+/* Realce do lugar ao passar o mouse, sem filtro: o filtro desenhava o grupo inteiro numa imagem de
+   baixa resolução, e o texto da faixa saía borrado com o mapa aproximado. Acendem um halo atrás da
+   arte (halo-lugar, posto por predio() em app.js), o contorno da faixa e o brilho dela; o texto
+   continua vetorial. "apontado" é o reino que a bússola acabou de indicar. */
+.mapa .no { cursor: pointer; outline: none; }
+.mapa .halo-lugar { opacity: 0; pointer-events: none; transition: opacity .18s ease-out; }
+.mapa .no .banda, .mapa .no .etq { transition: stroke .15s, stroke-width .15s; }
+.mapa .no .banda-luz { transition: opacity .15s; }
+.mapa .no:hover .halo-lugar, .mapa .no:focus-visible .halo-lugar, .mapa .no.apontado .halo-lugar { opacity: 1; }
+.mapa .no:hover .banda, .mapa .no:focus-visible .banda, .mapa .no.apontado .banda { stroke: #f6dc93; stroke-width: 2.2px; }
+.mapa .no:hover .banda-luz, .mapa .no:focus-visible .banda-luz, .mapa .no.apontado .banda-luz { opacity: .34; }
+.mapa .no:hover .etq, .mapa .no:focus-visible .etq, .mapa .no.apontado .etq { stroke: #d9b45f; stroke-width: 1.6px; }
+.mapa .no.apontado .halo-lugar { animation: pulso-lugar 1.1s ease-in-out infinite; }
+@keyframes pulso-lugar { 50% { opacity: .35; } }
+/* bússola: um botão; a agulha dá duas voltas e para no reino de mais erros (consultarBussola em app.js) */
+.mapa .rosa { cursor: pointer; outline: none; }
+.mapa .rosa .rosa-aro { transition: stroke .15s, stroke-width .15s; }
+.mapa .rosa:hover .rosa-aro, .mapa .rosa:focus-visible .rosa-aro { stroke: #f6dc93; stroke-width: 2.2px; }
+.mapa .rosa .agulha { opacity: 0; transform-origin: 0 0; transition: transform 1.4s cubic-bezier(.2, .8, .25, 1), opacity .25s; }
+.mapa .rosa.consultada .agulha { opacity: 1; }
 .faixa .f1 { font: 600 16px var(--titulo); fill: #fbf1d8; letter-spacing: .03em; }
 .faixa .f2 { font: 600 11.5px var(--corpo); fill: #5a4a32; }
 .faixa .etq { fill: #f7eed6; stroke: #b49a68; stroke-width: 1; }
-.rotulo-regiao { font: italic 400 18px var(--leitura); fill: #6b5638; letter-spacing: .16em; opacity: .78; }
 .rotulo-vaga { font: italic 600 19px var(--leitura); fill: #7d7466; letter-spacing: .14em; }
 .rotulo-mar { font: italic 400 19px var(--leitura); fill: #a9c9e4; letter-spacing: .34em; opacity: .55; }
-.rotulo-lago { font: italic 600 14px var(--leitura); fill: #f2f8fb; letter-spacing: .06em; opacity: .92; }
-/* no terreno pintado as regiões ficam sobre árvores e pedras escuras: letra clara com contorno escuro */
-.mapa.pintado .rotulo-regiao, .mapa.pintado .rotulo-lago { fill: #f6eedb; stroke: rgba(24, 18, 10, .7); stroke-width: 3.5px;
-  stroke-linejoin: round; paint-order: stroke; opacity: .95; }
 .cartela-t { font: 700 20px var(--titulo); fill: #4a3820; letter-spacing: .06em; }
 .cartela-s { font: italic 400 12.5px var(--leitura); fill: #6b5638; letter-spacing: .08em; }
 .rosa-n { font: 700 13px var(--titulo); fill: #ecdcb2; }
@@ -312,25 +325,15 @@ code { font-family: Consolas, monospace; font-size: .92em; background: rgba(0,0,
 .pergunta { font-style: italic; }
 .zero { list-style: none; padding: 0 !important; display: grid; gap: 5px; }
 .zero .ico { color: #a2402f; width: 1em; height: 1em; }
-.documentos { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 8px; margin-top: 8px; }
-.doc { display: flex; gap: 9px; align-items: center; padding: 9px 12px; border-radius: 8px; background: rgba(255,255,255,.5); border: 1px solid #cdbb8f; color: var(--tinta); text-align: left; font-family: var(--corpo); font-size: 14px; }
-.doc:hover { border-color: #7d6233; }
 .anos-torre { display: grid; grid-template-columns: 112px 1fr; gap: 18px; }
 .lista-anos { display: flex; flex-direction: column; gap: 2px; max-height: 62vh; overflow: auto; }
 .lista-anos button { padding: 5px 9px; text-align: left; border-radius: 6px; font: 600 15px var(--corpo); color: var(--tinta); }
-.lista-anos small { display: block; font-weight: 400; font-size: 11px; }
 .lista-anos button:hover { background: rgba(120, 90, 40, .12); }
 .lista-anos .ativa { background: #4a3518; color: #f5edda; }
-.lista-anos .ativa small { color: #e0d3b5; }
 .detalhe-ano h3 { margin: 12px 0 5px; }
 .tema { padding: 8px 12px; border-radius: 8px; background: rgba(255,255,255,.5); margin-bottom: 6px; }
 .titulo-tema { font-weight: 600; font-size: 18px; line-height: 1.25; }
 .tema small { display: block; margin-bottom: 5px; }
-.exemplo { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; border-radius: 8px; background: rgba(255,255,255,.5); margin-bottom: 6px; }
-.exemplo small { display: block; }
-.selo-nota { font: 600 12px var(--corpo); padding: 2px 8px; border-radius: 999px; }
-.selo-nota.mil { background: #4a3518; color: var(--ouro-forte); }
-.selo-nota.boa { background: #d8c79b; color: #4a3518; }
 
 /* grimório */
 .tiles { margin: 0 0 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 10px; }

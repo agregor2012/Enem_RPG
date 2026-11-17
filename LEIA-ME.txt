@@ -3,8 +3,7 @@ ENEM RPG
 
 COMO JOGAR
 Dê dois cliques em "Jogar ENEM RPG.exe". Não precisa de internet.
-Mantenha as pastas juntas: o jogo procura "app", "banco" e "documentos_redacao"
-ao lado desse arquivo. A pasta Enem inteira pode mudar de lugar.
+Mantenha as pastas juntas: o jogo procura "app" e "banco" ao lado desse arquivo. A pasta Enem inteira pode mudar de lugar.
 
 SEU PROGRESSO
 Fica em progresso\save.json, e uma cópia de segurança em save.copia.json.
@@ -14,8 +13,9 @@ O QUE HÁ NO JOGO
 - Mapa com os quatro reinos do Enem: Letras (Linguagens), Humanidades (Ciências
   Humanas), Natureza (Ciências da Natureza) e Números (Matemática). As regiões são
   as competências reais da Matriz de Referência do Enem. A roda do mouse aproxima e
-  afasta o mapa; aproximado, é só arrastar para mover (teclas + e - também servem,
-  e 0 mostra o mapa inteiro).
+  afasta o mapa, até 200%; aproximado, é só arrastar para mover (teclas + e - também
+  servem, e 0 mostra o mapa inteiro). A bússola, clicada, aponta o reino em que
+  você mais erra.
 - Reino do Sábio: todas as questões numa jornada sem fim, contra inimigos de todos
   os reinos. Cada acerto tira um ponto de vida do inimigo, a cada 5 ondas surge um
   chefe e a dificuldade sobe aos poucos. Dá para encerrar quando quiser.
@@ -25,8 +25,8 @@ O QUE HÁ NO JOGO
 - Masmorra dos Erros: revisão espaçada do que você errou (1, 2, 4, 8 e 16 dias).
 - Arena do Simulado: provas reais, na ordem original, com cronômetro: o 1º dia,
   o 2º dia ou uma área só.
-- Torre da Redação: estrutura, competências, nota zero, temas de 2005 a 2025 e
-  redações comentadas.
+- Torre da Redação: estrutura, competências, nota zero e os temas de 2005 a 2025,
+  com a proposta completa de cada prova.
 - Inventário: 72 itens em seis raridades (Comum, Incomum, Raro, Épico, Lendário e
   Mítico).
   - Equipamento: arma, armadura, dois acessórios, artefato e mascote.
@@ -68,7 +68,8 @@ vermelho na sua, se errou. Dá para clicar na letra ou no texto da alternativa.
 DE ONDE VÊM OS DADOS
 Provas e gabaritos: https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos
 Microdados: https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/enem
-Redação: Cartilhas do Participante, manuais de correção e Matrizes de Referência do INEP.
+Redação: Cartilha do Participante 2026 (o guia da Torre a resume) e as propostas das próprias provas.
+Habilidades e competências: Matrizes de Referência do INEP.
 
 Os gabaritos foram conferidos entre os PDFs e os microdados do INEP. A dificuldade
 vem do parâmetro da TRI publicado pelo INEP. As provas de 2005 a 2008 não separam
@@ -82,9 +83,8 @@ LIMITES CONHECIDOS
   anuladas. O filtro vale para o jogo, que não as mostra.
 - O INEP não divulga comentário de cada questão. O jogo mostra o gabarito e a
   habilidade cobrada, não a explicação da resposta.
-- Em 2024 e 2025 a Cartilha chama os textos de "boas notas", sem dizer se foram 1.000.
-- 2020 tem apenas um link para reportagem, e 2005 a 2010 não têm exemplos,
-  porque não há publicação oficial dessas redações.
+- A Torre da Redação não traz redações de exemplo nem os documentos do INEP em PDF:
+  ficam o guia, os temas e a proposta de cada prova.
 
 PARA RECONSTRUIR
 Os scripts da pasta "ferramentas" são numerados na ordem de execução.

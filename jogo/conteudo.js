@@ -150,7 +150,7 @@ const XP_ERRO = 2;              // errar também ensina, mas não compensa chuta
 const XP_FIM_SESSAO = 10;
 const XP_GUARDIAO = 20;         // sessão com 60% ou mais
 const XP_REVISAO = 12;
-const XP_LEITURA = 15;          // primeira leitura de um exemplo de redação
+const XP_LEITURA = 15;          // primeira leitura de uma proposta de redação, na Torre
 const XP_CONQUISTA = { 1: 15, 2: 25, 3: 40, 4: 60, 5: 90 }; // conforme o grau da conquista
 const BONUS_SEQUENCIA_MAX = 5;
 const META_GUARDIAO = 0.6;
@@ -167,7 +167,7 @@ const CONQUISTAS = [
   { id: 'q50', grau: 1, nome: 'Pé na estrada', titulo: 'Andarilho(a)', texto: 'Respondeu 50 questões.', teste: c => c.respondidas >= 50 },
   { id: 'seq5', grau: 1, nome: 'Mão firme', titulo: 'Mira Certeira', texto: 'Acertou 5 questões seguidas.', teste: c => c.melhorSeq >= 5 },
   { id: 'dias3', grau: 1, nome: 'Três auroras', titulo: 'Vigia da Aurora', texto: 'Estudou 3 dias seguidos.', teste: c => c.melhorDias >= 3 },
-  { id: 'leitor', grau: 1, nome: 'Leitor(a) da Torre', titulo: 'Leitor(a) de Pergaminhos', texto: 'Leu 3 redações de exemplo.', teste: c => c.lidas >= 3 },
+  { id: 'leitor', grau: 1, nome: 'Leitor(a) da Torre', titulo: 'Leitor(a) de Pergaminhos', texto: 'Leu 3 propostas de redação na Torre.', teste: c => c.lidas >= 3 },
   { id: 'sabio1', grau: 1, nome: 'Diante do Sábio', titulo: 'Discípulo(a) do Sábio', texto: 'Concluiu a primeira jornada no Reino do Sábio.', teste: c => c.sabio.jornadas >= 1 },
   { id: 'ini10', grau: 1, nome: 'Primeira caçada', titulo: 'Caçador(a) de Sombras', texto: 'Derrotou 10 inimigos no Reino do Sábio.', teste: c => c.sabio.inimigos >= 10 },
   { id: 'nivel5', grau: 1, nome: 'Escudo erguido', titulo: 'Portador(a) do Escudo', texto: 'Chegou ao nível 5.', teste: c => c.nivel >= 5 },
@@ -182,7 +182,7 @@ const CONQUISTAS = [
   { id: 'simulado', grau: 2, nome: 'Prova de fogo', titulo: 'Alma Forjada', texto: 'Concluiu um simulado.', teste: c => c.simulados >= 1 },
   { id: 's10', grau: 2, nome: 'Rotina de herói', titulo: 'Passo Incansável', texto: 'Concluiu 10 sessões.', teste: c => c.sessoes >= 10 },
   { id: 'chefe1', grau: 2, nome: 'Queda de um chefe', titulo: 'Algoz de Chefes', texto: 'Derrotou um chefe no Reino do Sábio.', teste: c => c.sabio.chefes >= 1 },
-  { id: 'torre', grau: 2, nome: 'Biblioteca aberta', titulo: 'Zelador(a) dos Livros', texto: 'Leu redações de 5 edições diferentes.', teste: c => c.edicoesLidas >= 5 },
+  { id: 'torre', grau: 2, nome: 'Biblioteca aberta', titulo: 'Zelador(a) dos Livros', texto: 'Leu propostas de redação de 5 edições diferentes.', teste: c => c.edicoesLidas >= 5 },
   { id: 'nivel10', grau: 2, nome: 'Meio caminho', titulo: 'Cavaleiro(a) do Saber', texto: 'Chegou ao nível 10.', teste: c => c.nivel >= 10 },
   // Ouro: a disciplina
   { id: 'q500', grau: 3, nome: 'Atlas vivo', titulo: 'Atlas Vivo', texto: 'Respondeu 500 questões.', teste: c => c.respondidas >= 500 },
@@ -199,7 +199,7 @@ const CONQUISTAS = [
   { id: 'onda10', grau: 3, nome: 'Dez ondas', titulo: 'Inabalável', texto: 'Chegou à 10ª onda em uma jornada do Sábio.', teste: c => c.sabio.melhorOnda >= 10 },
   { id: 'dom100', grau: 3, nome: 'Duas terras', titulo: 'Senhor(a) de Duas Terras', texto: 'Dominou 100 questões de Linguagens e 100 de Humanas.', teste: c => c.domLC >= 100 && c.domCH >= 100 },
   { id: 'dom100n', grau: 3, nome: 'Terras do Norte', titulo: 'Senhor(a) do Norte', texto: 'Dominou 100 questões de Natureza e 100 de Matemática.', teste: c => c.domCN >= 100 && c.domMT >= 100 },
-  { id: 'leitor10', grau: 3, nome: 'Leitura dedicada', titulo: 'Pena de Ouro', texto: 'Leu 10 redações de exemplo.', teste: c => c.lidas >= 10 },
+  { id: 'leitor10', grau: 3, nome: 'Leitura dedicada', titulo: 'Pena de Ouro', texto: 'Leu 10 propostas de redação na Torre.', teste: c => c.lidas >= 10 },
   { id: 'nivel15', grau: 3, nome: 'Erudição', titulo: 'Mente Brilhante', texto: 'Chegou ao nível 15.', teste: c => c.nivel >= 15 },
   // Platina: a maestria
   { id: 'q1000', grau: 4, nome: 'Mil batalhas', titulo: 'Veterano(a) de Mil Batalhas', texto: 'Respondeu 1.000 questões.', teste: c => c.respondidas >= 1000 },
@@ -306,16 +306,5 @@ const GUIA_REDACAO = {
     'A proposta respeita os direitos humanos.',
     'Reli o texto procurando desvios de escrita formal.',
     'Não assinei nem desenhei nada fora do lugar indicado.',
-  ],
-  documentos: [
-    ['cartilha_2026.pdf', 'Cartilha do Participante 2026 (a mais recente)'],
-    ['manual_correcao_competencia_1.pdf', 'Manual de correção: Competência 1'],
-    ['manual_correcao_competencia_2.pdf', 'Manual de correção: Competência 2'],
-    ['manual_correcao_competencia_3.pdf', 'Manual de correção: Competência 3'],
-    ['manual_correcao_competencia_4.pdf', 'Manual de correção: Competência 4'],
-    ['manual_correcao_competencia_5.pdf', 'Manual de correção: Competência 5'],
-    ['manual_correcao_nota_zero.pdf', 'Manual de correção: situações de nota zero'],
-    ['nota_direitos_humanos_redacao.pdf', 'Nota do INEP sobre direitos humanos na redação'],
-    ['matriz_de_referencia_enem.pdf', 'Matrizes de Referência do Enem'],
   ],
 };

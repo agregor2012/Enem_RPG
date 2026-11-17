@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Gera dados/matriz.json a partir das Matrizes de Referência do Enem (INEP).
 
-O PDF oficial é baixado pelo script 04 em documentos_redacao/. Ele traz as quatro áreas na
+O PDF oficial é baixado pelo script 04 (04_baixar_matriz.py) em provas/. Ele traz as quatro áreas na
 ordem Linguagens, Matemática, Ciências da Natureza e Ciências Humanas; cada área é uma
 sequência de "Competência de área N" seguida das habilidades "Hn – ...".
 
@@ -16,7 +16,7 @@ from pathlib import Path
 import pymupdf
 
 RAIZ = Path(__file__).resolve().parent.parent
-PDF = RAIZ / "documentos_redacao" / "matriz_de_referencia_enem.pdf"
+PDF = RAIZ / "provas" / "matriz_de_referencia_enem.pdf"
 ORDEM = ("LC", "MT", "CN", "CH")
 # linhas de cabeçalho e rodapé das páginas, que caem no meio do texto
 RUIDO = re.compile(r"^(MATRIZES DE REFERÊNCIA|ENEM|VOLTAR PARA|O SUMÁRIO|\d{1,2}|[A-ZÁÂÃÉÊÍÓÔÕÚÇ ,]+|"

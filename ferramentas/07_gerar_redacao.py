@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Gera o material da Torre da Redação: propostas de cada ano e exemplos comentados.
+"""Gera o material da Torre da Redação: o tema e a proposta de redação de cada edição.
 
-Propostas: páginas das próprias provas. Exemplos: páginas das Cartilhas do Participante do
-INEP, que autorizam a reprodução desde que citada a fonte. Só entram como "nota 1.000" as
-redações que o próprio INEP identifica assim; nas Cartilhas 2025 e 2026 o texto oficial diz
-"boas notas", e o selo acompanha essa redação.
+As propostas são páginas das próprias provas (pasta provas/). O jogo já trouxe também redações de
+exemplo, tiradas das Cartilhas do Participante; elas saíram, e as imagens que tinham ficado na
+pasta de saída são apagadas aqui.
 
 Saída: <build>/banco/redacao/ e <build>/banco/redacao.json
 """
@@ -86,57 +85,6 @@ PROPOSTAS = [
     (2025, "belem", "belem/2025_PV_impresso_D3_CD1.pdf", None, None),
     (2025, "reaplicacao_ppl", "reaplicacao_ppl/2025_PV_impresso_D5_CD1.pdf", None, None),
 ]
-MIL = "Nota 1.000 (identificada pelo INEP)"
-BOA = "Boa nota (o INEP não informa se foi 1.000)"
-# ano do Enem: (cartilha, selo, [páginas de cada exemplo, numeradas como no PDF])
-EXEMPLOS = {
-    2011: ("cartilha_2012", MIL, [[34, 35, 36], [36, 37, 38], [38, 39, 40]]),
-    2012: ("cartilha_2013", MIL, [[28, 29], [30, 31], [32, 33]]),
-    2013: ("cartilha_2016", MIL, [[31, 32], [33, 34], [35, 36]]),
-    2014: ("cartilha_2016", MIL, [[42, 43], [44, 45], [46, 47]]),
-    2015: ("cartilha_2016", MIL, [[51, 52], [53, 54], [55, 56]]),
-    2016: ("cartilha_2017", MIL, [[31, 32], [33, 34], [35, 36]]),
-    2017: ("cartilha_2018", MIL, [[31, 32], [33, 34], [35, 36]]),
-    2018: ("cartilha_2019", MIL, [[33, 34], [35, 36], [37, 38]]),
-    2019: ("cartilha_2020", MIL, [[35, 36], [37, 38], [39, 40]]),
-    2021: ("cartilha_2022", MIL, [[29, 30], [31, 32], [33, 34]]),
-    2022: ("cartilha_2023", MIL, [[28, 29], [30, 31, 32], [33, 34]]),
-    2023: ("cartilha_2024", MIL, [[37, 38, 39], [40, 41, 42], [43, 44, 45]]),
-    2024: ("cartilha_2025", BOA, [[43, 44, 45], [46, 47, 48], [49, 50, 51]]),
-    2025: ("cartilha_2026", BOA, [[44, 45, 46], [47, 48, 49], [50, 51]]),
-}
-TITULOS_CARTILHA = {
-    "cartilha_2012": "A redação no Enem 2012: guia do participante",
-    "cartilha_2013": "A redação no Enem 2013: guia do participante",
-    "cartilha_2016": "Redação no Enem 2016: cartilha do participante",
-    "cartilha_2017": "Redação no Enem 2017: cartilha do participante",
-    "cartilha_2018": "Redação no Enem 2018: cartilha do participante",
-    "cartilha_2019": "A redação no Enem 2019: cartilha do participante",
-    "cartilha_2020": "A redação no Enem 2020: cartilha do participante",
-    "cartilha_2022": "A redação no Enem 2022: cartilha do participante",
-    "cartilha_2023": "A redação no Enem 2023: cartilha do participante",
-    "cartilha_2024": "A redação no Enem 2024: cartilha do participante",
-    "cartilha_2025": "A redação no Enem 2025: cartilha do participante",
-    "cartilha_2026": "A redação do Enem 2026: cartilha do participante",
-}
-# Sem publicação oficial de redações desses anos: fica registrado no jogo, sem texto de cursinho.
-SEM_EXEMPLO = {
-    2005: "Em 2005 a nota ia de 0 a 100 e o INEP não publicou redações de nota máxima.",
-    2006: "Em 2006 a nota ia de 0 a 100 e o INEP não publicou redações de nota máxima.",
-    2007: "Em 2007 a nota ia de 0 a 100 e o INEP não publicou redações de nota máxima.",
-    2008: "Em 2008 a nota ia de 0 a 100 e o INEP não publicou redações de nota máxima.",
-    2009: "O INEP não publicou redações de nota máxima desta edição, e não encontramos publicação "
-          "em fonte oficial ou jornalística que comprovasse a nota.",
-    2010: "O INEP não publicou redações de nota máxima desta edição, e não encontramos publicação "
-          "em fonte oficial ou jornalística que comprovasse a nota.",
-}
-LINKS_EXTERNOS = {
-    2020: {"titulo": "Enem: leia as redações nota mil de estudantes da Paraíba em 2020",
-           "fonte": "Jornal da Paraíba, 29 maio 2021 (fonte jornalística, não é publicação do INEP)",
-           "url": "https://jornaldaparaiba.com.br/educacao/enem-leia-redacoes-nota-mil-de-estudantes-da-paraiba-em-2020",
-           "nota": "O INEP não publicou Cartilha com redações do Enem 2020. Esta matéria identifica dois "
-                   "textos com nota mil e abre no navegador."},
-}
 
 
 def salvar_pagina(page, nome):
@@ -181,24 +129,17 @@ def main():
         lido = tema_do_texto(doc, paginas) if paginas else None
         print(ano, apl[:6], paginas, "| lido:", lido, "| definido:", (tema or "")[:50])
         imagens = [salvar_pagina(doc[p], f"proposta_{ano}_{apl}_{p}.webp") for p in paginas]
-        entrada = anos.setdefault(ano, {"ano": ano, "temas": [], "exemplos": []})
+        entrada = anos.setdefault(ano, {"ano": ano, "temas": []})
         entrada["temas"].append({"aplicacao": NOMES[apl], "tema": tema or lido or "", "paginas": imagens,
                                  "fonte": f"Prova oficial do Enem {ano} (INEP), {NOMES[apl].lower()}"})
-    for ano, (cartilha, selo, grupos) in EXEMPLOS.items():
-        doc = pymupdf.open(RAIZ / "documentos_redacao" / f"{cartilha}.pdf")
-        titulo = TITULOS_CARTILHA[cartilha]
-        for i, grupo in enumerate(grupos, 1):
-            imagens = [salvar_pagina(doc[p - 1], f"exemplo_{ano}_{i}_{p}.webp") for p in grupo]
-            anos[ano]["exemplos"].append({
-                "titulo": f"Exemplo {i}", "selo": selo, "paginas": imagens,
-                "fonte": f"INEP. {titulo}. Páginas {grupo[0]} a {grupo[-1]} do PDF, com os comentários dos avaliadores.",
-                "arquivo": f"{cartilha}.pdf", "pagina_pdf": grupo[0],
-            })
-    for ano, texto in SEM_EXEMPLO.items():
-        anos[ano]["aviso"] = texto
-    for ano, link in LINKS_EXTERNOS.items():
-        anos[ano]["link"] = link
     saida = [anos[a] for a in sorted(anos, reverse=True)]
+    # o que sobrou de gerações anteriores (as redações de exemplo) sai da pasta
+    usadas = {img[0] for a in saida for t in a["temas"] for img in t["paginas"]}
+    sobras = [p for p in DESTINO.iterdir() if p.name not in usadas]
+    for p in sobras:
+        p.unlink()
+    if sobras:
+        print("imagens antigas apagadas:", len(sobras))
     (BUILD / "redacao.json").write_text(json.dumps(saida, ensure_ascii=False, indent=0), encoding="utf-8")
     tamanho = sum(p.stat().st_size for p in DESTINO.iterdir())
     print(f"{len(list(DESTINO.iterdir()))} imagens, {tamanho / 1e6:.1f} MB")

@@ -1,7 +1,7 @@
 'use strict';
 /* Processo principal do ENEM RPG (Electron).
    Serve o jogo pelo protocolo enem:// e grava o progresso na pasta "progresso". */
-const { app, BrowserWindow, Menu, ipcMain, protocol, shell } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, protocol } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
@@ -12,7 +12,6 @@ protocol.registerSchemesAsPrivileged([
 // Fora do pacote, roda a partir de Enem/jogo; empacotado, o .exe fica em Enem/app.
 const RAIZ = app.isPackaged ? path.resolve(path.dirname(process.execPath), '..') : path.resolve(__dirname, '..');
 const BANCO = path.join(RAIZ, 'banco', 'banco.asar');
-const DOCUMENTOS = path.join(RAIZ, 'documentos_redacao');
 const PEDIDO_AUTOTESTE = process.argv.find(a => a.startsWith('--autoteste='));
 // o autoteste joga com um herói próprio numa pasta temporária: nunca toca no progresso do jogador
 const PROGRESSO = PEDIDO_AUTOTESTE
@@ -25,7 +24,6 @@ const TIPOS = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8', '.webp': 'image/webp', '.woff2': 'font/woff2',
 };
-const LINKS_PERMITIDOS = [/^https:\/\/jornaldaparaiba\.com\.br\//, /^https:\/\/www\.gov\.br\//];
 
 async function atender(req) {
   const url = new URL(req.url);
@@ -163,17 +161,6 @@ app.whenReady().then(() => {
     } catch {
       ev.returnValue = false;
     }
-  });
-  ipcMain.handle('abrir-pdf', async (_ev, nome) => {
-    if (!/^[\w.-]+\.pdf$/.test(String(nome))) return false;
-    const alvo = path.join(DOCUMENTOS, nome);
-    if (!fs.existsSync(alvo)) return false;
-    return (await shell.openPath(alvo)) === '';
-  });
-  ipcMain.handle('abrir-link', async (_ev, url) => {
-    if (!LINKS_PERMITIDOS.some(r => r.test(String(url)))) return false;
-    await shell.openExternal(url);
-    return true;
   });
   const janela = criarJanela();
   if (PEDIDO_AUTOTESTE) autoteste(janela, PEDIDO_AUTOTESTE.split('=')[1]);

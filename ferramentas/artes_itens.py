@@ -52,7 +52,7 @@ LADO_LUGAR, LADO_LUGAR_ORIGINAL = 768, 1024
 OCUPA_LUGAR, PE = 0.92, 0.96
 CHAO = Path(__file__).with_name('chao_lugares.json')   # linha de chão de cada arte de lugar
 TERRENO = 'mapa'
-LARGURA_MAX_TERRENO = 4096  # o mapa aproxima até 3x; um 4K fica nítido até o fim, maior que isso só pesa
+LARGURA_MAX_TERRENO = 4096  # o mapa aproxima até 2x; um 4K fica nítido até o fim, maior que isso só pesa
 BORDA_TERRENO = 0.035       # faixa de cada lado em que o terreno esmaece até a cor do mar
 C0, C1 = 0.2, 0.75  # abaixo de C0 de "não fundo" é fundo; acima de C1 é desenho opaco
 # Artes com vidro ou partes translúcidas (o corpo de luz da Lumina, os redemoinhos da Fênix) pintadas

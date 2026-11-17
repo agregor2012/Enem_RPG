@@ -17,10 +17,11 @@ os microdados do INEP.
 - **Arena do Simulado:** provas reais na ordem original, com cronômetro: o 1º dia, o 2º dia ou
   uma área só.
 - **Torre da Redação:** estrutura, competências, proposta de intervenção e o que zera a nota,
-  segundo a Cartilha do Participante do INEP, mais temas e redações publicadas pelo INEP.
+  segundo a Cartilha do Participante do INEP, mais o tema e a proposta completa de cada prova.
 - **Progressão:** XP, níveis, pontos, porcentagem de acerto por sessão e 59 conquistas em cinco
   graus (Bronze, Prata, Ouro, Platina e Lendária). Cada conquista libera um título para o herói.
-- **Mapa:** atlas com os oito lugares do jogo, zoom pela roda do mouse e arraste para mover.
+- **Mapa:** atlas com os oito lugares do jogo, zoom pela roda do mouse (até 200%) e arraste para mover.
+  A bússola, clicada, aponta o reino em que você mais erra, e o mapa esconde alguns baús.
 - **Itens e raridades:**
   - **O que há:** 72 itens em seis raridades (Comum, Incomum, Raro, Épico, Lendário e Mítico) e
     dez categorias.
@@ -79,8 +80,8 @@ Rode os scripts de `ferramentas/` na ordem dos números:
 1. `01_mapear_inep.py`: lista as provas e gabaritos da página do INEP;
 2. `02_baixar_microdados.py`: lê dos microdados o gabarito, a habilidade, os parâmetros da TRI e a
    marcação de itens anulados, e traz as provas de 2005 a 2008;
-3. `03_baixar_provas.py` e `04_baixar_documentos_redacao.py`: baixam as provas dos dois dias e
-   os documentos oficiais da redação e das Matrizes de Referência;
+3. `03_baixar_provas.py` e `04_baixar_matriz.py`: baixam as provas dos dois dias e as Matrizes
+   de Referência (para `provas/`);
 4. `05_montar_banco.py`: recorta as questões dos PDFs e confere os gabaritos (`gerar_matriz.py`
    lê as competências e habilidades das Matrizes de Referência para `dados/matriz.json`);
 5. `06_gerar_banco_final.py` e `07_gerar_redacao.py`: geram as imagens e os arquivos do jogo. O 06
@@ -175,9 +176,9 @@ O terreno do mapa também pode ser pintado: `mapa.png`, na mesma subpasta, em 4:
 de posições anexado (a ilha, as montanhas, a água, as estradas e as clareiras dos lugares, tirados de
 `LUGARES_MAPA` e `ESTRADAS_MAPA`). O script o grava em `jogo/img/mapa/mapa.webp`, com as bordas
 esmaecendo até a cor do mar, e anota em `jogo/artes.js` o tamanho e essa cor (`MAPA_PINTADO`). Com ele,
-o mapa desenha a pintura no lugar da ilha vetorial (`terrenoPintado()`); os lugares, os nomes das
-regiões, a rosa dos ventos e o título continuam por cima. Os nomes das regiões (lago, bosque e ermos)
-têm posições próprias para o terreno pintado em `ROTULOS_MAPA`, a conferir quando a pintura mudar.
+o mapa desenha a pintura no lugar da ilha vetorial (`terrenoPintado()`); os lugares, a rosa dos
+ventos e o título continuam por cima. As áreas de clique dos
+segredos do mapa (`SEGREDOS_MAPA`) seguem o dragão, o barco e a ilhota da pintura: confira-as quando ela mudar.
 
 Enquanto o sistema está em teste, Ajustes tem um **modo desenvolvedor** temporário que:
 
@@ -196,6 +197,7 @@ Enquanto o sistema está em teste, Ajustes tem um **modo desenvolvedor** tempor�
 
 - Provas e gabaritos: https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos
 - Microdados: https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/enem
-- Redação: Cartilhas do Participante, manuais de correção e Matrizes de Referência do INEP.
+- Redação: Cartilha do Participante 2026 do INEP, resumida no guia da Torre, e as propostas das próprias provas.
+- Habilidades e competências: Matrizes de Referência do INEP.
 
 As fontes tipográficas Cinzel e Crimson Pro seguem a SIL Open Font License (licenças em `jogo/fontes`).

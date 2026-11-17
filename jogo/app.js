@@ -548,7 +548,7 @@ function contexto() {
     regioes: [...regioes].filter(k => doDia(1, k)).length,
     regioesN: [...regioes].filter(k => doDia(2, k)).length,
     regioes70: comp1.length >= comps1 && comp1.every(p => p.t >= 10 && p.a / p.t >= 0.7),
-    lidas: lidas.length, edicoesLidas: new Set(lidas.map(k => k.split('-')[0])).size,
+    lidas: lidas.length, edicoesLidas: new Set(lidas.map(k => k.split('-')[0].replace(/\D/g, ''))).size,
     nivel: nivelDe(S.xp).n, sabio: S.sabio,
     domLC: resumoArea('LC').dominadas, domCH: resumoArea('CH').dominadas,
     domCN: resumoArea('CN').dominadas, domMT: resumoArea('MT').dominadas,
@@ -1064,11 +1064,11 @@ function atualizarCronometro() {
 /* ---- Torre da Redação ------------------------------------------------- */
 function telaRedacao() {
   const abas = [['estrutura', 'Estrutura nota máxima'], ['competencias', 'As 5 competências'], ['proposta', 'Proposta de intervenção'],
-                ['zero', 'O que zera'], ['exemplos', 'Temas e exemplos por ano'], ['documentos', 'Documentos oficiais']];
-  const corpo = { estrutura: abaEstrutura, competencias: abaCompetencias, proposta: abaProposta, zero: abaZero, exemplos: abaExemplos, documentos: abaDocumentos }[E.torreAba]();
+                ['zero', 'O que zera'], ['temas', 'Temas por ano']];
+  const corpo = { estrutura: abaEstrutura, competencias: abaCompetencias, proposta: abaProposta, zero: abaZero, temas: abaTemas }[E.torreAba]();
   return `${menu('redacao')}<main class="conteudo torre">
     <header class="cabecalho"><div><h1>Torre da Redação</h1>
-      <p>Tudo aqui vem das publicações oficiais do INEP. Onde há fonte jornalística, ela é indicada.</p></div></header>
+      <p>Tudo aqui vem das publicações e das provas oficiais do INEP.</p></div></header>
     <div class="abas" role="tablist">${abas.map(([id, nome]) => `<button role="tab" aria-selected="${E.torreAba === id}" class="aba ${E.torreAba === id ? 'ativa' : ''}" data-acao="aba" data-id="${id}">${nome}</button>`).join('')}</div>
     <section class="pergaminho">${corpo}</section>
   </main>`;
@@ -1108,37 +1108,26 @@ function abaZero() {
     <ul class="zero">${GUIA_REDACAO.notaZero.map(t => `<li>${ico('xis')} ${t}</li>`).join('')}</ul>
     <p class="observacao">Linhas copiadas da prova ou do caderno de questões não contam para o mínimo de linhas (p. 8). O texto deve ter até 30 linhas, conforme as instruções da própria prova.</p>${FONTE_CARTILHA}`;
 }
-function abaDocumentos() {
-  return `<h2>Documentos oficiais do INEP nesta pasta</h2>
-    <p>Abrem no seu leitor de PDF. Ficam na pasta <code>documentos_redacao</code>, junto de todas as Cartilhas usadas nos exemplos.</p>
-    <div class="documentos">${GUIA_REDACAO.documentos.map(([arq, nome]) => `<button class="doc" data-acao="abrir-pdf" data-arquivo="${arq}">${ico('livro')}<span>${nome}</span></button>`).join('')}</div>`;
-}
-function abaExemplos() {
+/* Tema e proposta de redação de cada edição, tirados das próprias provas. A primeira leitura de cada
+   proposta vale XP_LEITURA e conta para as conquistas de leitura da Torre (chave "p<ano>-<i>" em
+   save.lidas; as chaves antigas, "<ano>-<i>", são dos exemplos de redação que o jogo trazia). */
+function chaveProposta(ano, i) { return `p${ano}-${i}`; }
+function abaTemas() {
   const anos = E.redacao;
   const ano = E.torreAno || anos[0]?.ano;
   const item = anos.find(a => a.ano === ano);
   if (!item) return '<p>Material de redação indisponível.</p>';
   return `<div class="anos-torre">
-    <nav class="lista-anos" aria-label="Anos">${anos.map(a => `<button class="${a.ano === ano ? 'ativa' : ''}" data-acao="ano-torre" data-ano="${a.ano}">${a.ano}${a.exemplos.length ? `<small>${a.exemplos.length} ${a.exemplos.length === 1 ? 'exemplo' : 'exemplos'}</small>` : ''}</button>`).join('')}</nav>
+    <nav class="lista-anos" aria-label="Anos">${anos.map(a => `<button class="${a.ano === ano ? 'ativa' : ''}" data-acao="ano-torre" data-ano="${a.ano}">${a.ano}</button>`).join('')}</nav>
     <div class="detalhe-ano">
       <h2>Enem ${item.ano}</h2>
       <h3>Tema e proposta</h3>
       ${item.temas.map((t, i) => `<div class="tema"><p class="titulo-tema">${esc(t.tema)}</p><small>${t.aplicacao}</small>
-        <button class="botao pequeno" data-acao="ver-proposta" data-ano="${item.ano}" data-i="${i}">Ver a proposta completa</button></div>`).join('')}
-      <h3>Exemplos de redação</h3>
-      ${item.exemplos.map((x, i) => {
-        const lida = E.save.lidas[`${item.ano}-${i}`];
-        return `<div class="exemplo"><div><strong>${x.titulo}</strong> <span class="selo-nota ${x.selo.startsWith('Nota') ? 'mil' : 'boa'}">${x.selo}</span>
-          <small>${esc(x.fonte)}</small></div>
-          <button class="botao pequeno" data-acao="ver-exemplo" data-ano="${item.ano}" data-i="${i}">${lida ? 'Ler de novo' : `Ler (+${XP_LEITURA} XP)`}</button></div>`;
-      }).join('')}
-      ${item.link ? `<div class="exemplo"><div><strong>${esc(item.link.titulo)}</strong><small>${esc(item.link.fonte)}</small><small>${esc(item.link.nota)}</small></div>
-        <button class="botao pequeno" data-acao="abrir-link" data-ano="${item.ano}">Abrir no navegador</button></div>` : ''}
-      ${item.aviso ? `<p class="observacao">${esc(item.aviso)}</p>` : ''}
+        <button class="botao pequeno" data-acao="ver-proposta" data-ano="${item.ano}" data-i="${i}">${E.save.lidas[chaveProposta(item.ano, i)] ? 'Ver a proposta de novo' : `Ver a proposta completa (+${XP_LEITURA} XP)`}</button></div>`).join('')}
     </div></div>`;
 }
-function abrirLeitor(titulo, subtitulo, paginas, fonte, arquivo) {
-  E.modal = { tipo: 'leitor', titulo, subtitulo, paginas, fonte, arquivo };
+function abrirLeitor(titulo, subtitulo, paginas, fonte) {
+  E.modal = { tipo: 'leitor', titulo, subtitulo, paginas, fonte };
   renderModal();
 }
 
@@ -1219,7 +1208,7 @@ function graficoSessoes(lista) {
       sob névoa como "Terras não mapeadas";
    3. se quiser, dê a ele uma estrada até as outras em ESTRADAS_MAPA. */
 const MAPA = { w: 1400, h: 1040 };
-const ZOOM_MAX = 3;
+const ZOOM_MAX = 2;
 const ESCALA_LUGAR = 1.1;
 const ILHA = 'M118 620C108 520 118 420 150 330C180 240 230 170 300 132C380 96 500 84 590 66C640 54 670 44 700 44C730 44 760 54 810 66C900 84 1020 96 1100 132C1170 170 1220 240 1250 330C1282 420 1300 520 1298 620C1296 700 1300 780 1272 860C1244 940 1180 990 1090 1004C1000 1016 930 1012 860 1000C810 990 760 970 700 970C640 970 590 990 540 1000C470 1012 380 1006 310 990C240 975 170 930 140 850C126 780 120 700 118 620Z';
 const COR_REINO = {
@@ -1252,12 +1241,6 @@ const VAGAS_MAPA = [
   { id: 'noroeste', x: 330, y: 320, montanhas: [[-40, -50, 1.2], [15, -75, 1], [60, -38, .8]] },
   { id: 'nordeste', x: 1070, y: 320, montanhas: [[-60, -38, .8], [-15, -75, 1], [40, -50, 1.2]] },
 ];
-/* Onde ficam os nomes das regiões, no terreno desenhado e no pintado (img/mapa/mapa.webp), que pôs o
-   lago e os Ermos em outro ponto. Se o mapa pintado for trocado, confira estas posições nele. */
-const ROTULOS_MAPA = {
-  vetor: { lago: [905, 478], bosque: [482, 604], ermos: [680, 905] },
-  pintado: { lago: [860, 388], bosque: [480, 458], ermos: [645, 765] },
-};
 /* Ponto de base de cada lugar no terreno pintado e, em terceiro, a escala da arte (o pé dela fica
    parado; a faixa com o nome não muda). A pintura pôs o descampado de cada reino no meio da oval do
    guia, acima do ponto de base de LUGARES_MAPA, e os descampados são menores que as artes: cada arte
@@ -1265,9 +1248,27 @@ const ROTULOS_MAPA = {
    entre os ciprestes das Humanidades, o prado da Natureza) para pisar nele sem cobrir árvore, coluna
    ou pirâmide pintada que fique na frente. Se o mapa pintado ou uma arte mudar, confira de novo. */
 const LUGARES_NO_PINTADO = {
-  sabio: [702, 263], numeros: [350, 272, 0.76], natureza: [1061, 285, 0.7], letras: [299, 584, 0.82],
+  sabio: [702, 263], numeros: [343.5, 268.5, 0.74], natureza: [1061, 285, 0.7], letras: [299, 584, 0.82],
   torre: [702, 609], humanidades: [1100, 589, 0.62], masmorra: [401, 806, 0.78], arena: [1012, 815],
 };
+/* Segredos do mapa: clicar no dragão do mar, no barco ou na árvore da ilhota dá um baú, uma vez a cada
+   tantos dias. Nada no mapa avisa: a área de clique é invisível e não muda o cursor; só o prêmio
+   revela. Cada segredo traz a elipse de clique [cx, cy, rx, ry] no terreno pintado e no desenhado
+   (se a pintura mudar, confira de novo). O dia do último achado fica em itens.segredos
+   (inventario.js); no modo desenvolvedor não há espera. */
+const SEGREDOS_MAPA = [
+  { id: 'dragao', premio: 'bau_prata', dias: 8, pintado: [92, 412, 66, 42], vetor: [56, 460, 48, 22],
+    achou: 'O dragão do mar guardava um tesouro', vazio: 'O dragão já entregou o tesouro que guardava.' },
+  { id: 'barco', premio: 'bau_ouro', dias: 12, pintado: [1259, 111, 48, 48], vetor: [1320, 97, 38, 30],
+    achou: 'O barco trazia um tesouro no porão', vazio: 'O porão do barco está vazio.' },
+  { id: 'arvore', premio: 'bau_madeira', dias: 4, pintado: [1308, 412, 46, 47], vetor: [1353, 698, 22, 22],
+    achou: 'Havia um baú enterrado ao pé da árvore', vazio: 'Não há nada novo ao pé da árvore.' },
+];
+/* Bússola do mapa: clicada, aponta o reino em que o jogador mais erra. Só entram os reinos com
+   BUSSOLA_MINIMO respostas ou mais, para uma ou duas respostas não decidirem. */
+const ROSA = { x: 88, y: 950, r: 40 };
+const BUSSOLA_MINIMO = 5;
+const LUGAR_DA_AREA = { LC: 'letras', CH: 'humanidades', CN: 'natureza', MT: 'numeros' };
 /* O rio desce do lago, passa entre a Torre e as Humanidades e deságua na baía do sul. */
 const RIO = 'M925 490C945 570 940 660 920 730C900 790 800 880 740 972';
 /* Estradas até a Torre, no centro. "ponte" marca onde a estrada cruza o rio. Os reinos do norte
@@ -1364,7 +1365,9 @@ let escalaArteLugar = 1;
 function predio(arte, svg, dy) {
   if (typeof ARTES_MAPA === 'undefined' || !ARTES_MAPA.has(arte)) return svg;
   const l = LADO_ARTE_LUGAR * escalaArteLugar;
-  return `<image href="img/mapa/${arte}.webp" x="${f1(-l / 2)}" y="${f1(dy - 18 - l * 0.96)}" width="${f1(l)}" height="${f1(l)}"/>`;
+  // o halo acende ao passar o mouse (estilo.css); fica atrás da arte e não recebe clique
+  return `<ellipse class="halo-lugar" cy="${f1(dy - 18 - l * 0.44)}" rx="${f1(l * 0.6)}" ry="${f1(l * 0.52)}" fill="url(#m-realce)"/>
+    <image href="img/mapa/${arte}.webp" x="${f1(-l / 2)}" y="${f1(dy - 18 - l * 0.96)}" width="${f1(l)}" height="${f1(l)}"/>`;
 }
 function castelo(sub) {
   let ameias = '';
@@ -1466,7 +1469,7 @@ function torreRedacao() {
       <path d="M5 -24l6 1M8 -30l6 1M11 -36l6 1M14 -42l5 1" stroke="#b18d3e" stroke-width=".8"/></g>
     <g transform="translate(-48 0)"><rect x="-12" y="-7" width="24" height="7" rx="3.5" fill="#f3e9cf" stroke="#8c7550" stroke-width="1.2"/>
       <path d="M-6 -4.5h12M-6 -2.5h9" stroke="#8c7550" stroke-width=".8"/></g>`, 34)
-    + faixa('Torre da Redação', 'Estrutura, temas e exemplos', 34, 'torre');
+    + faixa('Torre da Redação', 'Estrutura e temas de cada ano', 34, 'torre');
 }
 function masmorra(fila) {
   const tocha = x => `<g transform="translate(${x} -30)"><circle cy="-17" r="17" fill="url(#m-fogo)"/>
@@ -1594,8 +1597,10 @@ function rosaDosVentos(x, y, r) {
     const lx = f1(Math.cos(a + Math.PI / 2) * w); const ly = f1(Math.sin(a + Math.PI / 2) * w);
     pontas += `<path d="M${px} ${py}L${lx} ${ly}L0 0Z" fill="${longa ? '#ecdcb2' : '#c8b07a'}"/><path d="M${px} ${py}L${-lx} ${-ly}L0 0Z" fill="${longa ? '#8a6a2c' : '#9c8150'}"/>`;
   }
-  return `<g transform="translate(${x} ${y})"><circle r="${f1(r * 1.1)}" fill="rgba(15,30,50,.35)" stroke="#c9a865" stroke-width="1.2"/>
+  return `<g class="rosa" transform="translate(${x} ${y})" role="button" tabindex="0" data-acao="bussola" aria-label="Bússola: aponta o reino em que você mais erra">
+    <circle class="rosa-aro" r="${f1(r * 1.1)}" fill="rgba(15,30,50,.35)" stroke="#c9a865" stroke-width="1.2"/>
     <circle r="${f1(r * 0.86)}" fill="none" stroke="#c9a865" stroke-width=".8" stroke-dasharray="2 3" opacity=".8"/>${pontas}
+    <path class="agulha" d="M0 ${f1(-r * 1.02)}L${f1(r * 0.14)} 0L0 ${f1(r * 0.32)}L${f1(-r * 0.14)} 0Z" fill="#d9483b" stroke="#6e1d15" stroke-width="1" stroke-linejoin="round"/>
     <circle r="3" fill="#8a6a2c"/><text y="${f1(-r * 1.1 - 6)}" text-anchor="middle" class="rosa-n">N</text></g>`;
 }
 function navio(x, y) {
@@ -1652,7 +1657,6 @@ function mapaSVG(fila) {
     <path d="M-9 -8v16M-3 -8v16M3 -8v16M9 -8v16" stroke="#7a5a37" stroke-width="1"/><path d="M-16 -9H16M-16 9H16" stroke="#5f4529" stroke-width="1.8"/></g>`;
   const ocupadas = new Set(LUGARES_MAPA.map(l => l.vaga).filter(Boolean));
   const pintado = typeof MAPA_PINTADO !== 'undefined' && MAPA_PINTADO;
-  const rotulos = ROTULOS_MAPA[pintado ? 'pintado' : 'vetor'];
   const arvores = [
     [430, 470], [466, 454, .95, 1], [505, 478], [446, 512, .9], [488, 526, .9, 1], [530, 506, .85], [560, 546, .85, 1],
     [180, 790], [214, 806, .9, 1], [240, 776, .85], [168, 836, .85],
@@ -1673,6 +1677,7 @@ function mapaSVG(fila) {
       <radialGradient id="m-portal" cx="50%" cy="80%" r="70%"><stop offset="0" stop-color="#8fdcff" stop-opacity=".85"/><stop offset="1" stop-color="#8fdcff" stop-opacity="0"/></radialGradient>
       <radialGradient id="m-caverna" cx="50%" cy="95%" r="80%"><stop offset="0" stop-color="#7fe0a0" stop-opacity=".55"/><stop offset="1" stop-color="#7fe0a0" stop-opacity="0"/></radialGradient>
       <radialGradient id="m-fogo"><stop offset="0" stop-color="#ffbe5c" stop-opacity=".6"/><stop offset="1" stop-color="#ffbe5c" stop-opacity="0"/></radialGradient>
+      <radialGradient id="m-realce"><stop offset="0" stop-color="#fff2c4" stop-opacity=".95"/><stop offset=".5" stop-color="#ffdf8f" stop-opacity=".62"/><stop offset="1" stop-color="#ffdc8c" stop-opacity="0"/></radialGradient>
       <radialGradient id="m-nevoa"><stop offset="0" stop-color="#f4f1ea" stop-opacity=".22"/><stop offset="1" stop-color="#f4f1ea" stop-opacity="0"/></radialGradient>
       <radialGradient id="m-nevoa-vaga"><stop offset="0" stop-color="#f3f0e8" stop-opacity=".9"/><stop offset=".7" stop-color="#f3f0e8" stop-opacity=".55"/><stop offset="1" stop-color="#f3f0e8" stop-opacity="0"/></radialGradient>
       <clipPath id="m-ilha"><path d="${ILHA}"/></clipPath>
@@ -1681,13 +1686,14 @@ function mapaSVG(fila) {
     <rect x="-3000" y="-3000" width="${MAPA.w + 6000}" height="${MAPA.h + 6000}" fill="url(#m-ondas)"/>
     ${pintado ? terrenoPintado(pintado) : terrenoVetorial(arvores, estrada, ponte)}
     <text x="${MAPA.w / 2}" y="1024" text-anchor="middle" class="rotulo-mar">Mar das Questões</text>
-    <text x="${rotulos.lago[0]}" y="${rotulos.lago[1]}" text-anchor="middle" class="rotulo-lago">Lago da Inspiração</text>
-    <text x="${rotulos.bosque[0]}" y="${rotulos.bosque[1]}" text-anchor="middle" class="rotulo-regiao">Bosque dos Poetas</text>
-    <text x="${rotulos.ermos[0]}" y="${rotulos.ermos[1]}" text-anchor="middle" class="rotulo-regiao">Ermos Sombrios</text>
     ${VAGAS_MAPA.filter(v => !ocupadas.has(v.id)).map(nevoaVaga).join('')}
     ${LUGARES_MAPA.map(no).join('')}
     ${pintado ? '' : '<ellipse cx="1370" cy="460" rx="90" ry="24" fill="url(#m-nevoa)"/><ellipse cx="330" cy="1020" rx="140" ry="20" fill="url(#m-nevoa)"/>'}
-    ${rosaDosVentos(88, 950, 40)}${cartela()}
+    ${SEGREDOS_MAPA.map((s) => {
+      const [cx, cy, rx, ry] = pintado ? s.pintado : s.vetor;
+      return `<ellipse data-acao="segredo" data-id="${s.id}" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="transparent" aria-hidden="true"/>`;
+    }).join('')}
+    ${rosaDosVentos(ROSA.x, ROSA.y, ROSA.r)}${cartela()}
   </svg>`;
 }
 /* Terreno pintado (img/mapa/mapa.webp, gerado com o guia de posições do mapa): as clareiras e as
@@ -1730,6 +1736,75 @@ function controlesMapa() {
       <button class="botao-zoom" data-acao="zoom" data-v="inteiro" title="Ver o mapa inteiro (0)" aria-label="Ver o mapa inteiro">${ico('enquadrar')}</button>
     </div>
     ${dica ? '<p class="dica-mapa">Roda do mouse aproxima e afasta · arraste para mover</p>' : ''}`;
+}
+
+/* ---- segredos e bússola do mapa ---- */
+function diasAte(iso) {
+  const [a, m, d] = iso.split('-').map(Number);
+  const [ha, hm, hd] = hoje().split('-').map(Number);
+  return Math.round((new Date(a, m - 1, d) - new Date(ha, hm - 1, hd)) / 864e5);
+}
+function acharSegredo(id) {
+  const s = SEGREDOS_MAPA.find(x => x.id === id);
+  if (!s) return;
+  const inv = inventario();
+  inv.segredos = inv.segredos || {};
+  const volta = inv.segredos[id] ? somarDias(inv.segredos[id], s.dias) : null;
+  if (!inv.dev && volta && hoje() < volta) {
+    const n = diasAte(volta);
+    avisar(`${s.vazio} Volte em ${n} ${n === 1 ? 'dia' : 'dias'}.`);
+    return;
+  }
+  inv.segredos[id] = hoje();
+  avisarEspolio(s.achou, [ganharItem(s.premio, 1, inv)]);
+  salvar();
+}
+/* Reino com a maior taxa de erro entre os que têm respostas suficientes; empate fica com o de mais
+   respostas. Devolve { falta } sem respostas suficientes e { semErros } se não houve erro nenhum. */
+function reinoDeMaisErros() {
+  const linhas = Object.keys(LUGAR_DA_AREA).map((area) => {
+    const r = resumoArea(area);
+    const erros = r.tentativas - r.acertos;
+    return { area, respostas: r.tentativas, erros, taxa: r.tentativas ? erros / r.tentativas : 0 };
+  }).filter(l => l.respostas >= BUSSOLA_MINIMO);
+  if (!linhas.length) return { falta: true };
+  const pior = linhas.reduce((a, b) => (b.taxa > a.taxa || (b.taxa === a.taxa && b.respostas > a.respostas) ? b : a));
+  return pior.erros ? pior : { semErros: true };
+}
+/* A agulha dá duas voltas, sempre no mesmo sentido, e para no ângulo pedido (0 = norte); sem ângulo,
+   volta ao norte. Ela some quando o mapa é desenhado de novo. */
+let voltasDaBussola = 0;
+function girarBussola(angulo) {
+  const rosa = document.querySelector('svg.mapa .rosa');
+  const agulha = rosa?.querySelector('.agulha');
+  if (!agulha) return;
+  voltasDaBussola += 2;
+  rosa.classList.add('consultada');
+  agulha.style.transform = `rotate(${f1(360 * voltasDaBussola + (angulo ?? 0))}deg)`;
+}
+function consultarBussola() {
+  const r = reinoDeMaisErros();
+  if (r.falta) {
+    girarBussola(null);
+    avisar(`A bússola gira sem rumo. Responda pelo menos ${BUSSOLA_MINIMO} questões de um reino e ela aponta onde você mais erra.`);
+    return;
+  }
+  if (r.semErros) {
+    girarBussola(null);
+    avisar('A bússola não acha erros: você acertou tudo o que respondeu até aqui.');
+    return;
+  }
+  const lugar = LUGARES_MAPA.find(l => l.id === LUGAR_DA_AREA[r.area]);
+  const pintado = typeof MAPA_PINTADO !== 'undefined' && MAPA_PINTADO;
+  const [x, y] = (pintado && LUGARES_NO_PINTADO[lugar.id]) || [lugar.x, lugar.y];
+  // mira o prédio, que fica acima do ponto de base do lugar
+  girarBussola(Math.atan2(y - 90 - ROSA.y, x - ROSA.x) * 180 / Math.PI + 90);
+  const no = document.querySelector(`svg.mapa .no[data-area="${r.area}"]`);
+  if (no) {
+    no.classList.add('apontado');
+    setTimeout(() => no.classList.remove('apontado'), 6000);
+  }
+  avisar(`A bússola aponta para o ${REINOS[r.area].nome}: é onde você mais erra, com ${pct(r.erros, r.respostas)}% de erro em ${r.respostas} respostas.`);
 }
 
 /* ---- câmera do mapa: zoom e arraste ---- */
@@ -1946,7 +2021,7 @@ function renderModal() {
       <header><div><h2>${esc(m.titulo)}</h2><p>${esc(m.subtitulo || '')}</p></div>
         <button class="fechar" data-acao="fechar-modal" aria-label="Fechar">${ico('xis')}</button></header>
       <div class="paginas">${m.paginas.map(([arq, w, h]) => `<img src="${BASE_BANCO}redacao/${arq}" width="${w}" height="${h}" alt="Página do documento oficial">`).join('')}</div>
-      <footer><small>${esc(m.fonte)}</small>${m.arquivo ? `<button class="botao pequeno" data-acao="abrir-pdf" data-arquivo="${m.arquivo}">Abrir o PDF oficial</button>` : ''}</footer>
+      <footer><small>${esc(m.fonte)}</small></footer>
     </div>`;
   } else if (m.tipo === 'confirmar') {
     $modal.innerHTML = `<div class="janela caixa" role="alertdialog" aria-modal="true"><h2>${esc(m.titulo)}</h2><p>${esc(m.texto)}</p>
@@ -2054,6 +2129,8 @@ const ACOES = {
     render();
     avisar(`Título: ${tituloAtual()}`);
   },
+  segredo: d => acharSegredo(d.id),
+  bussola: () => consultarBussola(),
   zoom: (d) => {
     if (d.v === 'mais') zoomMapa(1.25);
     else if (d.v === 'menos') zoomMapa(1 / 1.25);
@@ -2070,13 +2147,8 @@ const ACOES = {
   'ver-proposta': (d) => {
     const item = E.redacao.find(a => a.ano === Number(d.ano));
     const t = item.temas[Number(d.i)];
-    abrirLeitor(t.tema, `Enem ${item.ano} · ${t.aplicacao}`, t.paginas, t.fonte, null);
-  },
-  'ver-exemplo': (d) => {
-    const item = E.redacao.find(a => a.ano === Number(d.ano));
-    const x = item.exemplos[Number(d.i)];
-    const chave = `${item.ano}-${d.i}`;
-    abrirLeitor(`${x.titulo}: Enem ${item.ano}`, x.selo, x.paginas, x.fonte, x.arquivo);
+    const chave = chaveProposta(item.ano, Number(d.i));
+    abrirLeitor(t.tema, `Enem ${item.ano} · ${t.aplicacao}`, t.paginas, t.fonte);
     if (!E.save.lidas[chave]) {
       E.save.lidas[chave] = hoje();
       E.save.xp += XP_LEITURA;
@@ -2089,15 +2161,6 @@ const ACOES = {
       E.manterRolagem = true;
       render();
     }
-  },
-  'abrir-link': (d) => {
-    const item = E.redacao.find(a => a.ano === Number(d.ano));
-    if (window.enem) window.enem.abrirLink(item.link.url); else window.open(item.link.url);
-  },
-  'abrir-pdf': async (d) => {
-    if (!window.enem) return;
-    const ok = await window.enem.abrirPdf(d.arquivo);
-    if (!ok) avisar('Não encontrei esse PDF na pasta documentos_redacao.', 'erro');
   },
   'fechar-modal': () => { E.modal = null; renderModal(); },
   'pedir-data': () => { E.modal = { tipo: 'data' }; renderModal(); },
@@ -2187,7 +2250,7 @@ document.addEventListener('keydown', (ev) => {
   const campo = ['INPUT', 'TEXTAREA', 'SELECT'].includes(ev.target.tagName);
   if (ev.key === 'Escape' && E.modal) { E.modal = null; renderModal(); return; }
   if (ev.key === 'Enter' && E.modal?.tipo === 'data') { ev.preventDefault(); ACOES['salvar-data'](); return; }
-  if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches?.('.no')) { ev.preventDefault(); ev.target.click(); return; }
+  if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches?.('.no, .rosa')) { ev.preventDefault(); ev.target.click(); return; }
   if (E.tela === 'mapa' && !campo && !E.modal && !ev.ctrlKey && !ev.altKey) {
     if (ev.key === '+' || ev.key === '=') { zoomMapa(1.25); return; }
     if (ev.key === '-' || ev.key === '_') { zoomMapa(1 / 1.25); return; }

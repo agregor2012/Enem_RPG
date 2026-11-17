@@ -38,6 +38,7 @@ function itensNovos() {
     jornada: null, // dia do último Baú de Ouro da Lumina
     melhorias: {}, // itens aprimorados (+1)
     especiais: {}, // conquistas cujo item especial (PREMIO_CONQUISTA) já foi entregue
+    segredos: {}, // dia do último baú achado em cada segredo do mapa (SEGREDOS_MAPA, em app.js)
   };
 }
 function mesclarItens(salvo) {
@@ -1020,6 +1021,7 @@ function comoConseguir(def) {
   const monstros = MONSTROS_ERRANTES.filter(m => m.drops.some(([id]) => id === def.id)).map(m => m.nome);
   if (monstros.length) fontes.push(`Monstros errantes: ${monstros.join(', ')}`);
   if (BAUS.tipos.some(([id]) => id === def.id)) fontes.push('Achado entre as questões, nas expedições, na Masmorra e no Sábio');
+  if (typeof SEGREDOS_MAPA !== 'undefined' && SEGREDOS_MAPA.some(s => s.premio === def.id)) fontes.push('Um segredo escondido no mapa');
   if (def.id === PREMIO_SIMULADO.bau) fontes.push(`Simulado com ${PREMIO_SIMULADO.minimo} questões ou mais (um por dia)`);
   if (def.id === PREMIO_SIMULADO.bauDiaInteiro) fontes.push(`Simulado de um dia inteiro, com ${PREMIO_SIMULADO.diaInteiro} questões ou mais (um por dia)`);
   const receita = RECEITAS.find(r => r.item === def.id);
